@@ -630,7 +630,7 @@ state the exclusion of warranty; and each file should have at least
 the "copyright" line and a pointer to where the full notice is found.
 
     Project for CMPUT301
-    Copyright (C) 2026  Keegan Lee, Shen Zhou, Teague Botterman, Alejandro Hernandez Garcia
+    Copyright (C) 2026  Keegan Lee, Shen Zhou, Teague Botterman, Alejandro Hernandez Garcia, Arturo Cachon Torres
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by

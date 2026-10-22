@@ -18,7 +18,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-           CampsiteApp()
+            Staaks_Campsite_AppTheme {
+                CampsiteApp()
+            }
+
         }
     }
 }

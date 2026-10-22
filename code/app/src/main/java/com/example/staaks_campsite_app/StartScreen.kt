@@ -31,6 +31,7 @@ fun StartScreen(navController: NavController) {
 
         Button(
             onClick = {
+                navController.navigate("admin_main")
 
             },
 

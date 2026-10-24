@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "891632003788",
+    "project_id": "cmput301f26-staaks",
+    "storage_bucket": "cmput301f26-staaks.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:891632003788:android:fb02c0ae1757478d687069",
+        "android_client_info": {
+          "package_name": "com.example.staaks_campsite_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3kCrIGy-LP6SWAPi9FJuR75ufo1P-Uio"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -11,7 +11,7 @@ package com.example.staaks_campsite_app.data.model
  * @property date List of dates available for booking.
  * @property description Detailed description including amenities and site facilities.
  * @property rating Average user rating score.
- * @property images Optional promotional images associated with the campsite..
+ * @property images Optional promotional images associated with the campsite.
  */
 class Campsite(
     val id: String,

@@ -11,7 +11,7 @@ import com.google.firebase.firestore.FirebaseFirestore
  * @property db Firebase Firestore instance for database operations.
  * @constructor Creates an empty campsite list.
  */
-class campsiteRepository(
+class CampsiteRepository(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
     private val campsitesRef = db.collection("campsites")

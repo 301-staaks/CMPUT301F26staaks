@@ -26,6 +26,14 @@ fun CampsiteApp() {
         composable("qr_scanner_screen") { QRScannerScreen(navController) }
 
         //composable("sample_res_page") { SampleResPage(navController) }
+        composable("admin_users") { AdminUsersScreen(navController) }
+        composable("admin_user") { AdminUserProfile(navController) }
+        composable("all_notifications") { AllNotifications(navController) }
+        composable("all_messages") { AllMessages(navController) }
+        composable("images_screen") { ImagesScreen(navController) }
+        composable("admin_conversation") { AdminConversation(navController) }
+        composable("admin_campsite") { AdminCampsite(navController) }
+
 
     }
 }

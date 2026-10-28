@@ -54,7 +54,7 @@ fun StartScreen(navController: NavController) {
 
         Button(
             onClick = {
-
+                navController.navigate("entree_main")
             },
 
             ) {

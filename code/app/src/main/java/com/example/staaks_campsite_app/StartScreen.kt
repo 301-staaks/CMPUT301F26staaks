@@ -41,14 +41,15 @@ fun StartScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // ---- StartScreen.kt : Owner button ----
         Button(
             onClick = {
-
+                navController.navigate("owner_main")
             },
-
-            ) {
+        ) {
             Text("Owner")
         }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 

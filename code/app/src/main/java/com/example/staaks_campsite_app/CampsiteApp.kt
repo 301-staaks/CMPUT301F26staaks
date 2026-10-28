@@ -17,6 +17,14 @@ fun CampsiteApp() {
         //Remember to pass needed variables to screens
         composable("start") { StartScreen(navController) }
         composable("admin_main") { AdminMain(navController) }
+        composable("admin_users") { AdminUsersScreen(navController) }
+        composable("admin_user") { AdminUserProfile(navController) }
+        composable("all_notifications") { AllNotifications(navController) }
+        composable("all_messages") { AllMessages(navController) }
+        composable("images_screen") { ImagesScreen(navController) }
+        composable("admin_conversation") { AdminConversation(navController) }
+        composable("admin_campsite") { AdminCampsite(navController) }
+
 
     }
 }

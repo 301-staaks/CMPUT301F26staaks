@@ -132,19 +132,23 @@ class CampsiteRepositoryTest {
     fun testGenerateUniqueID() {
         val uniqueID = campsiteRepository.generateUniqueID()
         assertTrue(uniqueID.isNotEmpty())
+        assertTrue(inMemoryCampsites.none { it.id == uniqueID })
     }
 
     @Test
     fun testAddOrUpdateCampsite() {
         campsiteRepository.addOrUpdateCampsite(campsite1)
         assertEquals(1, campsiteRepository.count())
+        assertEquals("Test Campsite", campsiteRepository.campsites[0].name)
+
 
         campsiteRepository.addOrUpdateCampsite(campsite2)
         assertEquals(2, campsiteRepository.count())
+        assertEquals("Test Campsite 2", campsiteRepository.campsites[1].name)
+
 
         val updated = Campsite(campsite1.id, owner, "Updated Campsite", campsite1.location, campsite1.capacity, price = campsite1.price, date =campsite1.date)
         campsiteRepository.addOrUpdateCampsite(updated)
-
         assertEquals(2, campsiteRepository.count())
         assertEquals("Updated Campsite", campsiteRepository.campsites.find { it.id == "123" }?.name)
     }
@@ -156,6 +160,8 @@ class CampsiteRepositoryTest {
 
         val ownerCampsites = campsiteRepository.getCampsitesByOwner(owner)
         assertEquals(2, ownerCampsites.size)
+        assertTrue(ownerCampsites.contains(campsite1))
+        assertTrue(ownerCampsites.contains(campsite2))
     }
 
     @Test
@@ -164,6 +170,7 @@ class CampsiteRepositoryTest {
         campsiteRepository.deleteCampsite(campsite1)
 
         assertEquals(0, campsiteRepository.count())
+        assertTrue(campsiteRepository.campsites.none { it.id == "123" })
     }
 
     @Test

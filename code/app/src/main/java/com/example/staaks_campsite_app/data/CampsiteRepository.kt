@@ -83,7 +83,7 @@ class CampsiteRepository(
         capacity: Int,
         price: Double,
         date: MutableList<String>,
-        images: MutableList<String>? = null,
+        images: MutableList<String> = mutableListOf(),
         description: String = "",
         rating: Double = 0.0
     ) {

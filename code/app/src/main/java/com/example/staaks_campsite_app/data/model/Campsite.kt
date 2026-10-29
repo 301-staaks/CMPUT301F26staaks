@@ -21,15 +21,15 @@ class Campsite(
     var capacity: Int,
     val date: MutableList<String>,
     var price: Double,
-    val images: MutableList<String>? = null,
+    val images: MutableList<String> = mutableListOf(),
     var description: String = "",
     var rating: Double = 0.0,
 ) {
     fun addImage(image: String) {
-        this.images?.plusAssign(image)
+        this.images.plusAssign(image)
     }
     fun removeImage(image: String) {
-        this.images?.minusAssign(image)
+        this.images.minusAssign(image)
     }
     fun addDate(date: String) {
         this.date += date

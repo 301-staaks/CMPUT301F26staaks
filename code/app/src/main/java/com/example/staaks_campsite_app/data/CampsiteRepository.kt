@@ -145,7 +145,7 @@ class CampsiteRepository(
     ): List<Campsite> {
         return campsites.filter { campsite ->
             val matchesKeyword = keyword.isNullOrBlank() ||
-                    campsite.name.contains(keyword)
+                    campsite.name.contains(keyword, ignoreCase = true)
             val matchesLocation = location.isNullOrBlank() ||
                     campsite.location.contains(location, ignoreCase = true)
 

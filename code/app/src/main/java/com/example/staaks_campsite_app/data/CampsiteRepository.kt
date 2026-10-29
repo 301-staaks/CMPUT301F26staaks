@@ -87,10 +87,8 @@ class CampsiteRepository(
         description: String = "",
         rating: Double = 0.0
     ) {
-        // 1. Generate unique ID from Firestore
         val autoId = campsitesRef.document().id
 
-        // 2. Assign that ID to the Campsite object
         val campsite = Campsite(
             id = autoId,
             owner = owner,
@@ -104,7 +102,6 @@ class CampsiteRepository(
             rating = rating
         )
 
-        // 3. Save to Firestore under that exact document ID
         campsitesRef.document(campsite.id).set(campsite)
     }
 

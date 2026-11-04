@@ -13,14 +13,15 @@ package com.example.staaks_campsite_app.data.model
  * @property rating Average user rating score.
  * @property images Optional promotional images associated with the campsite.
  */
-class Campsite(
-    val id: String,
-    val owner: User,
-    var name: String,
-    var location: String,
-    var capacity: Int,
-    val date: MutableList<String>,
-    var price: Double,
+data class Campsite(
+    val id: String = "",
+    val owner: Owner? = null,
+    val ownerId: String = "",
+    var name: String = "",
+    var location: String = "",
+    var capacity: Int = 0,
+    val date: MutableList<String> = mutableListOf(),
+    var price: Double = 0.0,
     val images: MutableList<String>? = null,
     var description: String = "",
     var rating: Double = 0.0,

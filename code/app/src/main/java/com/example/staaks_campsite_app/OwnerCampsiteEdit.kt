@@ -26,10 +26,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.staaks_campsite_app.data.CampsiteRepository
+import com.example.staaks_campsite_app.data.model.Campsite
 
 // OWNER VIEW (preview only) - all data on this screen is placeholder
 @Composable
-fun OwnerCampsiteEdit(navController: NavController, isNew: Boolean) {
+fun OwnerCampsiteEdit(
+    navController: NavController,
+    isNew: Boolean,
+    ownerId: String,
+    existing: Campsite? = null,
+    onSave: (Campsite) -> Unit
+) {
+    var name by remember(existing?.id) { mutableStateOf(existing?.name ?: "") }
+    var location by remember(existing?.id) { mutableStateOf(existing?.location ?: "") }
+    var capacity by remember(existing?.id) { mutableStateOf(existing?.capacity?.toString() ?: "") }
+    var price by remember(existing?.id) { mutableStateOf(existing?.price?.toString() ?: "") }
+    var description by remember(existing?.id) { mutableStateOf(existing?.description ?: "") }
+
     Column {
 
         // Pinned Top Row
@@ -99,14 +113,6 @@ fun OwnerCampsiteEdit(navController: NavController, isNew: Boolean) {
             Main Content of Page
             -------------------------------------------------------------------------------------------------------------------------------------
              */
-
-            // Same screen for add and edit: add starts empty, edit starts with placeholder values
-            var name by remember { mutableStateOf(if (isNew) "" else "Campsite 1") }
-            var location by remember { mutableStateOf(if (isNew) "" else "Placeholder location") }
-            var sites by remember { mutableStateOf(if (isNew) "" else "10") }
-            var price by remember { mutableStateOf(if (isNew) "" else "35.00") }
-            var description by remember { mutableStateOf(if (isNew) "" else "Placeholder description") }
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -116,12 +122,33 @@ fun OwnerCampsiteEdit(navController: NavController, isNew: Boolean) {
             ) {
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Campsite Name") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = location, onValueChange = { location = it }, label = { Text("Location") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = sites, onValueChange = { sites = it }, label = { Text("Number of Sites") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = capacity, onValueChange = { capacity = it }, label = { Text("Maximum Occupancy") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Price per Night") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, minLines = 3, modifier = Modifier.fillMaxWidth())
 
-                Button(
-                    onClick = { navController.popBackStack() }, // TODO: save campsite
+                Button( // creates a new campsite owned by owner or updates changed values of an existing one -Szymon
+                    onClick = {
+                        val campsiteToSave = if (existing != null) {
+                            existing.copy(
+                                name = name,
+                                location = location,
+                                capacity = capacity.toIntOrNull() ?: 0,
+                                price = price.toDoubleOrNull() ?: 0.0,
+                                description = description
+                            )
+                        } else {
+                            Campsite(
+                                ownerId = ownerId,
+                                name = name,
+                                location = location,
+                                capacity = capacity.toIntOrNull() ?: 0,
+                                price = price.toDoubleOrNull() ?: 0.0,
+                                description = description
+                            )
+                        }
+                        onSave(campsiteToSave)
+                        navController.popBackStack()
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(if (isNew) "Create Campsite" else "Save Changes")

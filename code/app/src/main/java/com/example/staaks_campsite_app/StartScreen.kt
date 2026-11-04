@@ -33,6 +33,7 @@ import kotlinx.coroutines.tasks.await
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import com.example.staaks_campsite_app.NewUserDialog
 import com.example.staaks_campsite_app.data.createUser
 import com.example.staaks_campsite_app.data.getDeviceId
 import com.example.staaks_campsite_app.data.model.Entrant
@@ -55,7 +56,7 @@ fun StartScreen(navController: NavController) {
                 val user = doc.toUser()
                 if (user != null) {
                     val route = when (user.type) {
-                        UserType.ENTRANT -> "entrant_main"
+                        UserType.ENTRANT -> "entree_main"
                         UserType.OWNER -> "owner_main"
                         UserType.ADMIN -> "admin_main"
                     }
@@ -141,7 +142,7 @@ fun StartScreen(navController: NavController) {
                 when (newUserType) {
                     UserType.ADMIN -> navController.navigate("admin_main")
                     UserType.OWNER -> navController.navigate("owner_main")
-                    UserType.ENTRANT -> navController.navigate("entrant_main")
+                    UserType.ENTRANT -> navController.navigate("entree_main")
                 }
             }
         )

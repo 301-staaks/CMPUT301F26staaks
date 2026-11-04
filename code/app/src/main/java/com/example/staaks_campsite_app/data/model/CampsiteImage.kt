@@ -8,10 +8,13 @@ package com.example.staaks_campsite_app.data.model
  * @property campsiteId the ID of the campsite the image belongs to
  * @property uploadedBy the ID of the user who uploaded it
  * @property imageUrl the link used to show the image
+ * @property userId the id of the user whose profile uses the image, or empty for a campsite image
  */
 class CampsiteImage(
     var imageId: String = "",
     var campsiteId: String = "",
     var uploadedBy: String = "",
-    var imageUrl: String = ""
+    var imageUrl: String = "",
+    var userId: String = ""
+
 )

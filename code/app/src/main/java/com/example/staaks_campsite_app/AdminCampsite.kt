@@ -19,9 +19,146 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.example.staaks_campsite_app.data.CampsiteRepository
+import com.example.staaks_campsite_app.data.model.Campsite
 
+/**
+ * displays the selected campsite and lets the admin confirm its removal
+ *
+ * @param navController controls navigation between screens
+ * @param campsiteId the id of the campsite to display
+ */
 @Composable
-fun AdminCampsite(navController: NavController) {
+fun AdminCampsite(
+    navController: NavController,
+    campsiteId: String
+) {
+    val campsiteRepository = remember {
+        CampsiteRepository()
+    }
+
+    var showDeleteDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var isDeleting by remember {
+        mutableStateOf(false)
+    }
+
+    var deleteError by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    var screenActive by remember {
+        mutableStateOf(true)
+    }
+
+    DisposableEffect(campsiteRepository) {
+        screenActive = true
+
+        onDispose {
+            screenActive = false
+            campsiteRepository.close()
+        }
+    }
+
+    // finds the campsite with the selected id
+    var campsite: Campsite? = null
+
+    for (savedCampsite in campsiteRepository.campsites) {
+        if (savedCampsite.id == campsiteId) {
+            campsite = savedCampsite
+            break
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!isDeleting) {
+                    showDeleteDialog = false
+                }
+            },
+
+            title = {
+                Text("Delete campsite?")
+            },
+
+            text = {
+                Text(
+                    "This will remove the campsite, close its lotteries " +
+                            "and cancel its active reservations."
+                )
+            },
+
+            dismissButton = {
+                TextButton(
+                    enabled = !isDeleting,
+
+                    onClick = {
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            },
+
+            confirmButton = {
+                TextButton(
+                    enabled = !isDeleting,
+
+                    onClick = {
+                        isDeleting = true
+                        deleteError = null
+
+                        campsiteRepository.removeCampsiteByAdmin(
+                            campsiteId = campsiteId,
+
+                            onSuccess = {
+                                if (screenActive) {
+                                    isDeleting = false
+                                    showDeleteDialog = false
+
+                                    navController.navigate("admin_main") {
+                                        popUpTo("admin_main") {
+                                            inclusive = false
+                                        }
+
+                                        launchSingleTop = true
+                                    }
+                                }
+                            },
+
+                            onError = { message ->
+                                if (screenActive) {
+                                    isDeleting = false
+                                    showDeleteDialog = false
+                                    deleteError = message
+                                }
+                            }
+                        )
+                    }
+                ) {
+                    Text(
+                        if (isDeleting) {
+                            "Deleting..."
+                        } else {
+                            "Delete"
+                        }
+                    )
+                }
+            }
+        )
+    }
     Column(
 
     ) {
@@ -107,7 +244,75 @@ fun AdminCampsite(navController: NavController) {
             Create Main Content of Page Here
             -------------------------------------------------------------------------------------------------------------------------------------
              */
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
+            ) {
 
+                if (campsiteRepository.isLoading) {
+                    Text("Loading campsite...")
+                }
+
+                campsiteRepository.loadError?.let { message ->
+                    Text(
+                        text = message,
+                        color = Color.Red
+                    )
+                }
+
+                deleteError?.let { message ->
+                    Text(
+                        text = message,
+                        color = Color.Red
+                    )
+                }
+
+                if (campsite != null) {
+
+                    CampsiteImagePreview(
+                        imageUrl = campsite.images?.firstOrNull() ?: ""
+                    )
+
+                    Text(
+                        text = campsite.name,
+                        fontSize = 24.sp
+                    )
+
+                    Text("Location: ${campsite.location}")
+
+                    Text("Capacity: ${campsite.capacity}")
+
+                    Text("Price: CAD ${campsite.price} / night")
+
+                    Text(campsite.description)
+
+                    Button(
+                        enabled = !isDeleting,
+
+                        onClick = {
+                            deleteError = null
+                            showDeleteDialog = true
+                        }
+                    ) {
+                        Text(
+                            if (isDeleting) {
+                                "Deleting..."
+                            } else {
+                                "Delete Campsite"
+                            }
+                        )
+                    }
+
+                } else if (
+                    !campsiteRepository.isLoading &&
+                    campsiteRepository.loadError == null &&
+                    !isDeleting
+                ) {
+                    Text("This campsite is no longer available.")
+                }
+            }
 
         }
 

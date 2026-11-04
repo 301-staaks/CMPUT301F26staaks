@@ -11,6 +11,7 @@ package com.example.staaks_campsite_app.data.model
  * @property registrationEndDate the last day entrants can join
  * @property bookingStartDate the first day of the camping period
  * @property bookingEndDate the last day of the camping period
+ * @property status the lottery's state, either Open or Closed
  */
 class Lottery(
     var lotteryId: String = "",
@@ -18,17 +19,21 @@ class Lottery(
     var registrationStartDate: String = "",
     var registrationEndDate: String = "",
     var bookingStartDate: String = "",
-    var bookingEndDate: String = ""
+    var bookingEndDate: String = "",
+    var status: String = "Open"
 ) {
     /**
-     * Checks if entrants can join on the given date
+     * checks if the lottery is open and entrants can join on the given date.
      *
-     * the first and last registration days are included
-     * @param currentDate the date we want to check
-     * @return true if the date is within the registration period
+     * the first and last registration days are included.
+     * closed lotteries do not accept registration.
+     *
+     * @param currentDate the date to check written as YYYY-MM-DD
+     * @return true if the status is Open and the date is within the registration period
      */
     fun isRegistrationOpen(currentDate: String): Boolean {
-        return currentDate >= registrationStartDate &&
+        return status == "Open" &&
+                currentDate >= registrationStartDate &&
                 currentDate <= registrationEndDate
     }
 

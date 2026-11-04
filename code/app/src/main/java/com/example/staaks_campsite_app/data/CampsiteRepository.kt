@@ -2,6 +2,7 @@ package com.example.staaks_campsite_app.data
 
 import androidx.compose.runtime.mutableStateListOf
 import com.example.staaks_campsite_app.data.model.Campsite
+import com.example.staaks_campsite_app.data.model.Owner
 import com.example.staaks_campsite_app.data.model.User
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -93,7 +94,7 @@ class CampsiteRepository(
         // 2. Assign that ID to the Campsite object
         val campsite = Campsite(
             id = autoId,
-            owner = owner,
+            owner = owner as Owner?,
             name = name,
             location = location,
             capacity = capacity,

@@ -24,10 +24,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.staaks_campsite_app.data.model.Campsite
 
 // OWNER VIEW (preview only) - all data on this screen is placeholder
 @Composable
-fun OwnerMain(navController: NavController) {
+fun OwnerMain(
+    navController: NavController,
+    campsites: List<Campsite>,
+    onEditCampsite: (Campsite) -> Unit
+) {
     Column {
 
         // Pinned Top Row
@@ -100,8 +105,6 @@ fun OwnerMain(navController: NavController) {
             -------------------------------------------------------------------------------------------------------------------------------------
              */
 
-            val campsites = listOf("Campsite 1", "Campsite 2", "Campsite 3") // placeholder
-
             // One preview card per campsite
             LazyColumn(
                 modifier = Modifier
@@ -109,15 +112,16 @@ fun OwnerMain(navController: NavController) {
                     .padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(campsites) { name ->
+                // Replaced placeholders with actual campsite data -Szymon
+                items(campsites, key = { it.id }) { campsite ->
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(name, fontSize = 20.sp)
-                            Text("Location: —")
-                            Text("Sites: —  |  Price/night: —")
+                            Text(campsite.name, fontSize = 20.sp)
+                            Text("Location: ${campsite.location}")
+                            Text("Capacity: ${campsite.capacity}  |  Price/night: ${campsite.price}")
                             Text("Upcoming reservations: —")
                             Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = { navController.navigate("owner_campsite_edit") }) {
+                            Button(onClick = { onEditCampsite(campsite) }) {
                                 Text("Edit")
                             }
                         }

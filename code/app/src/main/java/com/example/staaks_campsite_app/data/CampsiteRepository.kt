@@ -2,6 +2,7 @@ package com.example.staaks_campsite_app.data
 
 import androidx.compose.runtime.mutableStateListOf
 import com.example.staaks_campsite_app.data.model.Campsite
+import com.example.staaks_campsite_app.data.model.Owner
 import com.example.staaks_campsite_app.data.model.User
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.collections.filter
@@ -118,8 +119,8 @@ class CampsiteRepository(
      * @param owner the owner of the campsite.
      * @return The campsite with the specified ID, or null if not found.
      */
-    fun getCampsitesByOwner(owner: User): List<Campsite> {
-        return campsites.filter { it.owner == owner }
+    fun getCampsitesByOwner(ownerId: String): List<Campsite> {
+        return campsites.filter { it.ownerId == ownerId }
     }
 
     /**
@@ -159,7 +160,7 @@ class CampsiteRepository(
         // 2. Assign that ID to the Campsite object
         val campsite = Campsite(
             id = autoId,
-            owner = owner,
+            owner = owner as Owner?,
             name = name,
             location = location,
             capacity = capacity,
@@ -181,7 +182,7 @@ class CampsiteRepository(
      */
     fun addOrUpdateCampsite(campsite: Campsite) {
         val docId = campsite.id.ifBlank { campsitesRef.document().id }
-        campsitesRef.document(docId).set(campsite)
+        campsitesRef.document(docId).set(campsite.copy(id = docId))
     }
 
     /**

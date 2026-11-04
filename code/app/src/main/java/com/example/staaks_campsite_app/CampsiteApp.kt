@@ -63,9 +63,31 @@ fun CampsiteApp() {
         }
 
         // Owner screens
-        composable("owner_main") { OwnerMain(navController) }
-        composable("owner_campsite_new") { OwnerCampsiteEdit(navController, isNew = true) }
-        composable("owner_campsite_edit") { OwnerCampsiteEdit(navController, isNew = false) }
+        composable("owner_main") {
+            OwnerMain(
+                navController = navController,
+                campsites = campsiteRepository.getCampsitesByOwner(currentUserId),
+                onEditCampsite = { navController.navigate("owner_campsite_edit/${it.id}") }
+            )
+        }
+        composable("owner_campsite_new") {
+            OwnerCampsiteEdit(
+                navController = navController,
+                isNew = true,
+                ownerId = currentUserId,
+                onSave = { campsiteRepository.addOrUpdateCampsite(it) }
+            )
+        }
+        composable("owner_campsite_edit/{campsiteId}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("campsiteId")
+            OwnerCampsiteEdit(
+                navController = navController,
+                isNew = false,
+                ownerId = currentUserId,
+                existing = campsiteRepository.campsites.find { it.id == id },
+                onSave = { campsiteRepository.addOrUpdateCampsite(it) }
+            )
+        }
         composable("owner_reservations_active") { OwnerReservationsActive(navController) }
         composable("owner_reservations_past") { OwnerReservationsPast(navController) }
         composable("owner_reservations_cancelled") { OwnerReservationsCancelled(navController) }

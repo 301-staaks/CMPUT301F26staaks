@@ -1,0 +1,23 @@
+name: Shen Branch CI
+
+on:
+  push:
+    branches: ["shen"]
+  pull_request:
+    branches: ["shen"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        working-directory: ./code
+      - name: Build and test with Gradle
+        run: ./gradlew build --configuration-cache
+        working-directory: ./code

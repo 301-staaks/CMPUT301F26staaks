@@ -46,12 +46,12 @@ fun AdminMain(navController: NavController) {
             ) {
                 Button(
                     onClick = {
-                        navController.navigate("start")
+                        navController.navigate("admin_main")
 
                     },
 
                     ) {
-                    Text("Back")
+                    Text("Home")
                 }
             }
 
@@ -87,7 +87,7 @@ fun AdminMain(navController: NavController) {
                     fontSize = 15.sp,
                     color = Color.White
                 )
-                Button(onClick = { /* ... */ }) { Text("Admin") }
+                Button(onClick = {navController.navigate("admin_main")}) { Text("Admin") }
                 Button(onClick = { /* ... */ }) { Text("Owner") }
                 Button(onClick = { /* ... */ }) { Text("Entree") }
 
@@ -111,6 +111,12 @@ fun AdminMain(navController: NavController) {
             Create Main Content of Page Here
             -------------------------------------------------------------------------------------------------------------------------------------
              */
+            Column() {
+
+                Button(onClick = {navController.navigate("admin_campsite")}) {Text("Temp Campsite Screen") }
+
+            }
+
 
         }
 
@@ -129,10 +135,21 @@ fun AdminMain(navController: NavController) {
 
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Button(onClick = { /* ... */ }) { Text("1") }
-            Button(onClick = { /* ... */ }) { Text("2") }
-            Button(onClick = { /* ... */ }) { Text("3") }
-            Button(onClick = { /* ... */ }) { Text("4") }
+            Button(onClick = {navController.navigate("admin_users")},
+                modifier = Modifier.weight(1f)) { Text(text ="Users",
+                fontSize = 10.sp) }
+            Spacer(modifier = Modifier.width(1.dp))
+            Button(onClick = {navController.navigate("all_notifications")},
+                modifier = Modifier.weight(1f)) { Text(text ="Notifications",
+                fontSize = 9.sp) }
+            Spacer(modifier = Modifier.width(1.dp))
+            Button(onClick = {navController.navigate("all_messages")},
+                modifier = Modifier.weight(1f)) { Text(text ="Messages",
+                fontSize = 10.sp) }
+            Spacer(modifier = Modifier.width(1.dp))
+            Button(onClick = {navController.navigate("images_screen")},
+                modifier = Modifier.weight(1f)) { Text(text ="Images",
+                fontSize = 10.sp) }
         }
         Row(
             modifier = Modifier

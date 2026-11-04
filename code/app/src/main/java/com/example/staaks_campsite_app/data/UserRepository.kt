@@ -12,6 +12,10 @@ import com.example.staaks_campsite_app.data.model.Admin
 import com.example.staaks_campsite_app.data.model.Entrant
 import com.example.staaks_campsite_app.data.model.Owner
 import com.example.staaks_campsite_app.data.model.UserType
+import com.example.staaks_campsite_app.data.model.toUser
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 
 class UserRepository {
     private val db = Firebase.firestore
@@ -54,6 +58,34 @@ class UserRepository {
 
     fun deleteUser(user: User) {
         usersRef.document(user.id).delete()
+    }
+
+    fun observeUsers(): Flow<List<User>> = callbackFlow {
+        val reg = usersRef.addSnapshotListener { snapshot, error ->
+            if (error != null) { close(error); return@addSnapshotListener }
+            trySend(snapshot?.documents?.mapNotNull { doc ->
+                when (doc.getString("type")) {
+                    "ENTRANT" -> doc.toObject(Entrant::class.java)
+                    "OWNER" -> doc.toObject(Owner::class.java)
+                    "ADMIN" -> doc.toObject(Admin::class.java)
+                    else -> null
+                }
+            } ?: emptyList())
+        }
+        awaitClose { reg.remove() }
+    }
+
+    fun observeUser(id: String): Flow<User?> = callbackFlow {
+        val reg = usersRef.document(id).addSnapshotListener { snapshot, error ->
+            if (error != null) { close(error); return@addSnapshotListener }
+            trySend(when (snapshot?.getString("type")) {
+                "ENTRANT" -> snapshot.toObject(Entrant::class.java)
+                "OWNER" -> snapshot.toObject(Owner::class.java)
+                "ADMIN" -> snapshot.toObject(Admin::class.java)
+                else -> null
+            })
+        }
+        awaitClose { reg.remove() }
     }
 }
 

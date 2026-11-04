@@ -1,9 +1,18 @@
 package com.example.staaks_campsite_app.data
 
+import android.content.ContentValues.TAG
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
+import com.example.staaks_campsite_app.data.model.Admin
 import com.example.staaks_campsite_app.data.model.Campsite
+import com.example.staaks_campsite_app.data.model.Entrant
+import com.example.staaks_campsite_app.data.model.Owner
 import com.example.staaks_campsite_app.data.model.User
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.toObject
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 
 /**
  * Represents a list of campsite listings available in the system.
@@ -37,6 +46,24 @@ class CampsiteRepository(
             }
         }
     }
+
+//    fun observeCampsites(): Flow<List<Campsite>> = callbackFlow {
+//        val reg = campsitesRef.addSnapshotListener { snapshot, error ->
+//            if (error != null) { close(error); return@addSnapshotListener }
+//            val items = snapshot?.documents?.mapNotNull { doc ->
+//                try{
+//                    doc.toObject(Campsite::class.java)?.apply {
+//                        if (id.isEmpty()) id = doc.id
+//                    }
+//                } catch (error: Exception) {
+//                    null
+//                }
+//            } ?: emptyList()
+//            trySend(items)
+//
+//        }
+//        awaitClose { reg.remove() }
+//    }
 
 
     /**
@@ -77,7 +104,7 @@ class CampsiteRepository(
      * @param rating Optional rating of the campsite.
      */
     fun createAndAddCampsite(
-        owner: User,
+        owner: Owner,
         name: String,
         location: String,
         capacity: Int,

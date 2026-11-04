@@ -18,16 +18,40 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.staaks_campsite_app.data.CampsiteRepository
+import com.example.staaks_campsite_app.data.UserRepository
+import com.example.staaks_campsite_app.data.model.Campsite
+import com.example.staaks_campsite_app.data.model.User
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+
+class CampsiteListViewModel(
+    private val repo: CampsiteRepository = CampsiteRepository()
+) : ViewModel() {
+    val campsites: List<Campsite> = repo.campsites
+}
+
 
 // OWNER VIEW (preview only) - all data on this screen is placeholder
 @Composable
-fun OwnerMain(navController: NavController) {
+fun OwnerMain(
+    navController: NavController,
+    viewModel: CampsiteListViewModel = viewModel()
+) {
+    val campsites = viewModel.campsites
+
     Column {
 
         // Pinned Top Row
@@ -100,7 +124,8 @@ fun OwnerMain(navController: NavController) {
             -------------------------------------------------------------------------------------------------------------------------------------
              */
 
-            val campsites = listOf("Campsite 1", "Campsite 2", "Campsite 3") // placeholder
+
+
 
             // One preview card per campsite
             LazyColumn(
@@ -109,10 +134,10 @@ fun OwnerMain(navController: NavController) {
                     .padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(campsites) { name ->
+                items(campsites) { campsite ->
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(name, fontSize = 20.sp)
+                            Text(campsite.name, fontSize = 20.sp)
                             Text("Location: —")
                             Text("Sites: —  |  Price/night: —")
                             Text("Upcoming reservations: —")

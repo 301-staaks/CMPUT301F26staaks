@@ -15,22 +15,21 @@ package com.example.staaks_campsite_app.data.model
  */
 class Campsite(
     var id: String = "",
-    val owner: Owner? = null,
-    val ownerId: String = "",
+    var ownerId: String = "",
     var name: String = "",
     var location: String = "",
     var capacity: Int = 0,
-    val date: MutableList<String> = mutableListOf(),
+    var date: MutableList<String> = mutableListOf(),
     var price: Double = 0.0,
-    val images: MutableList<String>? = null,
+    var images: MutableList<String> = mutableListOf(),
     var description: String = "",
     var rating: Double = 0.0,
 ) {
     fun addImage(image: String) {
-        this.images?.plusAssign(image)
+        this.images.plusAssign(image)
     }
     fun removeImage(image: String) {
-        this.images?.minusAssign(image)
+        this.images.minusAssign(image)
     }
     fun addDate(date: String) {
         this.date += date

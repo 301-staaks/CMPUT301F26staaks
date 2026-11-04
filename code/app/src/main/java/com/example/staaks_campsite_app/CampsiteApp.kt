@@ -2,21 +2,40 @@ package com.example.staaks_campsite_app
 
 import androidx.navigation.compose.NavHost
 import androidx.compose.runtime.Composable
-import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import com.example.staaks_campsite_app.data.CampsiteRepository
+
 @Composable
 fun CampsiteApp() {
     /*
     This is where we should initialize variables to be passed to screens in the app
      */
     val navController = rememberNavController()
+    val campsiteRepository = remember {
+        CampsiteRepository()
+    }
+
+    DisposableEffect(campsiteRepository) {
+        onDispose {
+            campsiteRepository.close()
+        }
+    }
 
 
     NavHost(navController = navController, startDestination = "start") {
         //Remember to pass needed variables to screens
         composable("start") { StartScreen(navController) }
-        composable("admin_main") { AdminMain(navController) }
+        composable("admin_main") {
+            AdminMain(
+                navController = navController,
+                campsites = campsiteRepository.campsites,
+                isLoading = campsiteRepository.isLoading,
+                loadError = campsiteRepository.loadError
+            )
+        }
         composable("entree_main") { EntreeMain(navController) }
         composable("profile_screen") { ProfileScreen(navController) }
         composable("policy_guidelines_screen") { PolicyGuidelinesPage(navController) }
@@ -32,8 +51,16 @@ fun CampsiteApp() {
         composable("all_messages") { AllMessages(navController) }
         composable("images_screen") { ImagesScreen(navController) }
         composable("admin_conversation") { AdminConversation(navController) }
-        composable("admin_campsite") { AdminCampsite(navController) }
+        composable("admin_campsite/{campsiteId}") { backStackEntry ->
 
+            val campsiteId =
+                backStackEntry.arguments?.getString("campsiteId") ?: ""
+
+            AdminCampsite(
+                navController = navController,
+                campsiteId = campsiteId
+            )
+        }
 
         // Owner screens
         composable("owner_main") { OwnerMain(navController) }

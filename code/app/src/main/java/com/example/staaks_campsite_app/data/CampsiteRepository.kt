@@ -3,6 +3,8 @@ package com.example.staaks_campsite_app.data
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import com.example.staaks_campsite_app.data.model.Campsite
+import com.example.staaks_campsite_app.data.model.Owner
+import com.example.staaks_campsite_app.data.model.User
 import com.google.firebase.firestore.FirebaseFirestore
 
 /**
@@ -35,13 +37,12 @@ class CampsiteRepository(
             _campsites.clear()
 
             snapshot?.documents?.forEach { document ->
-                val campsite = document.toObject(Campsite::class.java)
-                if (campsite != null) {
-                    _campsites.add(campsite)
+                document.toObject(Campsite::class.java)
+                    ?.copy(id = document.id)
+                    ?.let { _campsites.add(it) }    // turns document into a campsite object and adds it to the list
                 }
             }
         }
-    }
 
 
     /**

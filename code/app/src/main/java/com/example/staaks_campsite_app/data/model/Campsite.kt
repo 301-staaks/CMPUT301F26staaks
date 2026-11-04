@@ -14,14 +14,14 @@ package com.example.staaks_campsite_app.data.model
  * @property images Optional promotional images associated with the campsite.
  */
 class Campsite(
-    val id: String,
-    val owner: User,
-    var name: String,
-    var location: String,
-    var capacity: Int,
-    val date: MutableList<String>,
-    var price: Double,
-    val images: MutableList<String> = mutableListOf(),
+    var id: String = "",
+    var ownerId: String = "",
+    var name: String = "",
+    var location: String = "",
+    var capacity: Int = 0,
+    var date: MutableList<String> = mutableListOf(),
+    var price: Double = 0.0,
+    var images: MutableList<String> = mutableListOf(),
     var description: String = "",
     var rating: Double = 0.0,
 ) {

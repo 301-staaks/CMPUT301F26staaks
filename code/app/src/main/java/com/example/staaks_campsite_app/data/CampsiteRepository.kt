@@ -1,8 +1,8 @@
 package com.example.staaks_campsite_app.data
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import com.example.staaks_campsite_app.data.model.Campsite
-import com.example.staaks_campsite_app.data.model.User
 import com.google.firebase.firestore.FirebaseFirestore
 
 /**
@@ -28,6 +28,7 @@ class CampsiteRepository(
     init {
         campsitesRef?.addSnapshotListener { snapshot, error ->
             if (error != null) {
+                Log.e("CampsiteRepository", "Firestore error: ${error.message}", error)
                 return@addSnapshotListener
             }
 
@@ -56,8 +57,8 @@ class CampsiteRepository(
      * @param owner the owner of the campsite.
      * @return The campsite with the specified ID, or null if not found.
      */
-    fun getCampsitesByOwner(owner: User): List<Campsite> {
-        return campsites.filter { it.owner == owner }
+    fun getCampsitesByOwner(ownerId: String): List<Campsite> {
+        return campsites.filter { it.ownerId == ownerId }
     }
 
     /**
@@ -81,7 +82,7 @@ class CampsiteRepository(
      * @param rating Optional rating of the campsite.
      */
     fun createAndAddCampsite(
-        owner: User,
+        ownerId: String,
         name: String,
         location: String,
         capacity: Int,
@@ -95,7 +96,7 @@ class CampsiteRepository(
 
         val campsite = Campsite(
             id = autoId,
-            owner = owner,
+            ownerId = ownerId,
             name = name,
             location = location,
             capacity = capacity,
@@ -146,7 +147,8 @@ class CampsiteRepository(
     ): List<Campsite> {
         return campsites.filter { campsite ->
             val matchesKeyword = keyword == "" ||
-                    campsite.name.contains(keyword, ignoreCase = true)
+                    campsite.name.contains(keyword, ignoreCase = true) ||
+                    campsite.location.contains(keyword, ignoreCase = true)
             val matchesLocation = location == "" ||
                     campsite.location.contains(location, ignoreCase = true)
 

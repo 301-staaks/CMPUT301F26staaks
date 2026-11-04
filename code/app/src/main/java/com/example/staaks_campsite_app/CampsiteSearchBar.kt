@@ -10,7 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -28,24 +32,20 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
+import com.example.staaks_campsite_app.data.model.Campsite
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-
-
-@Composable()
-fun CampsiteScreen() {
-    val campsites = CampsiteRepository()
-    CampsiteSearchBar(campsites = campsites)
-
-}
 
 @Composable
 fun CampsiteSearchBar(
     modifier: Modifier = Modifier,
     campsites: CampsiteRepository = CampsiteRepository(),
+    onChangeCampsites: (List<Campsite>) -> Unit = {}
 ){
     var keyword by remember() { mutableStateOf("") }
     var location by remember() { mutableStateOf("") }
@@ -59,7 +59,7 @@ fun CampsiteSearchBar(
     var showFilter by remember { mutableStateOf(false) }
 
     Column(
-        modifier = modifier.padding(16.dp).fillMaxSize()
+        modifier = modifier.padding(8.dp).fillMaxWidth()
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
             // SearchBar
@@ -75,19 +75,19 @@ fun CampsiteSearchBar(
             // search button
             FloatingActionButton(
                 onClick = {
-                    campsites.filterCampsites(keyword, location, date, capacity)
+                    onChangeCampsites(campsites.filterCampsites(keyword, location, date, capacity))
                 },
-                modifier = Modifier.padding(top = 8.dp).weight(0.2f)
+                modifier = Modifier.padding(top = 8.dp, start = 4.dp, end = 4.dp).weight(0.1f)
             ) {
-                Text("Search")
+                Icon(Icons.Default.Search, contentDescription = "Search")
             }
 
             // filter button
             FloatingActionButton(
                 onClick = { showFilter = !showFilter },
-                modifier = Modifier.padding(top = 8.dp).weight(0.2f)
+                modifier = Modifier.padding(top = 8.dp, start = 4.dp, end = 4.dp).weight(0.1f)
             ) {
-                Text("Filter")
+                Icon(Icons.Default.FilterList, contentDescription = "Filter")
             }
         }
 
@@ -95,13 +95,17 @@ fun CampsiteSearchBar(
             Popup(
                 alignment = Alignment.TopEnd,
                 onDismissRequest = { showFilter = false },
-                properties = PopupProperties(focusable = true)
+                properties = PopupProperties(
+                    focusable = true
+                )
             ) {
                 Surface(
-                    modifier = Modifier.padding(top = 64.dp).fillMaxWidth(0.95f),
+                    modifier = Modifier
+                        .padding(top = 64.dp, end = 16.dp)
+                        .fillMaxWidth(0.95f),
                     shape = RoundedCornerShape(16.dp),
                     shadowElevation = 16.dp,
-                    color = Color(0xFFF5F5F5)
+                    color = Color(0xFFF5F5F5),
                 ) {
                     Column(
                         modifier = Modifier, verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -114,63 +118,6 @@ fun CampsiteSearchBar(
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp)
                         )
-
-                        fun validateAndGenerateDates(startStr: String = startDateInput, endStr: String = endDateInput) {
-                            if (startStr.isBlank() && endStr.isBlank()) {
-                                errorMessage = null
-                                date = emptyList()
-                                return
-                            }
-
-                            if (startStr.isBlank()) {
-                                errorMessage = "Start date is required"
-                                date = emptyList()
-                                return
-                            }
-
-                            if (endStr.isBlank()) {
-                                errorMessage = "End date is required"
-                                date = emptyList()
-                                return
-                            }
-
-                            val dateRegex = Regex("""\d{4}-\d{2}-\d{2}""")
-                            if (!dateRegex.matches(startStr) || !dateRegex.matches(endStr)) {
-                                errorMessage = "Invalid date format (YYYY-MM-DD)"
-                                date = emptyList()
-                                return
-                            }
-
-                            val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
-                                isLenient = false
-                            }
-
-                            try {
-                                val start = format.parse(startStr)
-                                val end = format.parse(endStr)
-
-                                if (start != null && end != null) {
-                                    if (end.before(start)) {
-                                        errorMessage = "End date cannot be before start date"
-                                        date = emptyList()
-                                    } else {
-                                        errorMessage = null
-                                        val cal = Calendar.getInstance().apply { time = start }
-                                        val calend = Calendar.getInstance().apply { time = end }
-                                        val dateList = mutableListOf<String>()
-
-                                        while (!cal.after(calend)) {
-                                            dateList.add(format.format(cal.time))
-                                            cal.add(Calendar.DATE, 1)
-                                        }
-                                        date = dateList
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                errorMessage = "Invalid date format (YYYY-MM-DD)"
-                                date = emptyList()
-                            }
-                        }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             OutlinedTextField(
@@ -198,7 +145,9 @@ fun CampsiteSearchBar(
                                 value = endDateInput,
                                 onValueChange = { input ->
                                     endDateInput = input
-                                    validateAndGenerateDates(startStr = startDateInput, endStr = input)
+                                    val (err, d) = validateAndGenerateDates(startStr = startDateInput, endStr = input)
+                                    errorMessage = err
+                                    date = d
                                 },
                                 label = { Text("End Date") },
                                 isError = errorMessage != null,
@@ -237,7 +186,7 @@ fun CampsiteSearchBar(
                             // Applies filter button
                             FloatingActionButton(
                                 onClick = {
-                                    campsites.filterCampsites(keyword, location, date, capacity)
+                                    onChangeCampsites(campsites.filterCampsites(keyword, location, date, capacity))
                                     showFilter = false
                                 },
                                 modifier = Modifier.padding(start = 8.dp).weight(1f)
@@ -262,4 +211,62 @@ fun CampsiteSearchScreenPreview() {
             CampsiteSearchBar()
         }
     }
+}
+
+fun validateAndGenerateDates(startStr: String, endStr: String): Pair<String?, List<String>> {
+    var errorMessage: String? = null
+    var date: List<String> = emptyList()
+
+    if (startStr.isBlank() && endStr.isBlank()) {
+        errorMessage = null
+        date = emptyList()
+    }
+
+    if (startStr.isBlank()) {
+        errorMessage = "Start date is required"
+        date = emptyList()
+    }
+
+    if (endStr.isBlank()) {
+        errorMessage = "End date is required"
+        date = emptyList()
+    }
+
+    val dateRegex = Regex("""\d{4}-\d{2}-\d{2}""")
+    if (!dateRegex.matches(startStr) || !dateRegex.matches(endStr)) {
+        errorMessage = "Invalid date format (YYYY-MM-DD)"
+        date = emptyList()
+    }
+
+    val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
+        isLenient = false
+    }
+
+    try {
+        val start = format.parse(startStr)
+        val end = format.parse(endStr)
+
+        if (start != null && end != null) {
+            if (end.before(start)) {
+                errorMessage = "End date cannot be before start date"
+                date = emptyList()
+                return Pair(errorMessage, date)
+            } else {
+                errorMessage = null
+                val cal = Calendar.getInstance().apply { time = start }
+                val calend = Calendar.getInstance().apply { time = end }
+                val dateList = mutableListOf<String>()
+
+                while (!cal.after(calend)) {
+                    dateList.add(format.format(cal.time))
+                    cal.add(Calendar.DATE, 1)
+                }
+                date = dateList
+            }
+        }
+    } catch (e: Exception) {
+        errorMessage = "Invalid date format (YYYY-MM-DD)"
+        date = emptyList()
+    }
+    return Pair(errorMessage, date)
 }

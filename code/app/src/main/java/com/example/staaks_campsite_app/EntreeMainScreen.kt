@@ -29,7 +29,7 @@ import androidx.navigation.NavController
 import androidx.compose.material3.OutlinedTextField
 
 @Composable
-fun EntreeMain(navController: NavController) {
+fun EntrantMain(navController: NavController) {
     var campsiteSearchInput by remember { mutableStateOf("") }
     var showFilterOptions by remember { mutableStateOf(false) }
     var locationFilter by remember { mutableStateOf("") }

@@ -32,17 +32,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.example.staaks_campsite_app.data.CampsiteRepository
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AdminCampsite(navController: NavController, campsiteID: String) {
-
-    val CampRepo = CampsiteRepository()
-    val CampsitesList = CampRepo.campsites
-    val campsite = CampsitesList.find({ it.id == campsiteID })
-    val ImageNum = campsite?.images?.size
-
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -52,20 +41,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.Campsite
+import kotlin.collections.getValue
 
-/**
- * displays the selected campsite and lets the admin confirm its removal
- *
- * @param navController controls navigation between screens
- * @param campsiteId the id of the campsite to display
- */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminCampsite(
-    navController: NavController,
-    campsiteId: String
-) {
+fun AdminCampsite(navController: NavController, campsiteId: String) {
+
+    val CampRepo = CampsiteRepository()
+    val CampsitesList = CampRepo.campsites
+
     val campsiteRepository = remember {
         CampsiteRepository()
     }
@@ -104,6 +89,8 @@ fun AdminCampsite(
             break
         }
     }
+
+    val ImageNum = campsite?.images?.size
 
     if (showDeleteDialog) {
         AlertDialog(

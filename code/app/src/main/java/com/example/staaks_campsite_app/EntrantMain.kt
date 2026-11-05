@@ -46,7 +46,7 @@ import com.example.staaks_campsite_app.data.model.Campsite
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EntrantMain(
+fun EntreeMain(
     navController: NavController
 ) {
     // Selected inner screen (home, profile, reservations, inbox, messages, scan )
@@ -177,17 +177,11 @@ fun Home(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 itemsIndexed(displayCampsites) { index, campsite: Campsite ->
-                    Row(
-                        modifier = Modifier.clickable {
-                            onCampsiteChange(campsite)
-                            onSelectedTabChange("Campsite Details")
-                        }
-                    ) {
-                        CampsiteCard(
-                            campsite = campsite,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                    CampsiteCard(
+                        campsite = campsite,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
                 }
             }
         }

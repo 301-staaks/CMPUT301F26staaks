@@ -39,7 +39,7 @@ fun EntreeCampsite(navController: NavController, campsiteID: String) {
 
     val CampRepo = CampsiteRepository()
     val CampsitesList = CampRepo.campsites
-    val campsite = CampsitesList.find({ it.id == campsiteID }) ?: Campsite(id = "", owner = CampRepo.campsites[0].owner, name = "", location = "", capacity = 0, date = mutableListOf(), price = 0.0)
+    val campsite = CampsitesList.find({ it.id == campsiteID }) ?: Campsite(id = "", ownerId = CampRepo.campsites[0].ownerId, name = "", location = "", capacity = 0, date = mutableListOf(), price = 0.0)
 
     val ImageNum = campsite.images?.size
 

@@ -11,7 +11,8 @@ import com.example.staaks_campsite_app.data.model.entree_campsite
 import com.example.staaks_campsite_app.data.model.owner_campsite
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
-import com.example.staaks_campsite_app.data.CampsiteRepository
+import androidx.compose.ui.platform.LocalContext
+import com.example.staaks_campsite_app.data.getDeviceId
 
 @Composable
 fun CampsiteApp() {
@@ -22,6 +23,9 @@ fun CampsiteApp() {
     val campsiteRepository = remember {
         CampsiteRepository()
     }
+
+    val context = LocalContext.current
+    val currentUserId = remember(context) { getDeviceId(context) }
 
     DisposableEffect(campsiteRepository) {
         onDispose {
@@ -50,7 +54,6 @@ fun CampsiteApp() {
         composable("qr_scanner_screen") { QRScannerScreen(navController) }
         composable<entree_campsite> { backStackEntry ->
             val campsite = backStackEntry.toRoute<entree_campsite>()
-
             EntreeCampsite(navController, campsiteID = campsite.campsiteID)
         }
 
@@ -64,8 +67,7 @@ fun CampsiteApp() {
 
         composable<admin_campsite> { backStackEntry ->
             val campsite = backStackEntry.toRoute<admin_campsite>()
-
-            AdminCampsite(navController, campsiteID = campsite.campsiteID)
+            AdminCampsite(navController, campsiteId = campsite.campsiteID)
         }
 
         composable("admin_campsite/{campsiteId}") { backStackEntry ->

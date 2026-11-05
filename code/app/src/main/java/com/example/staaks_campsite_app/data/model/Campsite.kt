@@ -17,7 +17,7 @@ import com.google.firebase.firestore.IgnoreExtraProperties
  * @property ratingCount Total number of ratings received.
  */
 @IgnoreExtraProperties
-class Campsite(
+data class Campsite(
     var id: String = "",
     var ownerId: String = "",
     var name: String = "",

@@ -138,9 +138,9 @@ fun AdminMain(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-
-                Button(onClick = {navController.navigate(admin_campsite(campsiteID = "8zYJaC9j2aJt74e0HIb0"))}) {Text("Temp Campsite Screen") }
-
+                item{
+                    Button(onClick = {navController.navigate(admin_campsite(campsiteID = "8zYJaC9j2aJt74e0HIb0"))}) {Text("Temp Campsite Screen") }
+                }
 
                 item {
 

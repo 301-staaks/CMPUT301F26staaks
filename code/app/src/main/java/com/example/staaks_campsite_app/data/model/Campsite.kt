@@ -12,6 +12,7 @@ package com.example.staaks_campsite_app.data.model
  * @property description Detailed description including amenities and site facilities.
  * @property rating Average user rating score.
  * @property images Optional promotional images associated with the campsite.
+ * @property ratingCount Total number of ratings received.
  */
 class Campsite(
     var id: String = "",
@@ -24,6 +25,7 @@ class Campsite(
     var images: MutableList<String> = mutableListOf(),
     var description: String = "",
     var rating: Double = 0.0,
+    var ratingCount: Int = 0
 ) {
     fun addImage(image: String) {
         this.images.plusAssign(image)

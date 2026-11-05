@@ -4,6 +4,11 @@ import androidx.navigation.compose.NavHost
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import com.example.staaks_campsite_app.data.CampsiteRepository
+import com.example.staaks_campsite_app.data.model.admin_campsite
+import com.example.staaks_campsite_app.data.model.entree_campsite
+import com.example.staaks_campsite_app.data.model.owner_campsite
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import com.example.staaks_campsite_app.data.CampsiteRepository
@@ -43,6 +48,11 @@ fun CampsiteApp() {
         composable("entree_inbox_screen") { EntreeInboxScreen(navController) }
         composable("messages_screen") { MessagesScreen(navController) }
         composable("qr_scanner_screen") { QRScannerScreen(navController) }
+        composable<entree_campsite> { backStackEntry ->
+            val campsite = backStackEntry.toRoute<entree_campsite>()
+
+            EntreeCampsite(navController, campsiteID = campsite.campsiteID)
+        }
 
         //composable("sample_res_page") { SampleResPage(navController) }
         composable("admin_users") { AdminUsersScreen(navController) }
@@ -51,6 +61,13 @@ fun CampsiteApp() {
         composable("all_messages") { AllMessages(navController) }
         composable("images_screen") { ImagesScreen(navController) }
         composable("admin_conversation") { AdminConversation(navController) }
+
+        composable<admin_campsite> { backStackEntry ->
+            val campsite = backStackEntry.toRoute<admin_campsite>()
+
+            AdminCampsite(navController, campsiteID = campsite.campsiteID)
+        }
+
         composable("admin_campsite/{campsiteId}") { backStackEntry ->
 
             val campsiteId =
@@ -99,5 +116,11 @@ fun CampsiteApp() {
         composable("owner_messages") { OwnerMessages(navController) }
         composable("owner_conversation") { OwnerConversation(navController) }
         composable("owner_notifications") { OwnerNotifications(navController) }
+
+        composable<owner_campsite> { backStackEntry ->
+            val campsite = backStackEntry.toRoute<owner_campsite>()
+
+            OwnerCampsite(navController, campsiteID = campsite.campsiteID)
+        }
     }
 }

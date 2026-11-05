@@ -11,6 +11,7 @@ package com.example.staaks_campsite_app.data.model
  * @property startDate the first day of the stay
  * @property endDate the last day of the stay
  * @property status the reservation's status such as active or canceled
+ * @property campsiteName the saved campsite name, kept for booking history after the campsite is deleted
  */
 class Reservation(
     var reservationId: String = "",
@@ -18,7 +19,8 @@ class Reservation(
     var entrantId: String = "",
     var startDate: String = "",
     var endDate: String = "",
-    var status: String = "Active"
+    var status: String = "Active",
+    var campsiteName: String = ""
 ) {
     /**
      * marks this reservation as canceled

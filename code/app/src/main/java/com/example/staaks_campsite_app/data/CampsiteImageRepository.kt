@@ -10,7 +10,7 @@ import com.google.firebase.firestore.firestore
  *
  * still needed: upload and delete the image pictures themselves
  *
- * @property images the image records loaded from firestore
+ * @property images the image records loaded from firesxtore
  */
 class CampsiteImageRepository {
     private val db = Firebase.firestore

@@ -56,7 +56,7 @@ fun CampsiteApp() {
 
         //composable("sample_res_page") { SampleResPage(navController) }
         composable("admin_users") { AdminUsersScreen(navController) }
-        composable("admin_user") { AdminUserProfile(navController) }
+        composable("admin_user/{userId}") { AdminUserProfile(navController) }
         composable("all_notifications") { AllNotifications(navController) }
         composable("all_messages") { AllMessages(navController) }
         composable("images_screen") { ImagesScreen(navController) }

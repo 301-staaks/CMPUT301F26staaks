@@ -14,6 +14,7 @@ import com.google.firebase.firestore.IgnoreExtraProperties
  * @property description Detailed description including amenities and site facilities.
  * @property rating Average user rating score.
  * @property images Optional promotional images associated with the campsite.
+ * @property ratingCount Total number of ratings received.
  */
 @IgnoreExtraProperties
 class Campsite(
@@ -24,15 +25,16 @@ class Campsite(
     var capacity: Int = 0,
     var date: MutableList<String> = mutableListOf(),
     var price: Double = 0.0,
-    var images: MutableList<String>? = mutableListOf(),
+    var images: MutableList<String> = mutableListOf(),
     var description: String = "",
     var rating: Double = 0.0,
+    var ratingCount: Int = 0
 ) {
     fun addImage(image: String) {
-        this.images?.plusAssign(image)
+        this.images.plusAssign(image)
     }
     fun removeImage(image: String) {
-        this.images?.minusAssign(image)
+        this.images.minusAssign(image)
     }
     fun addDate(date: String) {
         this.date += date

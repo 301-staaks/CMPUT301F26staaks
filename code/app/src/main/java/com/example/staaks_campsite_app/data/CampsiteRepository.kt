@@ -446,7 +446,16 @@ package com.example.staaks_campsite_app.data
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import com.example.staaks_campsite_app.data.model.Campsite
+import com.example.staaks_campsite_app.data.model.Owner
+import com.example.staaks_campsite_app.data.model.User
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlin.collections.filter
+import kotlin.jvm.java
+import com.example.staaks_campsite_app.data.model.Owner
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+
 
 /**
  * Represents a list of campsite listings available in the system.
@@ -468,27 +477,80 @@ class CampsiteRepository(
     val campsites: List<Campsite>
         get() = _campsites
 
-    init {
-        campsitesRef?.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                Log.e("CampsiteRepository", "Firestore error: ${error.message}", error)
-                return@addSnapshotListener
-            }
+    var isLoading by mutableStateOf(true)
 
+    var loadError by mutableStateOf<String?>(null)
+
+    private val listener = campsitesRef.addSnapshotListener { snapshot, error ->
+
+        isLoading = false
+
+        if (error != null) {
+
+            loadError = "Could not load campsites."
+
+        } else if (snapshot == null) {
+
+            loadError = "No campsite data was received."
+
+        } else {
+
+            loadError = null
             _campsites.clear()
 
-            snapshot?.documents?.forEach { document ->
-                try {
-                    val campsite = document.toObject(Campsite::class.java)
-                    if (campsite != null) {
-                        _campsites.add(campsite)
+            for (document in snapshot.documents) {
+
+                val owner = Owner()
+
+                owner.id = document.getString("owner.id") ?: ""
+                owner.name = document.getString("owner.name") ?: ""
+                owner.email = document.getString("owner.email") ?: ""
+                owner.phone = document.getString("owner.phone") ?: ""
+
+                val dates = mutableListOf<String>()
+                val savedDates = document.get("date")
+
+                if (savedDates is List<*>) {
+                    for (date in savedDates) {
+                        if (date is String) {
+                            dates.add(date)
+                        }
                     }
-                } catch (e: Exception) {
-                    Log.e("CampsiteRepository", "Error converting document to campsite: ${document.id}")
                 }
 
+                val images = mutableListOf<String>()
+                val savedImages = document.get("images")
+
+                if (savedImages is List<*>) {
+                    for (image in savedImages) {
+                        if (image is String) {
+                            images.add(image)
+                        }
+                    }
+                }
+
+                val campsite = Campsite(
+                    id = document.id,
+                    owner = owner,
+                    name = document.getString("name") ?: "",
+                    location = document.getString("location") ?: "",
+                    capacity = document.getLong("capacity")?.toInt() ?: 0,
+                    date = dates,
+                    price = document.getDouble("price") ?: 0.0,
+                    images = images,
+                    description = document.getString("description") ?: "",
+                    rating = document.getDouble("rating") ?: 0.0
+                )
+
+                _campsites.add(campsite)
             }
         }
+    }
+    /**
+     * stops listening when the repository is no longer needed.
+     */
+    fun close() {
+        listener.remove()
     }
 
 
@@ -530,13 +592,13 @@ class CampsiteRepository(
      * @param rating Optional rating of the campsite.
      */
     fun createAndAddCampsite(
-        ownerId: String,
-        name: String,
-        location: String,
-        capacity: Int,
-        price: Double,
-        date: MutableList<String>,
-        images: MutableList<String> = mutableListOf(),
+        ownerId: String = "",
+        name: String = "",
+        location: String = "",
+        capacity: Int = 0,
+        price: Double = 0.0,
+        date: MutableList<String> = mutableListOf(),
+        images: MutableList<String>? = null,
         description: String = "",
         rating: Double = 0.0
     ) {
@@ -578,6 +640,220 @@ class CampsiteRepository(
             "Campsite with ID ${campsite.id} does not exist"
         }
         campsitesRef?.document(campsite.id)?.delete()
+    }
+
+    /**
+     * starts the admin campsite removal process
+     *
+     * loads document ids from lotteries, reservations and images
+     * before preparing the related updates and deletions
+     *
+     * @param campsiteId the id of the campsite to remove
+     * @param onSuccess the action called after the removal is good
+     * @param onError the action that receives an error message
+     */
+    fun removeCampsiteByAdmin(
+        campsiteId: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        if (campsiteId.isBlank()) {
+            onError("Select a campsite first.")
+            return
+        }
+
+        loadDocumentIds("lotteries", onError) { lotteryIds ->
+
+            loadDocumentIds("reservations", onError) { reservationIds ->
+
+                loadDocumentIds("images", onError) { imageIds ->
+
+                    deleteCampsiteRecords(
+                        campsiteId,
+                        lotteryIds,
+                        reservationIds,
+                        imageIds,
+                        onSuccess,
+                        onError
+                    )
+                }
+            }
+        }
+    }
+    /**
+     * loads the document ids from a firestore collection
+     *
+     * reports an error if the read fails or the result comes from cache.
+     *
+     * @param collectionName the name of the collection to read
+     * @param onError the action that receives an error message
+     * @param onLoaded the action that receives the loaded document ids
+     */
+    private fun loadDocumentIds(
+        collectionName: String,
+        onError: (String) -> Unit,
+        onLoaded: (List<String>) -> Unit
+    ) {
+        db.collection(collectionName).get().addOnCompleteListener { task ->
+
+            if (!task.isSuccessful) {
+
+                onError("Could not load $collectionName.")
+
+            } else {
+
+                val ids = mutableListOf<String>()
+
+                for (document in task.result.documents) {
+                    ids.add(document.id)
+                }
+
+                onLoaded(ids)
+            }
+        }
+    }
+
+
+    /**
+     * removes a campsite and updates its related records in one transaction.
+     *
+     * closes matching lotteries and clears their campsite references
+     * cancels matching active reservations and saves the campsite name
+     * deletes matching image records and the campsite document
+     *
+     * @param campsiteId the id of the campsite to remove
+     * @param lotteryIds the lottery document ids to check
+     * @param reservationIds the reservation document ids to check
+     * @param imageIds the image document ids to check
+     * @param onSuccess the action called after the transaction succeeds
+     * @param onError the action that receives an error message
+     */
+    private fun deleteCampsiteRecords(
+        campsiteId: String,
+        lotteryIds: List<String>,
+        reservationIds: List<String>,
+        imageIds: List<String>,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        db.runTransaction { transaction ->
+
+            val campsiteReference = campsitesRef.document(campsiteId)
+            val campsite = transaction.get(campsiteReference)
+
+            if (campsite.exists()) {
+
+                val lotteriesToClose = mutableListOf<String>()
+                val reservationsToCancel = mutableListOf<String>()
+                val imagesToDelete = mutableListOf<String>()
+
+                // finds the lotteries linked to this campsite
+                for (id in lotteryIds) {
+
+                    val reference = db.collection("lotteries").document(id)
+                    val lottery = transaction.get(reference)
+
+                    if (
+                        lottery.exists() &&
+                        lottery.getString("campsiteId") == campsiteId
+                    ) {
+                        lotteriesToClose.add(id)
+                    }
+                }
+
+                // finds the active reservations linked to this campsite
+                for (id in reservationIds) {
+
+                    val reference = db.collection("reservations").document(id)
+                    val reservation = transaction.get(reference)
+
+                    if (
+                        reservation.exists() &&
+                        reservation.getString("campsiteId") == campsiteId &&
+                        reservation.getString("status") == "Active"
+                    ) {
+                        reservationsToCancel.add(id)
+                    }
+                }
+
+                // finds the image records linked to this campsite
+                for (id in imageIds) {
+
+                    val reference = db.collection("images").document(id)
+                    val image = transaction.get(reference)
+
+                    if (
+                        image.exists() &&
+                        image.getString("campsiteId") == campsiteId
+                    ) {
+                        imagesToDelete.add(id)
+                    }
+                }
+
+                // closes the lotteries and removes their campsite references.
+                for (id in lotteriesToClose) {
+
+                    val reference = db.collection("lotteries").document(id)
+
+                    transaction.update(
+                        reference,
+                        "campsiteId",
+                        "",
+                        "status",
+                        "Closed"
+                    )
+                }
+
+                // keeps the reservations for booking history
+                for (id in reservationsToCancel) {
+
+                    val reference = db.collection("reservations").document(id)
+
+                    transaction.update(
+                        reference,
+                        "status",
+                        "Cancelled",
+                        "campsiteName",
+                        campsite.getString("name") ?: ""
+                    )
+                }
+
+                // deletes the campsite's image records
+                for (id in imagesToDelete) {
+
+                    val reference = db.collection("images").document(id)
+
+                    transaction.delete(reference)
+                }
+
+                // deletes the campsite
+                transaction.delete(campsiteReference)
+
+                true
+
+            } else {
+
+                false
+            }
+
+        }.addOnCompleteListener { task ->
+
+            if (task.isSuccessful) {
+
+                if (task.result == true) {
+                    onSuccess()
+                } else {
+                    onError("This campsite no longer exists.")
+                }
+
+            } else {
+
+                onError(
+                    task.exception?.localizedMessage
+                        ?: "Could not delete the campsite."
+                )
+            }
+        }
     }
 
     /**

@@ -104,32 +104,20 @@ class ReservationRepository {
     }
 
     /**
-     * saves a reservation with a new status
+     * updates a reservation's status in firestore without replacing its other fields
      *
-     * does nothing if the reservation is not loaded
+     * the reservation does not need to be loaded in the local list
+     * the update fails if the document does not exist.
      *
-     * @param reservationId the id of the reservation
-     * @param status the new status such as active or canceled
+     * @param reservationId the id of the reservation to update
+     * @param status the new status, such as Active or Canceled
      */
-
-    fun updateReservationStatus(reservationId: String, status: String) {
-        for (reservation in _reservations) {
-            if (reservation.reservationId == reservationId) {
-                val updatedReservation = Reservation(
-                    reservationId = reservation.reservationId,
-                    campsiteId = reservation.campsiteId,
-                    entrantId = reservation.entrantId,
-                    startDate = reservation.startDate,
-                    endDate = reservation.endDate,
-                    status = status
-                )
-
-                reservationsRef.document(reservationId)
-                    .set(updatedReservation)
-
-                return
-            }
-        }
+    fun updateReservationStatus(
+        reservationId: String,
+        status: String
+    ) {
+        reservationsRef.document(reservationId)
+            .update("status", status)
     }
 
     init {

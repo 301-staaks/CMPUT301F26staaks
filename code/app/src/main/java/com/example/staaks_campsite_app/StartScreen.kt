@@ -33,6 +33,7 @@ import kotlinx.coroutines.tasks.await
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import com.example.staaks_campsite_app.NewUserDialog
 import com.example.staaks_campsite_app.data.createUser
 import com.example.staaks_campsite_app.data.getDeviceId
 import com.example.staaks_campsite_app.data.model.Entrant

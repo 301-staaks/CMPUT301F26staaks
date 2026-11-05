@@ -4,24 +4,185 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CheckboxDefaults.colors
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
+import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil3.compose.AsyncImage
+import com.example.staaks_campsite_app.data.CampsiteRepository
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminCampsite(navController: NavController) {
+fun AdminCampsite(navController: NavController, campsiteID: String) {
+
+    val CampRepo = CampsiteRepository()
+    val CampsitesList = CampRepo.campsites
+    val campsite = CampsitesList.find({ it.id == campsiteID })
+    val ImageNum = campsite?.images?.size
+
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.example.staaks_campsite_app.data.CampsiteRepository
+import com.example.staaks_campsite_app.data.model.Campsite
+
+/**
+ * displays the selected campsite and lets the admin confirm its removal
+ *
+ * @param navController controls navigation between screens
+ * @param campsiteId the id of the campsite to display
+ */
+@Composable
+fun AdminCampsite(
+    navController: NavController,
+    campsiteId: String
+) {
+    val campsiteRepository = remember {
+        CampsiteRepository()
+    }
+
+    var showDeleteDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var isDeleting by remember {
+        mutableStateOf(false)
+    }
+
+    var deleteError by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    var screenActive by remember {
+        mutableStateOf(true)
+    }
+
+    DisposableEffect(campsiteRepository) {
+        screenActive = true
+
+        onDispose {
+            screenActive = false
+            campsiteRepository.close()
+        }
+    }
+
+    // finds the campsite with the selected id
+    var campsite: Campsite? = null
+
+    for (savedCampsite in campsiteRepository.campsites) {
+        if (savedCampsite.id == campsiteId) {
+            campsite = savedCampsite
+            break
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!isDeleting) {
+                    showDeleteDialog = false
+                }
+            },
+
+            title = {
+                Text("Delete campsite?")
+            },
+
+            text = {
+                Text(
+                    "This will remove the campsite, close its lotteries " +
+                            "and cancel its active reservations."
+                )
+            },
+
+            dismissButton = {
+                TextButton(
+                    enabled = !isDeleting,
+
+                    onClick = {
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            },
+
+            confirmButton = {
+                TextButton(
+                    enabled = !isDeleting,
+
+                    onClick = {
+                        isDeleting = true
+                        deleteError = null
+
+                        campsiteRepository.removeCampsiteByAdmin(
+                            campsiteId = campsiteId,
+
+                            onSuccess = {
+                                if (screenActive) {
+                                    isDeleting = false
+                                    showDeleteDialog = false
+
+                                    navController.navigate("admin_main") {
+                                        popUpTo("admin_main") {
+                                            inclusive = false
+                                        }
+
+                                        launchSingleTop = true
+                                    }
+                                }
+                            },
+
+                            onError = { message ->
+                                if (screenActive) {
+                                    isDeleting = false
+                                    showDeleteDialog = false
+                                    deleteError = message
+                                }
+                            }
+                        )
+                    }
+                ) {
+                    Text(
+                        if (isDeleting) {
+                            "Deleting..."
+                        } else {
+                            "Delete"
+                        }
+                    )
+                }
+            }
+        )
+    }
     Column(
 
     ) {
@@ -107,9 +268,170 @@ fun AdminCampsite(navController: NavController) {
             Create Main Content of Page Here
             -------------------------------------------------------------------------------------------------------------------------------------
              */
+            Column(modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
+                Row(modifier = Modifier.padding(8.dp)) {
+                    Button(
+                        onClick = { navController.navigate("admin_main") },
+                        modifier = Modifier
+                            .size(
+                                width = 100.dp,
+                                height = 35.dp
+                            ),
+                        shape = RectangleShape
+
+                    ) { Text(text = "Back") }
+                    Spacer(modifier = Modifier
+                        .width(1.dp)
+                        .weight(1f))
+                }
+                Row(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Spacer(modifier = Modifier
+                        .width(1.dp)
+                        .weight(1f))
+                    Text(
+                        text = "${campsite?.name}",
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Text(text = "${campsite?.rating} Stars")
+                }
+
+
+
+
+
+                if (ImageNum != null) {
+                    HorizontalMultiBrowseCarousel(
+                        state = rememberCarouselState { ImageNum },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(top = 16.dp, bottom = 16.dp),
+                        preferredItemWidth = 186.dp,
+                        itemSpacing = 8.dp,
+                        contentPadding = PaddingValues(horizontal = 16.dp)
+                    ) { i ->
+                        val image = campsite.images[i]
+                        AsyncImage(
+                            model = image,
+                            contentDescription = null,
+                        )
+
+
+                    }
+
+                }
+
+                Box(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .background(color = Color.LightGray)
+                        .fillMaxWidth()
+
+                ){Text(text = "Description: ${campsite?.description}")}
+                Box(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .background(color = Color.LightGray)
+                        .fillMaxWidth()
+
+                ){Text(text = "Details\n Location: ${campsite?.location}\nCapacity: ${campsite?.capacity}\nPrice per Night:$ ${campsite?.price}")}
+
+
+                //TODO Implement Campsite deletion
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {Button(
+                    onClick = {/* ### */},
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red,
+                        contentColor = Color.White))
+                    { Text("Delete Campsite") } }
+
+
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
+            ) {
+
+                if (campsiteRepository.isLoading) {
+                    Text("Loading campsite...")
+                }
+
+                campsiteRepository.loadError?.let { message ->
+                    Text(
+                        text = message,
+                        color = Color.Red
+                    )
+                }
+
+                deleteError?.let { message ->
+                    Text(
+                        text = message,
+                        color = Color.Red
+                    )
+                }
+
+                if (campsite != null) {
+
+                    CampsiteImagePreview(
+                        imageUrl = campsite.images?.firstOrNull() ?: ""
+                    )
+
+                    Text(
+                        text = campsite.name,
+                        fontSize = 24.sp
+                    )
+
+                    Text("Location: ${campsite.location}")
+
+                    Text("Capacity: ${campsite.capacity}")
+
+                    Text("Price: CAD ${campsite.price} / night")
+
+                    Text(campsite.description)
+
+                    Button(
+                        enabled = !isDeleting,
+
+                        onClick = {
+                            deleteError = null
+                            showDeleteDialog = true
+                        }
+                    ) {
+                        Text(
+                            if (isDeleting) {
+                                "Deleting..."
+                            } else {
+                                "Delete Campsite"
+                            }
+                        )
+                    }
+
+                } else if (
+                    !campsiteRepository.isLoading &&
+                    campsiteRepository.loadError == null &&
+                    !isDeleting
+                ) {
+                    Text("This campsite is no longer available.")
+                }
+            }
 
         }
+
 
 
 

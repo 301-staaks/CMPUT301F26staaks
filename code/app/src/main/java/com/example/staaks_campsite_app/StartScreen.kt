@@ -39,6 +39,7 @@ import com.example.staaks_campsite_app.data.getDeviceId
 import com.example.staaks_campsite_app.data.model.Entrant
 import com.example.staaks_campsite_app.data.model.UserType
 import com.example.staaks_campsite_app.data.model.toUser
+import com.example.staaks_campsite_app.session.SessionManager
 
 
 /**
@@ -66,6 +67,7 @@ fun StartScreen(navController: NavController) {
                         UserType.OWNER -> "owner_main"
                         UserType.ADMIN -> "admin_main"
                     }
+                    SessionManager.onLogin(getDeviceId(context), user.type)
                     navController.navigate(route) {
                         popUpTo("start") { inclusive = true }
                     }
@@ -82,6 +84,8 @@ fun StartScreen(navController: NavController) {
         }
         return
     }
+
+
 
 
 
@@ -202,4 +206,8 @@ fun NewUserDialog(
             ) { Text("Cancel") }
         }
     )
+}
+
+object UserSessionManager {
+
 }

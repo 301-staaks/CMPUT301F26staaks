@@ -2,6 +2,7 @@ package com.example.staaks_campsite_app
 
 import androidx.navigation.compose.NavHost
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
@@ -13,12 +14,14 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.example.staaks_campsite_app.data.getDeviceId
+import com.example.staaks_campsite_app.session.SessionManager
 
 @Composable
 fun CampsiteApp() {
     /*
     This is where we should initialize variables to be passed to screens in the app
      */
+
     val navController = rememberNavController()
     val campsiteRepository = remember {
         CampsiteRepository()
@@ -52,10 +55,10 @@ fun CampsiteApp() {
         composable("entree_inbox_screen") { EntreeInboxScreen(navController) }
         composable("messages_screen") { MessagesScreen(navController) }
         composable("qr_scanner_screen") { QRScannerScreen(navController) }
-        composable<entree_campsite> { backStackEntry ->
-            val campsite = backStackEntry.toRoute<entree_campsite>()
-            EntreeCampsite(navController, campsiteID = campsite.campsiteID)
-        }
+//        composable<entree_campsite> { backStackEntry ->
+//            val campsite = backStackEntry.toRoute<entree_campsite>()
+//            EntreeCampsite(navController, campsiteID = campsite.campsiteID)
+//        }
 
         //composable("sample_res_page") { SampleResPage(navController) }
         composable("admin_users") { AdminUsersScreen(navController) }

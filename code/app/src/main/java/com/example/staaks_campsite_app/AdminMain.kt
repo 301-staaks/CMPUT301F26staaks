@@ -57,11 +57,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import com.example.staaks_campsite_app.data.model.Campsite
 
 // light green 0xFF63B267
 // dark green 0xFF1B5E20
 // shamrock 0xFF009E60
+
 private data class AdminTab(val route: String, val label: String, val icon: ImageVector)
 
 private val adminTabs = listOf(
@@ -221,7 +223,7 @@ fun AdminViewChanger(navController: NavController) {
             color = Color.White
         )
         AdminChangeViewButton(text = "Admin", onClick = { navController.navigate("admin_main") }, selected = true)
-        AdminChangeViewButton(text = "Owner", onClick = { /* ... */ })
+        AdminChangeViewButton(text = "Owner", onClick = { navController.navigate("owner_main") })
         AdminChangeViewButton(text = "Entree", onClick = { /* ... */ })
     }
 }

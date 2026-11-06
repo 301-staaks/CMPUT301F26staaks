@@ -7,9 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,20 +31,30 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.NavController
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.ImageNotSupported
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Textsms
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.staaks_campsite_app.Entree.EntreeCampsite
 import com.example.staaks_campsite_app.data.model.Campsite
 
 /**
@@ -63,59 +77,63 @@ fun EntreeMain(
 
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                navigationIcon = {
-                    IconButton(onClick = {
-                        selectedTab = "Home"
-                    }) {
-                        Icon(Icons.Default.Home, contentDescription = "Home")
-                    }},
-                title = {
-                    Text(
-                        text = selectedTab,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    )
-                },
-                actions = {
-                    IconButton(onClick = {
-                        selectedTab = "Profile"
-                    }) {
-                        Icon(Icons.Default.Person, contentDescription = "Profile")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
+        topBar = { UiTopRow(navController, selectedTab, "entree_main")
         },
 
         bottomBar = {
-            NavigationBar {
+            NavigationBar(containerColor = Color(0xFF1B5E20)) {
                 NavigationBarItem(
                     selected = selectedTab == "Reservations",
                     onClick = { selectedTab = "Reservations" },
                     icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Reservations") },
-                    label = { Text("Reservations") }
+                    label = { Text("Reservations")},
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = Color(0xFF63B267),
+                        selectedIconColor = Color.White,
+                        selectedTextColor = Color.White,
+                        unselectedIconColor = Color.White.copy(alpha = 0.8f),
+                        unselectedTextColor = Color.White.copy(alpha = 0.8f),
+                    )
                 )
                 NavigationBarItem(
                     selected = selectedTab == "Inbox",
                     onClick = { selectedTab = "Inbox" },
                     icon = { Icon(Icons.Default.Search, contentDescription = "Inbox") },
-                    label = { Text("Inbox") }
+                    label = { Text("Inbox") },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = Color(0xFF63B267),
+                        selectedIconColor = Color.White,
+                        selectedTextColor = Color.White,
+                        unselectedIconColor = Color.White.copy(alpha = 0.8f),
+                        unselectedTextColor = Color.White.copy(alpha = 0.8f),
+                    )
+
                 )
                 NavigationBarItem(
                     selected = selectedTab == "Messages",
                     onClick = { selectedTab = "Messages" },
                     icon = { Icon(Icons.Default.Textsms, contentDescription = "Message") },
-                    label = { Text("Message") }
+                    label = { Text("Message") },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = Color(0xFF63B267),
+                        selectedIconColor = Color.White,
+                        selectedTextColor = Color.White,
+                        unselectedIconColor = Color.White.copy(alpha = 0.8f),
+                        unselectedTextColor = Color.White.copy(alpha = 0.8f),
+                    )
                 )
                 NavigationBarItem(
                     selected = selectedTab == "Scan",
                     onClick = { selectedTab = "Scan" },
                     icon = { Icon(Icons.Default.QrCode, contentDescription = "Scan") },
-                    label = { Text("Scan") }
+                    label = { Text("Scan") },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = Color(0xFF63B267),
+                        selectedIconColor = Color.White,
+                        selectedTextColor = Color.White,
+                        unselectedIconColor = Color.White.copy(alpha = 0.8f),
+                        unselectedTextColor = Color.White.copy(alpha = 0.8f),
+                    )
                 )
             }
         }
@@ -139,7 +157,7 @@ fun EntreeMain(
                 "Campsite Details" -> {
                     val currentCampsite = selectedCampsite
                     if (currentCampsite != null) {
-                        CampsiteDetailsScreenContent(currentCampsite.id, onSelectedTabChange = { selectedTab = it})
+                        CampsiteDetailsScreenContent(navController, campsiteId = currentCampsite.id, onSelectedTabChange = { selectedTab = it})
                     } else {
                         LaunchedEffect(Unit) {
                             selectedTab = "Home"
@@ -163,7 +181,6 @@ fun EntreeMain(
  * @param onSelectedTabChange called when the selected tab is changed
  */
 @Composable
-
 fun Home(
     campsites: CampsiteRepository,
     onCampsiteChange: (Campsite) -> Unit = {},
@@ -174,7 +191,7 @@ fun Home(
     Column(modifier = Modifier.fillMaxSize()) {
         CampsiteSearchBar(
             campsites = campsites,
-            onChangeCampsites = {filteredCampsites = it}
+            onChangeCampsites = { filteredCampsites = it }
         )
         if (displayCampsites.isEmpty()) {
             Box(
@@ -194,26 +211,25 @@ fun Home(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 itemsIndexed(displayCampsites) { index, campsite: Campsite ->
-                    CampsiteCard(
-                        campsite = campsite,
+                    Row (
                         modifier = Modifier
                             .fillMaxWidth()
-                    )
+                            .clickable{
+                                onCampsiteChange(campsite)
+                                onSelectedTabChange("Campsite Details")
+                            }) {
+                        CampsiteCard(
+                            campsite = campsite,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-/**
- * summary card for a campsite in the home screen
- *
- * The left side of the card is for images which isnt implemented yet. The right side of the card
- * contains the name, location, capacity, and rating of the campsite.
- * 
- * @param campsite the campsite to display
- * @param modifier the modifier to apply to the card
- */
 @Composable
 fun CampsiteCard(
     campsite: Campsite,
@@ -225,28 +241,100 @@ fun CampsiteCard(
                 .weight(0.4f)
         ) {
             /* TODO: Image*/
+            Icon(
+                imageVector = Icons.Default.ImageNotSupported,
+                contentDescription = "Image not supported",
+                modifier = Modifier.fillMaxSize()
+            )
         }
         Column(
             modifier = Modifier
                 .padding(8.dp)
                 .weight(0.6f)
-
         ) {
-            Text(text = campsite.name)
+            // Title Header
+            Text(
+                text = campsite.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
 
-            Row() {
-                Column(modifier = Modifier.weight(0.9f)) {
-                    // TODO: format the card
-                    Text(text = campsite.location)
-                    Text(text = campsite.capacity.toString())
-                    Text(text = campsite.rating.toString())
-                }
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Details Column
                 Column(
-                    modifier = Modifier
-                        .weight(0.1f)
+                    modifier = Modifier.weight(0.9f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text(text = ">", textAlign = TextAlign.Center)
+                    // Location with pin icon
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = campsite.location,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    // Stats row (Capacity + Rating side-by-side)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Capacity
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Capacity",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Text(
+                                text = "${campsite.capacity} guests",
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+
+                        // Rating
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Rating",
+                                tint = Color(0xFFFFB800),
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Text(
+                                text = campsite.rating.toString(),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
+
+                // Chevron icon replacing standard text ">"
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = "View Details",
+                    tint = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.weight(0.1f)
+                )
             }
         }
     }
@@ -254,17 +342,63 @@ fun CampsiteCard(
 
 
 
+@Composable
 fun Profile(navController: NavController) {
     // TODO:    navController.navigate("profile")
+    NotFoundScreen()
 }
-fun ReservationScreenContent() {}
-fun InboxContent() {}
-fun MessageScreenContent() {}
-fun QRCodeScreenContent() {}
 @Composable
-fun CampsiteDetailsScreenContent(campsiteId: String, onSelectedTabChange: (String) -> Unit = {}){
+fun ReservationScreenContent() {
+    NotFoundScreen()
+}
+@Composable
+fun InboxContent() {
+    NotFoundScreen()
+}
+@Composable
+fun MessageScreenContent() {
+    NotFoundScreen()
+}
+@Composable
+fun QRCodeScreenContent() {
+    NotFoundScreen()
+}
+@Composable
+fun CampsiteDetailsScreenContent(navController: NavController, campsiteId: String, onSelectedTabChange: (String) -> Unit = {}){
     BackHandler(enabled = true) {
         onSelectedTabChange("Home")
     }
-    // TODO: pass campsiteId to the CampsiteDetailsScreen
+    EntreeCampsite(navController, campsiteId)
+}
+
+@Composable
+fun NotFoundScreen() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = "404 Error",
+                modifier = Modifier.size(96.dp),
+                tint = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "404",
+                style = MaterialTheme.typography.displayLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Page Not Found",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
 }

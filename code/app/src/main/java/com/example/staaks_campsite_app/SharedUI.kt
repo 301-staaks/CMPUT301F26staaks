@@ -30,8 +30,11 @@ data class Tab(val route: String, val label: String, val icon: ImageVector)
 fun UiTopRow(
     navController: NavController,
     title: String = "Title",
-    homeRoute: String = ""
+    homeRoute: String = "",
+    isAdmin: Boolean = false
 ) {
+    var changeViewVisible by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -58,8 +61,13 @@ fun UiTopRow(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.CenterEnd
             ) {
-
+                if (isAdmin) {
+                    AdminTopRowToggleChangeView { changeViewVisible = !changeViewVisible }
+                }
             }
+        }
+        if (changeViewVisible) {
+            AdminViewChanger(navController = navController)
         }
     }
 }

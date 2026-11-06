@@ -2,7 +2,6 @@ package com.example.staaks_campsite_app
 
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.Campsite
-import com.example.staaks_campsite_app.data.model.User
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
@@ -26,10 +25,10 @@ class CampsiteRepositoryTest {
     private val inMemoryCampsites = mutableListOf<Campsite>()
     private lateinit var campsiteRepository: CampsiteRepository
 
-    private val owner = User("123")
+    private val ownerId = "123"
     private val campsite1 = Campsite(
         id = "123",
-        owner = owner,
+        ownerId = ownerId,
         name = "Test Campsite",
         location = "Test Location",
         capacity = 10,
@@ -38,7 +37,7 @@ class CampsiteRepositoryTest {
     )
     private val campsite2 = Campsite(
         id = "456",
-        owner = owner,
+        ownerId = ownerId,
         name = "Test Campsite 2",
         location = "Test Location 2",
         capacity = 20,
@@ -99,8 +98,17 @@ class CampsiteRepositoryTest {
     private fun notifySnapshotListener() {
         val querySnapshot = mockk<QuerySnapshot>()
         val docSnapshots = inMemoryCampsites.map { campsite ->
-            val docSnap = mockk<DocumentSnapshot>()
-            every { docSnap.toObject(Campsite::class.java) } returns campsite
+            val docSnap = mockk<DocumentSnapshot>(relaxed = true)
+            every { docSnap.id } returns campsite.id
+            every { docSnap.getString("name") } returns campsite.name
+            every { docSnap.getString("location") } returns campsite.location
+            every { docSnap.getLong("capacity") } returns campsite.capacity.toLong()
+            every { docSnap.getDouble("price") } returns campsite.price
+            every { docSnap.get("date") } returns campsite.date
+            every { docSnap.get("images") } returns campsite.images
+            every { docSnap.getString("description") } returns campsite.description
+            every { docSnap.getDouble("rating") } returns campsite.rating
+            every { docSnap.getString("ownerId") } returns campsite.ownerId
             docSnap
         }
         every { querySnapshot.documents } returns docSnapshots
@@ -114,7 +122,7 @@ class CampsiteRepositoryTest {
     @Test
     fun testCreateAndAddCampsite() {
         campsiteRepository.createAndAddCampsite(
-            owner = owner,
+            ownerId = ownerId,
             name = "Test Campsite",
             location = "Test Location",
             capacity = 2,
@@ -137,17 +145,20 @@ class CampsiteRepositoryTest {
 
     @Test
     fun testAddOrUpdateCampsite() {
+        // testing add
         campsiteRepository.addOrUpdateCampsite(campsite1)
         assertEquals(1, campsiteRepository.count())
         assertEquals("Test Campsite", campsiteRepository.campsites[0].name)
-
+        assertEquals(ownerId, campsiteRepository.campsites[0].ownerId)
 
         campsiteRepository.addOrUpdateCampsite(campsite2)
         assertEquals(2, campsiteRepository.count())
         assertEquals("Test Campsite 2", campsiteRepository.campsites[1].name)
+        assertEquals(ownerId, campsiteRepository.campsites[1].ownerId)
 
 
-        val updated = Campsite(campsite1.id, owner, "Updated Campsite", campsite1.location, campsite1.capacity, price = campsite1.price, date =campsite1.date)
+        // testing update
+        val updated = Campsite(campsite1.id, ownerId, "Updated Campsite", campsite1.location, campsite1.capacity, price = campsite1.price, date = campsite1.date)
         campsiteRepository.addOrUpdateCampsite(updated)
         assertEquals(2, campsiteRepository.count())
         assertEquals("Updated Campsite", campsiteRepository.campsites.find { it.id == "123" }?.name)
@@ -158,7 +169,7 @@ class CampsiteRepositoryTest {
         campsiteRepository.addOrUpdateCampsite(campsite1)
         campsiteRepository.addOrUpdateCampsite(campsite2)
 
-        val ownerCampsites = campsiteRepository.getCampsitesByOwner(owner)
+        val ownerCampsites = campsiteRepository.getCampsitesByOwner(ownerId)
         assertEquals(2, ownerCampsites.size)
         assertTrue(ownerCampsites.contains(campsite1))
         assertTrue(ownerCampsites.contains(campsite2))

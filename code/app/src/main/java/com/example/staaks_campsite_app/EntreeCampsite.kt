@@ -33,6 +33,16 @@ import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.Campsite
 
 
+/**
+ * Looks up the campsite matching [campsiteID] in the [CampsiteRepository] and displays its name,
+ * rating, image carousel, description and details (location, capacity, price per night). If no
+ * campsite matches, an empty placeholder campsite is shown instead.
+ *
+ * The "View Lotteries" button is not implemented yet.
+ *
+ * @param navController controls navigation to other screens
+ * @param campsiteID the id of the campsite to display.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EntreeCampsite(navController: NavController, campsiteID: String) {

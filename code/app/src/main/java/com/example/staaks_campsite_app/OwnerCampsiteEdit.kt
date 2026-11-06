@@ -29,7 +29,15 @@ import androidx.navigation.NavController
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.Campsite
 
-// OWNER VIEW (preview only) - all data on this screen is placeholder
+/**
+ * The owner's screen for creating a new campsite or editing an existing one
+ *
+ * @param navController controls navigation to other screens.
+ * @param isNew true when creating a new campsite, which changes the title and button text.
+ * @param ownerId the id of the owner who will own a newly created campsite.
+ * @param existing the campsite being edited, or null when creating a new one.
+ * @param onSave called with the campsite to store when the user saves.
+ */
 @Composable
 fun OwnerCampsiteEdit(
     navController: NavController,

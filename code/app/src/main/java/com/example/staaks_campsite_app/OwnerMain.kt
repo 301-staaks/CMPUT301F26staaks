@@ -31,7 +31,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.staaks_campsite_app.data.model.Campsite
 
-// OWNER VIEW (preview only) - all data on this screen is placeholder
+
+/**
+ * The owner's main screen, which lists the owner's campsites.
+ *
+ * The "Upcoming reservations" line on each card is a placeholder and is not
+ * loaded from the database yet.
+ *
+ * @param navController controls navigation to other screens.
+ * @param campsites the campsites to list, normally those owned by the current owner.
+ * @param onEditCampsite called with the campsite whose "Edit" button was pressed.
+ */
 @Composable
 fun OwnerMain(
     navController: NavController,

@@ -23,7 +23,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
-// OWNER VIEW (preview only) - all data on this screen is placeholder
+
+/**
+ * The owner's notifications screen.
+ *
+ * The notifications shown are placeholder data, and the campsite and time on
+ * each card are not filled in. Nothing is loaded from the database yet.
+ *
+ * @param navController controls navigation to other screens.
+ */
 @Composable
 fun OwnerNotifications(navController: NavController) {
     Column {

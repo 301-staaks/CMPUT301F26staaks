@@ -28,10 +28,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
+
+/**
+ * Displays: a pinned top bar with a back button (to the entree main screen) and a profile button.
+ * A "Clear All" button, and a pinned bottom row of navigation buttons to the reservations, messages
+ * and QR scanner screens.
+ *
+ * The notification list and the "Clear All" action are not implemented yet.
+ *
+ * @param navController controls navigation to other screens.
+ */
 @Composable
 fun EntreeInboxScreen(navController: NavController) {
-    var name by remember { mutableStateOf("John Doe") }
-
     Column(
 
     ) {
@@ -52,7 +60,7 @@ fun EntreeInboxScreen(navController: NavController) {
             ) {
                 Button(
                     onClick = {
-                        navController.navigate("entree_home_screen")
+                        navController.navigate("entree_main")
 
                     },
 

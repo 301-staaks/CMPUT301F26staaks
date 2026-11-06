@@ -32,6 +32,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
+
+/**
+ * Profile screens should be generalizable to all the types of users.
+ *
+ * Delete profile button is yet to be implemented
+ *
+ * @param navController controls navigation to other screens.
+ */
 @Composable
 fun ProfileScreen(navController: NavController) {
     var username by remember { mutableStateOf("johndoe999") }

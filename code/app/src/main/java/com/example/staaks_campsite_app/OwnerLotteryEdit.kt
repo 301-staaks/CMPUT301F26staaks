@@ -27,7 +27,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
-// OWNER VIEW (preview only) - all data on this screen is placeholder
+
+/**
+ * The owner's screen for creating a new lottery or editing an existing one.
+ *
+ * Lottery data is placeholder only. Saving does not store anything yet, and an existing lottery is
+ * not loaded from the database.
+ *
+ * @param navController controls navigation to other screens.
+ * @param isNew true when creating a new lottery, which changes the title,
+ * button text and starting field values.
+ */
 @Composable
 fun OwnerLotteryEdit(navController: NavController, isNew: Boolean) {
     Column {

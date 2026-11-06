@@ -1,15 +1,14 @@
 package com.example.staaks_campsite_app
 
 import com.example.staaks_campsite_app.data.model.Campsite
-import com.example.staaks_campsite_app.data.model.User
 import org.junit.Before
 import org.junit.Test
 
 class CampsiteTest {
-    private val owner = User("123")
+    private val ownerId = "123"
     var campsite = Campsite(
         id = "123",
-        owner = owner,
+        ownerId = ownerId,
         name = "Test Campsite",
         location = "Test Location",
         capacity = 10,
@@ -20,7 +19,7 @@ class CampsiteTest {
     fun setUp(){
         campsite = Campsite(
             id = "123",
-            owner = owner,
+            ownerId = ownerId,
             name = "Test Campsite",
             location = "Test Location",
             capacity = 10,

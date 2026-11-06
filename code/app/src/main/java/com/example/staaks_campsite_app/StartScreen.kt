@@ -40,6 +40,12 @@ import com.example.staaks_campsite_app.data.model.Entrant
 import com.example.staaks_campsite_app.data.model.UserType
 import com.example.staaks_campsite_app.data.model.toUser
 
+
+/**
+ * The start screen, where a user picks a role or is signed in automatically.
+ *
+ * @param navController controls navigation to the main screens.
+ */
 @Composable
 fun StartScreen(navController: NavController) {
     var showNewUserDialog by remember {mutableStateOf(false)}

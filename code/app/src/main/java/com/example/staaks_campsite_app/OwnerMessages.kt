@@ -24,7 +24,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
-// OWNER VIEW (preview only) - all data on this screen is placeholder
+
+/**
+ * The owner's messages screen, it lists conversations with guests.
+ *
+ * The conversations shown are placeholder data and are not loaded from the
+ * database yet.
+ *
+ * @param navController controls navigation to other screens.
+ */
 @Composable
 fun OwnerMessages(navController: NavController) {
     Column {

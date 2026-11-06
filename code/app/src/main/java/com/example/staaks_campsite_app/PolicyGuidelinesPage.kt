@@ -23,6 +23,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
+
+/**
+ * Policy guidelines page.
+ *
+ * Need to flesh out the actuale policy and guidlines.
+ *
+ * @param navController controls navigation to other screens.
+ */
 @Composable
 fun PolicyGuidelinesPage(navController: NavController) {
     var username by remember { mutableStateOf("johndoe999") }

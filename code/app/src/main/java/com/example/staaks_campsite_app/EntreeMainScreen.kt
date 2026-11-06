@@ -28,8 +28,20 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.material3.OutlinedTextField
 
+
+/**
+ * NOTE: THIS IS OUTDATED, SEE [EntrantMain.kt]
+ * Displays: a pinned top bar with a back button (to the start screen) and a profile button, a
+ * search field, and a "Filters" button that toggles a panel with location, date and guest-count fields.
+ * A pinned bottom row that navigates to the reservations, inbox, messages and QR scanner screens.
+ *
+ * The search text and filter values are kept in local state. Searching, "Apply" and "Clear" are not
+ * implemented yet, and no campsite list is shown on this screen.
+ *
+ * @param navController controls navigation to other screens.
+ */
 @Composable
-fun EntreeMain(navController: NavController) {
+fun EntrantMain(navController: NavController) {
     var campsiteSearchInput by remember { mutableStateOf("") }
     var showFilterOptions by remember { mutableStateOf(false) }
     var locationFilter by remember { mutableStateOf("") }

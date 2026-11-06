@@ -1,14 +1,10 @@
 package com.example.staaks_campsite_app.data
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import com.example.staaks_campsite_app.data.model.Campsite
 import com.example.staaks_campsite_app.data.model.Owner
-import com.example.staaks_campsite_app.data.model.User
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.collections.filter
-import kotlin.jvm.java
-import com.example.staaks_campsite_app.data.model.Owner
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -38,7 +34,7 @@ class CampsiteRepository(
 
     var loadError by mutableStateOf<String?>(null)
 
-    private val listener = campsitesRef.addSnapshotListener { snapshot, error ->
+    private val listener = campsitesRef?.addSnapshotListener { snapshot, error ->
 
         isLoading = false
 
@@ -59,10 +55,11 @@ class CampsiteRepository(
 
                 val owner = Owner()
 
-                owner.id = document.getString("owner.id") ?: ""
                 owner.name = document.getString("owner.name") ?: ""
                 owner.email = document.getString("owner.email") ?: ""
                 owner.phone = document.getString("owner.phone") ?: ""
+
+                val ownerId = document.getString("ownerId") ?: document.getString("owner.id") ?: ""
 
                 val dates = mutableListOf<String>()
                 val savedDates = document.get("date")
@@ -88,7 +85,7 @@ class CampsiteRepository(
 
                 val campsite = Campsite(
                     id = document.id,
-                    owner = owner,
+                    ownerId = ownerId,
                     name = document.getString("name") ?: "",
                     location = document.getString("location") ?: "",
                     capacity = document.getLong("capacity")?.toInt() ?: 0,
@@ -107,7 +104,7 @@ class CampsiteRepository(
      * stops listening when the repository is no longer needed.
      */
     fun close() {
-        listener.remove()
+        listener?.remove()
     }
 
 
@@ -169,7 +166,7 @@ class CampsiteRepository(
             capacity = capacity,
             price = price,
             date = date,
-            images = images,
+            images = images ?: mutableListOf(),
             description = description,
             rating = rating
         )
@@ -193,10 +190,9 @@ class CampsiteRepository(
      * @throws IllegalArgumentException if the campsite with the specified ID does not exist.
      */
     fun deleteCampsite(campsite: Campsite) {
-        require(campsites.any { it.id == campsite.id }) {
-            "Campsite with ID ${campsite.id} does not exist"
+        if (campsite.id.isNotBlank()) {
+            campsitesRef?.document(campsite.id)?.delete()
         }
-        campsitesRef?.document(campsite.id)?.delete()
     }
 
     /**
@@ -251,7 +247,7 @@ class CampsiteRepository(
         onError: (String) -> Unit,
         onLoaded: (List<String>) -> Unit
     ) {
-        db.collection(collectionName).get().addOnCompleteListener { task ->
+        db?.collection(collectionName)?.get()?.addOnCompleteListener { task ->
 
             if (!task.isSuccessful) {
 
@@ -293,107 +289,109 @@ class CampsiteRepository(
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
-        db.runTransaction { transaction ->
+        db?.runTransaction { transaction ->
 
-            val campsiteReference = campsitesRef.document(campsiteId)
-            val campsite = transaction.get(campsiteReference)
+            val campsiteReference = campsitesRef?.document(campsiteId)
+            val campsite = campsiteReference?.let { transaction.get(it) }
 
-            if (campsite.exists()) {
+            campsite?.let {
+                if (it.exists()) {
 
-                val lotteriesToClose = mutableListOf<String>()
-                val reservationsToCancel = mutableListOf<String>()
-                val imagesToDelete = mutableListOf<String>()
+                    val lotteriesToClose = mutableListOf<String>()
+                    val reservationsToCancel = mutableListOf<String>()
+                    val imagesToDelete = mutableListOf<String>()
 
-                // finds the lotteries linked to this campsite
-                for (id in lotteryIds) {
+                    // finds the lotteries linked to this campsite
+                    for (id in lotteryIds) {
 
-                    val reference = db.collection("lotteries").document(id)
-                    val lottery = transaction.get(reference)
+                        val reference = db.collection("lotteries").document(id)
+                        val lottery = transaction.get(reference)
 
-                    if (
-                        lottery.exists() &&
-                        lottery.getString("campsiteId") == campsiteId
-                    ) {
-                        lotteriesToClose.add(id)
+                        if (
+                            lottery.exists() &&
+                            lottery.getString("campsiteId") == campsiteId
+                        ) {
+                            lotteriesToClose.add(id)
+                        }
                     }
-                }
 
-                // finds the active reservations linked to this campsite
-                for (id in reservationIds) {
+                    // finds the active reservations linked to this campsite
+                    for (id in reservationIds) {
 
-                    val reference = db.collection("reservations").document(id)
-                    val reservation = transaction.get(reference)
+                        val reference = db.collection("reservations").document(id)
+                        val reservation = transaction.get(reference)
 
-                    if (
-                        reservation.exists() &&
-                        reservation.getString("campsiteId") == campsiteId &&
-                        reservation.getString("status") == "Active"
-                    ) {
-                        reservationsToCancel.add(id)
+                        if (
+                            reservation.exists() &&
+                            reservation.getString("campsiteId") == campsiteId &&
+                            reservation.getString("status") == "Active"
+                        ) {
+                            reservationsToCancel.add(id)
+                        }
                     }
-                }
 
-                // finds the image records linked to this campsite
-                for (id in imageIds) {
+                    // finds the image records linked to this campsite
+                    for (id in imageIds) {
 
-                    val reference = db.collection("images").document(id)
-                    val image = transaction.get(reference)
+                        val reference = db.collection("images").document(id)
+                        val image = transaction.get(reference)
 
-                    if (
-                        image.exists() &&
-                        image.getString("campsiteId") == campsiteId
-                    ) {
-                        imagesToDelete.add(id)
+                        if (
+                            image.exists() &&
+                            image.getString("campsiteId") == campsiteId
+                        ) {
+                            imagesToDelete.add(id)
+                        }
                     }
+
+                    // closes the lotteries and removes their campsite references.
+                    for (id in lotteriesToClose) {
+
+                        val reference = db.collection("lotteries").document(id)
+
+                        transaction.update(
+                            reference,
+                            "campsiteId",
+                            "",
+                            "status",
+                            "Closed"
+                        )
+                    }
+
+                    // keeps the reservations for booking history
+                    for (id in reservationsToCancel) {
+
+                        val reference = db.collection("reservations").document(id)
+
+                        transaction.update(
+                            reference,
+                            "status",
+                            "Cancelled",
+                            "campsiteName",
+                            campsite.getString("name") ?: ""
+                        )
+                    }
+
+                    // deletes the campsite's image records
+                    for (id in imagesToDelete) {
+
+                        val reference = db.collection("images").document(id)
+
+                        transaction.delete(reference)
+                    }
+
+                    // deletes the campsite
+                    transaction.delete(campsiteReference)
+
+                    true
+
+                } else {
+
+                    false
                 }
-
-                // closes the lotteries and removes their campsite references.
-                for (id in lotteriesToClose) {
-
-                    val reference = db.collection("lotteries").document(id)
-
-                    transaction.update(
-                        reference,
-                        "campsiteId",
-                        "",
-                        "status",
-                        "Closed"
-                    )
-                }
-
-                // keeps the reservations for booking history
-                for (id in reservationsToCancel) {
-
-                    val reference = db.collection("reservations").document(id)
-
-                    transaction.update(
-                        reference,
-                        "status",
-                        "Cancelled",
-                        "campsiteName",
-                        campsite.getString("name") ?: ""
-                    )
-                }
-
-                // deletes the campsite's image records
-                for (id in imagesToDelete) {
-
-                    val reference = db.collection("images").document(id)
-
-                    transaction.delete(reference)
-                }
-
-                // deletes the campsite
-                transaction.delete(campsiteReference)
-
-                true
-
-            } else {
-
-                false
             }
 
-        }.addOnCompleteListener { task ->
+        }?.addOnCompleteListener { task ->
 
             if (task.isSuccessful) {
 
@@ -443,3 +441,5 @@ class CampsiteRepository(
         }
     }
 }
+
+

@@ -1,5 +1,7 @@
 package com.example.staaks_campsite_app.data.model
 
+import com.google.firebase.firestore.IgnoreExtraProperties
+
 /**
  * Represents an individual campsite listing available in the system.
  * @property id Unique identifier assigned to the campsite listing.
@@ -12,8 +14,10 @@ package com.example.staaks_campsite_app.data.model
  * @property description Detailed description including amenities and site facilities.
  * @property rating Average user rating score.
  * @property images Optional promotional images associated with the campsite.
+ * @property ratingCount Total number of ratings received.
  */
-class Campsite(
+@IgnoreExtraProperties
+data class Campsite(
     var id: String = "",
     var ownerId: String = "",
     var name: String = "",
@@ -24,6 +28,7 @@ class Campsite(
     var images: MutableList<String> = mutableListOf(),
     var description: String = "",
     var rating: Double = 0.0,
+    var ratingCount: Int = 0
 ) {
     fun addImage(image: String) {
         this.images.plusAssign(image)

@@ -24,6 +24,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
+
+/**
+ * The QR scanner screen for entree users.
+
+ * The scanner itself is not implemented yet, and the fourth bottom button
+ * (this screen) does nothing.
+ *
+ * @param navController controls navigation to other screens.
+ */
 @Composable
 fun QRScannerScreen(navController: NavController) {
     Column(

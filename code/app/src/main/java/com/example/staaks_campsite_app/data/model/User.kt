@@ -13,12 +13,14 @@ sealed class User {
     var name: String = ""
     var email: String = ""
     var phone: String = ""
+    var profileImageId: String = ""
+    var profileImageUrl: String = ""
     @ServerTimestamp var createdAt: Timestamp? = null
     abstract val type: UserType
 }
 
 @IgnoreExtraProperties
-class Entrant: User () {
+class Entrant : User() {
     override val type get() = UserType.ENTRANT
 }
 

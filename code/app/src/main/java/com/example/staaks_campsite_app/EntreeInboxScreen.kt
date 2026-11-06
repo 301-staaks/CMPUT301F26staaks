@@ -52,7 +52,7 @@ fun EntreeInboxScreen(navController: NavController) {
             ) {
                 Button(
                     onClick = {
-                        navController.navigate("entree_home_screen")
+                        navController.navigate("entree_main")
 
                     },
 

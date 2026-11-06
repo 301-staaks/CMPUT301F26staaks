@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,11 +24,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.staaks_campsite_app.data.model.admin_campsite
 
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import com.example.staaks_campsite_app.data.model.Campsite
+
+/**
+ * displays the admin home screen and the campsite list
+ *
+ * lets the admin open a campsite to view its details and deletion option
+ *
+ * @param navController controls navigation between screens
+ * @param campsites the campsite list provided by CampsiteApp
+ * @param isLoading whether campsite data is still loading
+ * @param loadError the loading error message or null when there is no error
+ */
 @Composable
-fun AdminMain(navController: NavController) {
+fun AdminMain(
+    navController: NavController,
+    campsites: List<Campsite>,
+    isLoading: Boolean,
+    loadError: String?
+) {
     Column(
-
+        modifier = Modifier.fillMaxSize()
     ) {
 
         //Pinned Top Row
@@ -39,7 +60,7 @@ fun AdminMain(navController: NavController) {
                 .background(color = Color(0xFF1B5E20))
                 .padding(16.dp)
 
-        ){
+        ) {
             Box(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.CenterStart
@@ -71,7 +92,7 @@ fun AdminMain(navController: NavController) {
         }
 
 
-        if (true){
+        if (true) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -87,7 +108,7 @@ fun AdminMain(navController: NavController) {
                     fontSize = 15.sp,
                     color = Color.White
                 )
-                Button(onClick = {navController.navigate("admin_main")}) { Text("Admin") }
+                Button(onClick = { navController.navigate("admin_main") }) { Text("Admin") }
                 Button(onClick = { /* ... */ }) { Text("Owner") }
                 Button(onClick = { /* ... */ }) { Text("Entree") }
 
@@ -111,18 +132,80 @@ fun AdminMain(navController: NavController) {
             Create Main Content of Page Here
             -------------------------------------------------------------------------------------------------------------------------------------
              */
-            Column() {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item{
+                    Button(onClick = {navController.navigate(admin_campsite(campsiteID = "8zYJaC9j2aJt74e0HIb0"))}) {Text("Temp Campsite Screen") }
+                }
 
-                Button(onClick = {navController.navigate("admin_campsite")}) {Text("Temp Campsite Screen") }
+                item {
 
+                    if (isLoading) {
+                        Text("Loading campsites...")
+                    }
+
+                    loadError?.let { message ->
+
+                        Text(
+                            text = message,
+                            color = Color.Red
+                        )
+                    }
+
+                    if (
+                        !isLoading &&
+                        loadError == null &&
+                        campsites.isEmpty()
+                    ) {
+                        Text("No campsites found.")
+                    }
+                }
+
+                items(
+                    items = campsites,
+                    key = { campsite -> campsite.id }
+                ) { campsite ->
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.LightGray)
+                    ) {
+
+                        Column(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+
+                            CampsiteImagePreview(
+                                imageUrl = campsite.images?.firstOrNull() ?: ""
+                            )
+
+                            Text(
+                                text = campsite.name,
+                                fontSize = 20.sp
+                            )
+
+                            Text(campsite.location)
+
+                            Button(
+                                onClick = {
+                                    // opens the details screen for the selected campsite
+                                    navController.navigate(
+                                        "admin_campsite/${campsite.id}"
+                                    )
+                                }
+                            ) {
+                                Text("View campsite")
+                            }
+                        }
+                    }
+                }
             }
-
-
         }
-
-
-
-
 
 
 
@@ -135,21 +218,45 @@ fun AdminMain(navController: NavController) {
 
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Button(onClick = {navController.navigate("admin_users")},
-                modifier = Modifier.weight(1f)) { Text(text ="Users",
-                fontSize = 10.sp) }
+            Button(
+                onClick = { navController.navigate("admin_users") },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = "Users",
+                    fontSize = 10.sp
+                )
+            }
             Spacer(modifier = Modifier.width(1.dp))
-            Button(onClick = {navController.navigate("all_notifications")},
-                modifier = Modifier.weight(1f)) { Text(text ="Notifications",
-                fontSize = 9.sp) }
+            Button(
+                onClick = { navController.navigate("all_notifications") },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = "Notifications",
+                    fontSize = 9.sp
+                )
+            }
             Spacer(modifier = Modifier.width(1.dp))
-            Button(onClick = {navController.navigate("all_messages")},
-                modifier = Modifier.weight(1f)) { Text(text ="Messages",
-                fontSize = 10.sp) }
+            Button(
+                onClick = { navController.navigate("all_messages") },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = "Messages",
+                    fontSize = 10.sp
+                )
+            }
             Spacer(modifier = Modifier.width(1.dp))
-            Button(onClick = {navController.navigate("images_screen")},
-                modifier = Modifier.weight(1f)) { Text(text ="Images",
-                fontSize = 10.sp) }
+            Button(
+                onClick = { navController.navigate("images_screen") },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = "Images",
+                    fontSize = 10.sp
+                )
+            }
         }
         Row(
             modifier = Modifier
@@ -162,10 +269,4 @@ fun AdminMain(navController: NavController) {
 
         }
     }
-
-
-
-
-
-
 }

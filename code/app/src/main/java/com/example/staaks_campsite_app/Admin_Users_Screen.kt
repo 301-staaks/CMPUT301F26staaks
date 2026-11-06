@@ -1,5 +1,6 @@
 package com.example.staaks_campsite_app
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,17 +20,30 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Textsms
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CheckboxDefaults.colors
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -73,6 +87,7 @@ class UsersListViewModel(
         repo.deleteUser(user)
     }
 }
+
 @Composable
 fun AdminUsersScreen(
     navController: NavController,
@@ -80,116 +95,57 @@ fun AdminUsersScreen(
 ) {
     val users by viewModel.users.collectAsStateWithLifecycle()
     var userToDelete by remember {mutableStateOf<User?>(null)}
+    val userListFilter = remember { mutableStateListOf(UserType.ADMIN, UserType.OWNER, UserType.ENTRANT) }
 
-
-    Column(
-
+    Scaffold(
+        topBar = { AdminTopRow(navController = navController, title = "Users") },
+        bottomBar = { AdminBottomRow(navController = navController)}
     ) {
-
-        //Pinned Top Row
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()            // Makes the row span the full width
-                .background(color = Color(0xFF1B5E20))
-                .padding(16.dp)
-
-        ){
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Button(
-                    onClick = {
-                        navController.navigate("admin_main")
-
-                    },
-
-                    ) {
-                    Text("Home")
-                }
-            }
-
-
-            Text(
-                text = "Users",
-                fontSize = 25.sp,
-                color = Color.White,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-
-            }
-        }
-
-
-        if (true){
+        innerPadding ->
+        Column(
+            modifier = Modifier.padding(innerPadding)
+        ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()            // Makes the row span the full width
-                    .background(color = Color(0xFF63B267))
-                    .heightIn(max = 45.dp)
+                    .background(color = Color.LightGray)
                     .padding(5.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
 
             ) {
-                Text(
-                    text = "View:",
-                    fontSize = 15.sp,
-                    color = Color.White
-                )
-                Button(onClick = {navController.navigate("admin_main")}) { Text("Admin") }
-                Button(onClick = { /* ... */ }) { Text("Owner") }
-                Button(onClick = { /* ... */ }) { Text("Entree") }
+                Button(
+                    onClick = { if (userListFilter.contains(UserType.ENTRANT)) { userListFilter.remove(UserType.ENTRANT) } else { userListFilter.add(UserType.ENTRANT) } },
+                    shape = RectangleShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (userListFilter.contains(UserType.ENTRANT)) { Color(0xFF009E60) } else { Color.Gray },
+                        contentColor = Color.White,
+                    ),
+                ) { Text("Entrees") }
 
+                Button(
+                    onClick = { if (userListFilter.contains(UserType.OWNER)) { userListFilter.remove(UserType.OWNER) } else { userListFilter.add(UserType.OWNER) } },
+                    shape = RectangleShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (userListFilter.contains(UserType.OWNER)) { Color(0xFF009E60) } else { Color.Gray },
+                        contentColor = Color.White
+                    )
+                ) { Text("Owners") }
 
+                Button(
+                    onClick = { if (userListFilter.contains(UserType.ADMIN)) { userListFilter.remove(UserType.ADMIN) } else { userListFilter.add(UserType.ADMIN) } },
+                    shape = RectangleShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (userListFilter.contains(UserType.ADMIN)) { Color(0xFF009E60) } else { Color.Gray },
+                        contentColor = Color.White
+                    )
+                ) { Text("Admins") }
             }
-        }
 
 
 
-
-
-
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-
-        ) {
-            /*
-            -------------------------------------------------------------------------------------------------------------------------------------
-            Create Main Content of Page Here
-            -------------------------------------------------------------------------------------------------------------------------------------
-             */
-            Column() {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()            // Makes the row span the full width
-                        .background(color = Color.LightGray)
-                        .padding(5.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-
-                ) {
-                    Button(onClick = { /* ... */ },
-                        shape = RectangleShape) { Text("All") }
-                    Button(onClick = { /* ... */ },
-                        shape = RectangleShape) { Text("Entrees") }
-                    Button(onClick = { /* ... */ },
-                        shape = RectangleShape) { Text("Owners") }
-                    Button(onClick = { /* ... */ },
-                        shape = RectangleShape) { Text("Admins") }
-                }
-
-
-
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    itemsIndexed(users) { index, user ->
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                itemsIndexed(users) { index, user ->
+                    if (user.type in userListFilter) {
                         UserRow(
                             user = user,
                             canDelete = user.type != UserType.ADMIN,
@@ -205,73 +161,27 @@ fun AdminUsersScreen(
                         }
                     }
                 }
-
-                userToDelete?.let { user ->
-                    AlertDialog(
-                        onDismissRequest = { userToDelete = null },
-                        confirmButton = {
-                            TextButton(onClick = {
-                                viewModel.deleteUser(user)
-                                userToDelete = null
-                            }) { Text("Delete") }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = {
-                                userToDelete = null
-                            }) { Text("Cancel") }
-                        },
-                        title = { Text("Delete User") },
-                        text = { Text("Are you sure you want to delete ${user.name}?") }
-
-                    )
-                }
-
             }
 
+            userToDelete?.let { user ->
+                AlertDialog(
+                    onDismissRequest = { userToDelete = null },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            viewModel.deleteUser(user)
+                            userToDelete = null
+                        }) { Text("Delete") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            userToDelete = null
+                        }) { Text("Cancel") }
+                    },
+                    title = { Text("Delete User") },
+                    text = { Text("Are you sure you want to delete ${user.name}?") }
 
-
-        }
-
-
-
-
-
-
-
-        // Pinned Bottom Row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .padding(5.dp),
-
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(onClick = {navController.navigate("admin_users")},
-                modifier = Modifier.weight(1f)) { Text(text ="Users",
-                fontSize = 10.sp) }
-            Spacer(modifier = Modifier.width(1.dp))
-            Button(onClick = {navController.navigate("all_notifications")},
-                modifier = Modifier.weight(1f)) { Text(text ="Notifications",
-                fontSize = 9.sp) }
-            Spacer(modifier = Modifier.width(1.dp))
-            Button(onClick = {navController.navigate("all_messages")},
-                modifier = Modifier.weight(1f)) { Text(text ="Messages",
-                fontSize = 10.sp) }
-            Spacer(modifier = Modifier.width(1.dp))
-            Button(onClick = {navController.navigate("images_screen")},
-                modifier = Modifier.weight(1f)) { Text(text ="Images",
-                fontSize = 10.sp) }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .heightIn(max = 16.dp)
-                .heightIn(min = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-
+                )
+            }
         }
     }
 }
@@ -294,7 +204,7 @@ fun UserRow(
             .padding(horizontal = 20.dp, vertical = 16.dp)
 
     ) {
-        CircularProfilePicture()
+        UserProfileImagePreview(60.dp, user.profileImageUrl)
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -314,12 +224,12 @@ fun UserRow(
             )
 
             Text(
-                text = user.email,
+                text = "Email: ${user.email}",
                 fontSize = 15.sp,
             )
 
             Text(
-                text = user.phone,
+                text = "Phone: ${user.phone}",
                 fontSize = 15.sp,
             )
         }
@@ -328,21 +238,14 @@ fun UserRow(
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Button(
-            onClick = {
-                onDelete()
-            },
-            enabled = canDelete,
-            modifier = Modifier.width(90.dp).height(45.dp)
-        ) {
-            Text(text = "Delete")
-        }
+        DeleteButton(onDeleteClick = onDelete, enabled = canDelete)
     }
 }
 
 @Composable
 fun CircularProfilePicture(
-    size: Dp = 60.dp
+    size: Dp = 60.dp,
+    imageUrl: String = "",
 ) {
     Card(
         modifier = Modifier.size(size),
@@ -358,5 +261,20 @@ fun CircularProfilePicture(
             contentScale = ContentScale.Fit,
         )
     }
+}
 
+@Composable
+fun DeleteButton(
+    onDeleteClick: () -> Unit,
+    enabled: Boolean = true,
+) {
+    IconButton(
+        onClick = onDeleteClick,
+        enabled = enabled,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Delete,
+            contentDescription = "Delete item"
+        )
+    }
 }

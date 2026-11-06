@@ -34,7 +34,12 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.example.staaks_campsite_app.data.CampsiteRepository
 
-
+/**
+ * The owner's details screen for a campsite they own
+ *
+ * @param navController controls navigation to other screens, such as returning to the owner main screen.
+ * @param campsiteID the id of the campsite to display.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OwnerCampsite(navController: NavController, campsiteID: String) {

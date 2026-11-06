@@ -23,7 +23,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
-// OWNER VIEW (preview only) - all data on this screen is placeholder
+
+/**
+ * The owner's "Past" reservations screen.
+ *
+ * The reservation cards currently show placeholder data. They are not loaded
+ * from the database yet.
+ *
+ * @param navController controls navigation to other screens.
+ */
 @Composable
 fun OwnerReservationsPast(navController: NavController) {
     Column {

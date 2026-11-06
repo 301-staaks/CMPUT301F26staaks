@@ -43,7 +43,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.staaks_campsite_app.data.model.Campsite
 
-
+/**
+ * Displays: a top bar that has a home and profile button, a bottom navigation bar that has
+ * reservations, inbox, messages, and scan
+ *
+ * @param navController app navigation controller
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EntreeMain(
@@ -146,7 +151,19 @@ fun EntreeMain(
     }
 }
 
+/**
+ * home tab for entrants
+ *
+ * shows campsite search bar and a scrolling list of campsites. If a search or filter has been
+ * inputted, the filtered list will be displayed. Otherwise every campsite is just shown. Displays
+ * "No campsites." if there is no campsites.
+ *
+ * @param campsites the repository that provides the full lis of campsites
+ * @param onCampsiteChange called when a campsite is selected
+ * @param onSelectedTabChange called when the selected tab is changed
+ */
 @Composable
+
 fun Home(
     campsites: CampsiteRepository,
     onCampsiteChange: (Campsite) -> Unit = {},
@@ -188,6 +205,15 @@ fun Home(
     }
 }
 
+/**
+ * summary card for a campsite in the home screen
+ *
+ * The left side of the card is for images which isnt implemented yet. The right side of the card
+ * contains the name, location, capacity, and rating of the campsite.
+ * 
+ * @param campsite the campsite to display
+ * @param modifier the modifier to apply to the card
+ */
 @Composable
 fun CampsiteCard(
     campsite: Campsite,

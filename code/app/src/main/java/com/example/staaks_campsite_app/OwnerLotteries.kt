@@ -25,7 +25,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
-// OWNER VIEW (preview only) - all data on this screen is placeholder
+
+/**
+ * The owner's chat screen for a conversation with a guest.
+ *
+ * The messages shown are placeholder data. "Send" currently only clears the text field, and
+ * messages are not saved or loaded from the database yet.
+ *
+ * @param navController controls navigation to other screens.
+ */
 @Composable
 fun OwnerLotteries(navController: NavController) {
     Column {

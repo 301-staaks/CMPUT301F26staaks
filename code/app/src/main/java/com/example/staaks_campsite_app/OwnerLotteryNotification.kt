@@ -27,7 +27,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
-// OWNER VIEW (preview only) - all data on this screen is placeholder
+/**
+ * The owner's screen for writing a notification to the entrants of a lottery.
+ *
+ * The recipient label is placeholder text, and sending does not deliver anything yet. The title and
+ * message are not saved or sent to the database yet either
+ *
+ * @param navController controls navigation to other screens.
+ */
 @Composable
 fun OwnerLotteryNotification(navController: NavController) {
     Column {

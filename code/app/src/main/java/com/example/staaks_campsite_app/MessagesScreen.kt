@@ -24,6 +24,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
+/** Blank screen template for messages screen
+ *
+ * @param navController controls navigation to other screens.
+ */
 @Composable
 fun MessagesScreen(navController: NavController) {
     Column(

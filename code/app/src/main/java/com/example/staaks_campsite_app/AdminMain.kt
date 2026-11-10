@@ -64,14 +64,12 @@ import com.example.staaks_campsite_app.data.model.Campsite
 // dark green 0xFF1B5E20
 // shamrock 0xFF009E60
 
-private data class AdminTab(val route: String, val label: String, val icon: ImageVector)
-
-private val adminTabs = listOf(
-    AdminTab("admin_main", "Main", Icons.Default.Home),
-    AdminTab("admin_users", "Users", Icons.Default.Person),
-    AdminTab("all_notifications", "Notifications", Icons.Default.Notifications),
-    AdminTab("all_messages", "Messages", Icons.Default.Textsms),
-    AdminTab("images_screen", "Images", Icons.Default.Image)
+public val adminTabs = listOf(
+    Tab("admin_main", "Main", Icons.Default.Home),
+    Tab("admin_users", "Users", Icons.Default.Person),
+    Tab("all_notifications", "Notifications", Icons.Default.Notifications),
+    Tab("all_messages", "Messages", Icons.Default.Textsms),
+    Tab("images_screen", "Images", Icons.Default.Image)
 )
 
 /**

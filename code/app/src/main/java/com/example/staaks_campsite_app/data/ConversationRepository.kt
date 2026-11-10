@@ -1,9 +1,19 @@
 package com.example.staaks_campsite_app.data
 
 import androidx.compose.runtime.mutableStateListOf
+import com.example.staaks_campsite_app.data.model.Admin
 import com.example.staaks_campsite_app.data.model.Conversation
+import com.example.staaks_campsite_app.data.model.Entrant
+import com.example.staaks_campsite_app.data.model.Message
+import com.example.staaks_campsite_app.data.model.Owner
+import com.example.staaks_campsite_app.data.model.User
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlin.collections.emptyList
 
 /**
  * @property conversations the conversations loaded from firestore
@@ -68,6 +78,45 @@ class ConversationRepository {
         }
 
         return result
+    }
+
+
+    fun sendMessage(conversationId: String, message: Message) {
+        val messages = db.collection("conversations").document(conversationId).collection("messages")
+        message.messageId = messages.document().id
+        messages.document(message.messageId).set(message)
+    }
+
+    fun getMessages(conversationId: String): Flow<List<Message>> = callbackFlow() {
+        val listener = db.collection("conversations")
+            .document(conversationId)
+            .collection("messages")
+            .orderBy("sentDate", Query.Direction.ASCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    return@addSnapshotListener
+                }
+                val messages = snapshot?.toObjects(Message::class.java) ?: emptyList()
+                trySend(messages)
+            }
+
+        awaitClose { listener.remove() }
+    }
+
+    fun observeConversations(userId: String): Flow<List<Conversation>> = callbackFlow {
+        val reg = conversationsRef
+            .whereArrayContains("participantIds", userId)
+            .addSnapshotListener { snapshot, error ->
+            if (error != null) { close(error); return@addSnapshotListener }
+            trySend(snapshot?.documents?.mapNotNull { doc ->
+                doc.toObject(Conversation::class.java)
+            } ?: emptyList())
+        }
+        awaitClose { reg.remove() }
+    }
+
+    fun deleteConversation(conversation: Conversation) {
+        conversationsRef.document(conversation.conversationId).delete()
     }
 
     init {

@@ -119,7 +119,7 @@ fun CampsiteApp() {
         composable("owner_lotteries_past") { OwnerPastLotteries(navController) }
         composable("owner_lottery_notification") { OwnerLotteryNotification(navController) }
         composable("owner_messages") { OwnerMessages(navController) }
-        composable("owner_conversation") { OwnerConversation(navController) }
+        composable("owner_conversation/{conversationId}") { OwnerConversation(navController) }
         composable("owner_notifications") { OwnerNotifications(navController) }
 
         composable<owner_campsite> { backStackEntry ->

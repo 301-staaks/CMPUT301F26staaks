@@ -34,8 +34,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.ImageNotSupported
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Search
@@ -56,6 +58,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.staaks_campsite_app.Entree.EntreeCampsite
 import com.example.staaks_campsite_app.data.model.Campsite
+
+
+public val entrantTabs = listOf(
+    Tab("admin_main", "Reservations", Icons.AutoMirrored.Filled.List),
+    Tab("admin_users", "Inbox", Icons.Default.Search),
+    Tab("all_notifications", "Message", Icons.Default.Textsms),
+    Tab("all_messages", "Scan", Icons.Default.QrCode)
+)
 
 /**
  * Displays: a top bar that has a home and profile button, a bottom navigation bar that has

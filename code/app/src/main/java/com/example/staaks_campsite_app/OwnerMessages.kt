@@ -15,14 +15,32 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavController
+import com.example.staaks_campsite_app.data.ConversationRepository
+import com.example.staaks_campsite_app.data.UserRepository
+import com.example.staaks_campsite_app.data.model.Conversation
+import com.example.staaks_campsite_app.data.model.User
+import com.example.staaks_campsite_app.data.model.UserType
+import com.example.staaks_campsite_app.session.SessionManager
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 
 
 /**
@@ -33,136 +51,97 @@ import androidx.navigation.NavController
  *
  * @param navController controls navigation to other screens.
  */
+
+class ConversationListViewModel(
+    userId: String,
+    private val repo: ConversationRepository = ConversationRepository(),
+    private val userRepo: UserRepository = UserRepository()
+) : ViewModel() {
+    val conversations: StateFlow<List<Conversation>> = repo.observeConversations(userId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun getUser(userId: String): User? {
+        return userRepo.users.find { it.id == userId }
+    }
+
+    fun deleteConversation(conversation: Conversation) {
+        repo.deleteConversation(conversation)
+    }
+
+
+    companion object {
+        fun factory(userId: String) = viewModelFactory {
+            initializer { ConversationListViewModel(userId) }
+        }
+    }
+}
 @Composable
 fun OwnerMessages(navController: NavController) {
-    Column {
+    val session by SessionManager.state.collectAsState()
+    val userType = session!!.type
 
-        // Pinned Top Row
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()            // Makes the row span the full width
-                .background(color = Color(0xFF1B5E20))
-                .padding(16.dp)
-        ) {
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Button(
-                    onClick = {
-                        navController.popBackStack()
-                    }
-                ) {
-                    Text("Back")
+    val viewModel: ConversationListViewModel = viewModel(factory = ConversationListViewModel.factory(session!!.userId))
+
+    val conversations by viewModel.conversations.collectAsStateWithLifecycle()
+
+    Scaffold(
+        topBar = {
+            UiTopRow(
+                navController = navController,
+                title = "Messages",
+                homeRoute = when (userType) {
+                    UserType.ENTRANT -> "entrant_main"
+                    UserType.OWNER -> "owner_main"
+                    UserType.ADMIN -> "admin_main"
                 }
-            }
-
-            Text(
-                text = "Messages",
-                fontSize = 25.sp,
-                color = Color.White,
-                modifier = Modifier.align(Alignment.CenterVertically)
             )
-
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-
-            }
+        },
+        bottomBar = {
+            UiBottomRow(
+                navController = navController,
+                tabs = when (userType) {
+                    UserType.ENTRANT -> entrantTabs
+                    UserType.OWNER -> ownerTabs
+                    UserType.ADMIN -> adminTabs
+                }
+            )
         }
-
-        // This is for when the admin is spoofing a different user. Logic must be implemented here to allow this to pop up
-        if (false) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()            // Makes the row span the full width
-                    .background(color = Color(0xFF63B267))
-                    .heightIn(max = 45.dp)
-                    .padding(5.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Text(
-                    text = "View:",
-                    fontSize = 15.sp,
-                    color = Color.White
-                )
-                Button(onClick = { /* ... */ }) { Text("Admin") }
-                Button(onClick = { /* ... */ }) { Text("Owner") }
-                Button(onClick = { /* ... */ }) { Text("Entree") }
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-        ) {
-            /*
-            -------------------------------------------------------------------------------------------------------------------------------------
-            Main Content of Page
-            -------------------------------------------------------------------------------------------------------------------------------------
-             */
-
-            val conversations = listOf("Guest 1", "Guest 2", "Guest 3") // placeholder
-
+    ) { innerPadding ->
+        Column(modifier = Modifier.padding(innerPadding)) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(conversations) { name ->
+                items(conversations) { conversation ->
+                    val otherUserId = if (conversation.participantIds[0] == session!!.userId) {conversation.participantIds[1]} else {conversation.participantIds[0]}
+                    val otherUser = viewModel.getUser(otherUserId)
+                    if (otherUser == null) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text("Error loading user", fontSize = 18.sp)
+                                Text("Campsite: —")
+                                Text("—", color = Color.Gray)
+                            }
+                        }
+                    }
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { navController.navigate("owner_conversation") }
+                            .clickable { navController.navigate("owner_conversation/{conversationId}") }
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(name, fontSize = 18.sp)
+                            Text(otherUser!!.name, fontSize = 18.sp)
                             Text("Campsite: —")
                             Text("Last message preview…", color = Color.Gray)
                         }
                     }
                 }
             }
-        }
-
-        // Pinned Bottom Row (Owner navigation)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .padding(5.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(
-                onClick = { navController.navigate("owner_reservations_active") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Reservations", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_notifications") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Notifs", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_messages") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Messages", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_lotteries") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Lotteries", fontSize = 11.sp) }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .heightIn(max = 16.dp)
-                .heightIn(min = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-
         }
     }
 }

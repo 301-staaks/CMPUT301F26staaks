@@ -55,7 +55,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 
 
-private val ownerTabs = listOf(
+val ownerTabs = listOf(
     Tab("owner_main", "Main", Icons.Default.Home),
     Tab("owner_reservations_active", "Reservations", Icons.Default.CalendarMonth),
     Tab("owner_notifications", "Notifications", Icons.Default.Notifications),

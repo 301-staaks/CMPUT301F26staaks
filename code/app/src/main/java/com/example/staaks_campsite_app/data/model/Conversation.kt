@@ -15,7 +15,8 @@ class Conversation(
     var participantIds: List<String> = emptyList(),
     var campsiteId: String = "",
     var lastMessageText: String = "",
-    var updatedDate: String = ""
+    var updatedDate: String = "",
+    var messages: List<Message> = emptyList()
 ) {
     /**
      * checks if a user is part of this conversation

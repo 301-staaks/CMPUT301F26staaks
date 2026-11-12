@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -34,6 +35,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavController
 import com.example.staaks_campsite_app.data.ConversationRepository
 import com.example.staaks_campsite_app.data.UserRepository
+import com.example.staaks_campsite_app.data.getDeviceId
 import com.example.staaks_campsite_app.data.model.Conversation
 import com.example.staaks_campsite_app.data.model.User
 import com.example.staaks_campsite_app.data.model.UserType
@@ -77,12 +79,13 @@ class ConversationListViewModel(
 }
 @Composable
 fun OwnerMessages(navController: NavController) {
+    val context = LocalContext.current
     val session by SessionManager.state.collectAsState()
-    val userType = session!!.type
+    val currentUserId = session?.userId ?: getDeviceId(context)
+    val userType = session?.type ?: UserType.OWNER
 
-    val viewModel: ConversationListViewModel = viewModel(factory = ConversationListViewModel.factory(session!!.userId))
-
-    val conversations by viewModel.conversations.collectAsStateWithLifecycle()
+    val viewModel: ConversationListViewModel = viewModel(factory = ConversationListViewModel.factory(currentUserId))
+    val conversations by viewModel.conversations.collectAsStateWithLifecycle(initialValue = emptyList())
 
     Scaffold(
         topBar = {
@@ -115,8 +118,11 @@ fun OwnerMessages(navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(conversations) { conversation ->
-                    val otherUserId = if (conversation.participantIds[0] == session!!.userId) {conversation.participantIds[1]} else {conversation.participantIds[0]}
-                    val otherUser = viewModel.getUser(otherUserId)
+                    val otherUserId = conversation.participantIds.find { it != session?.userId }
+                    var otherUser: User? = null
+                    if (otherUserId != null) {
+                        otherUser = viewModel.getUser(otherUserId)
+                    }
                     if (otherUser == null) {
                         Card(
                             modifier = Modifier
@@ -132,10 +138,10 @@ fun OwnerMessages(navController: NavController) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { navController.navigate("owner_conversation/{conversationId}") }
+                            .clickable { navController.navigate("owner_conversation/${conversation.conversationId}") }
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(otherUser!!.name, fontSize = 18.sp)
+                            Text(otherUser?.name?: "User", fontSize = 18.sp)
                             Text("Campsite: —")
                             Text("Last message preview…", color = Color.Gray)
                         }

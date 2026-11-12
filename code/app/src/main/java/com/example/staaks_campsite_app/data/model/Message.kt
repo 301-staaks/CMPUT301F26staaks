@@ -1,5 +1,9 @@
 package com.example.staaks_campsite_app.data.model
 
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.ServerTimestamp
+
 /**
  * stores a message sent in a conversation between two users
  *
@@ -15,7 +19,7 @@ class Message(
     var conversationId: String = "",
     var senderId: String = "",
     var text: String = "",
-    var sentDate: String = "",
+    @ServerTimestamp var sentDate: Timestamp? = null,
     var isRead: Boolean = false
 ) {
     /**

@@ -8,6 +8,8 @@ import com.example.staaks_campsite_app.data.model.Message
 import com.example.staaks_campsite_app.data.model.Owner
 import com.example.staaks_campsite_app.data.model.User
 import com.google.firebase.Firebase
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.channels.awaitClose
@@ -48,13 +50,7 @@ class ConversationRepository {
      * @return the conversation or null if it is not in the list
      */
     fun getConversation(conversationId: String): Conversation? {
-        for (conversation in _conversations) {
-            if (conversation.conversationId == conversationId) {
-                return conversation
-            }
-        }
-
-        return null
+        return _conversations.find { it.conversationId == conversationId }
     }
 
     /**
@@ -81,23 +77,50 @@ class ConversationRepository {
     }
 
 
-    fun sendMessage(conversationId: String, message: Message) {
-        val messages = db.collection("conversations").document(conversationId).collection("messages")
+    fun sendMessage(message: Message) {
+        val messages = db.collection("conversations").document(message.conversationId).collection("messages")
         message.messageId = messages.document().id
         messages.document(message.messageId).set(message)
     }
 
-    fun getMessages(conversationId: String): Flow<List<Message>> = callbackFlow() {
+    fun getMessages(conversationId: String): Flow<List<Message>> = callbackFlow {
         val listener = db.collection("conversations")
             .document(conversationId)
             .collection("messages")
-            .orderBy("sentDate", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     return@addSnapshotListener
                 }
-                val messages = snapshot?.toObjects(Message::class.java) ?: emptyList()
-                trySend(messages)
+
+                val messages = snapshot?.documents?.mapNotNull { doc ->
+                    val rawDate = doc.get("sentDate")
+                    val timestamp: Timestamp? = when (rawDate) {
+                        is Timestamp -> rawDate
+                        is Long -> Timestamp(rawDate / 1000, 0)
+                        is String -> {
+                            try {
+                                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+                                sdf.parse(rawDate)?.let { Timestamp(it) }
+                            } catch (e: Exception) {null}
+                        }
+                        else -> null
+                    }
+
+
+                    Message(
+                        messageId = doc.id,
+                        conversationId = doc.getString("conversationId") ?: conversationId,
+                        senderId = doc.getString("senderId") ?: "",
+                        text = doc.getString("text") ?: "",
+                        sentDate = timestamp,
+                        isRead = doc.getBoolean("isRead") ?: false
+                    )
+
+                } ?: emptyList()
+
+                val sortedMessages = messages.sortedWith( compareBy(nullsFirst()) {it.sentDate} )
+
+                trySend(sortedMessages)
             }
 
         awaitClose { listener.remove() }
@@ -109,7 +132,7 @@ class ConversationRepository {
             .addSnapshotListener { snapshot, error ->
             if (error != null) { close(error); return@addSnapshotListener }
             trySend(snapshot?.documents?.mapNotNull { doc ->
-                doc.toObject(Conversation::class.java)
+                doc.toObject(Conversation::class.java)?.apply {conversationId = doc.id}
             } ?: emptyList())
         }
         awaitClose { reg.remove() }

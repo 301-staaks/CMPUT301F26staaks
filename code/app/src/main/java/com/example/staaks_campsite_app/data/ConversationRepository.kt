@@ -152,7 +152,7 @@ class ConversationRepository {
         val reg = conversationsRef
             .whereArrayContains("participantIds", userId)
             .addSnapshotListener { snapshot, error ->
-            if (error != null) { close(error); return@addSnapshotListener }
+            if (error != null) { close(); return@addSnapshotListener }
             trySend(snapshot?.documents?.mapNotNull { doc ->
                 doc.toObject(Conversation::class.java)?.apply {conversationId = doc.id}
             } ?: emptyList())

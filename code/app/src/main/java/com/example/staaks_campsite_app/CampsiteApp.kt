@@ -55,6 +55,7 @@ fun CampsiteApp() {
         composable("entree_inbox_screen") { EntreeInboxScreen(navController) }
         composable("messages_screen") { MessagesScreen(navController) }
         composable("qr_scanner_screen") { QRScannerScreen(navController) }
+        composable("entrant_conversation/{conversationId}") { EntrantConversation(navController) }
 //        composable<entree_campsite> { backStackEntry ->
 //            val campsite = backStackEntry.toRoute<entree_campsite>()
 //            EntreeCampsite(navController, campsiteID = campsite.campsiteID)

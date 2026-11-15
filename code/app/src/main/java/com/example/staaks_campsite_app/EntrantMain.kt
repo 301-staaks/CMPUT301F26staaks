@@ -162,7 +162,7 @@ fun EntreeMain(
                 "Profile" -> Profile(navController)
                 "Reservations" -> ReservationScreenContent()
                 "Inbox" -> InboxContent()
-                "Messages" -> MessageScreenContent()
+                "Messages" -> MessageScreenContent(navController)
                 "Scan" -> QRCodeScreenContent()
                 "Campsite Details" -> {
                     val currentCampsite = selectedCampsite
@@ -366,8 +366,8 @@ fun InboxContent() {
     NotFoundScreen()
 }
 @Composable
-fun MessageScreenContent() {
-    NotFoundScreen()
+fun MessageScreenContent(navController: NavController) {
+    EntrantMessagesScreen(navController = navController)
 }
 @Composable
 fun QRCodeScreenContent() {

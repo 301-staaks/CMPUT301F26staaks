@@ -11,19 +11,37 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -35,14 +53,17 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavController
 import com.example.staaks_campsite_app.data.ConversationRepository
 import com.example.staaks_campsite_app.data.UserRepository
+import com.example.staaks_campsite_app.data.createUser
 import com.example.staaks_campsite_app.data.getDeviceId
 import com.example.staaks_campsite_app.data.model.Conversation
 import com.example.staaks_campsite_app.data.model.User
 import com.example.staaks_campsite_app.data.model.UserType
 import com.example.staaks_campsite_app.session.SessionManager
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlin.collections.lastIndex
 
 
 /**
@@ -62,8 +83,14 @@ class ConversationListViewModel(
     val conversations: StateFlow<List<Conversation>> = repo.observeConversations(userId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    val users: Flow<List<User>> = userRepo.observeUsers()
+
     fun getUser(userId: String): User? {
         return userRepo.users.find { it.id == userId }
+    }
+
+    fun createConversation(fromId: String, toId: String) {
+        repo.createConversation(fromId, toId)
     }
 
     fun deleteConversation(conversation: Conversation) {
@@ -84,8 +111,14 @@ fun OwnerMessages(navController: NavController) {
     val currentUserId = session?.userId ?: getDeviceId(context)
     val userType = session?.type ?: UserType.OWNER
 
+
+
     val viewModel: ConversationListViewModel = viewModel(factory = ConversationListViewModel.factory(currentUserId))
     val conversations by viewModel.conversations.collectAsStateWithLifecycle(initialValue = emptyList())
+    val users by viewModel.users.collectAsStateWithLifecycle(initialValue = emptyList())
+
+
+    var showNewConversationDialog by remember {mutableStateOf(false)}
 
     Scaffold(
         topBar = {
@@ -108,7 +141,11 @@ fun OwnerMessages(navController: NavController) {
                     UserType.ADMIN -> adminTabs
                 }
             )
-        }
+        },
+        floatingActionButton = {
+            NewConversationButton(onClick = { showNewConversationDialog = true })
+        },
+        floatingActionButtonPosition = FabPosition.Start
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             LazyColumn(
@@ -149,5 +186,83 @@ fun OwnerMessages(navController: NavController) {
                 }
             }
         }
+
+        if (showNewConversationDialog) {
+            NewConversationDialog(
+                onDismiss = { showNewConversationDialog = false },
+                onCreate = { userId ->
+                    viewModel.createConversation(
+                        fromId = currentUserId,
+                        toId = userId
+                    )
+                },
+                users = users
+            )
+        }
     }
+}
+
+@Composable
+fun NewConversationButton(onClick: () -> Unit) {
+    FloatingActionButton(
+        onClick = onClick,
+        shape = CircleShape
+    ) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "New conversation"
+        )
+    }
+}
+
+@Composable
+fun NewConversationDialog(
+    onDismiss: () -> Unit,
+    onCreate: (userId: String) -> Unit,
+    users: List<User>,
+) {
+    var userId by remember { mutableStateOf("") }
+    val valid = userId.isNotBlank()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("NEW CONVERSATION: TESTING ONLY") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Select a user")
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    itemsIndexed(users) { index, user ->
+                        if (user.type == UserType.ENTRANT) {
+                            Row(
+                                modifier = Modifier
+                                    .clickable { userId = user.id }
+                                    .background(if (userId == user.id) Color.LightGray else Color.Transparent)
+                            ) {
+                                Text("User name: ${user.name}")
+                            }
+                            if (index < users.lastIndex) {
+                                HorizontalDivider()
+                            }
+                        }
+                    }
+                }
+                Text("Selected user: $userId")
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onCreate(userId)
+                },
+                enabled = valid
+            ) { Text("Done") }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    onDismiss()
+                }
+            ) { Text("Cancel") }
+        }
+    )
 }

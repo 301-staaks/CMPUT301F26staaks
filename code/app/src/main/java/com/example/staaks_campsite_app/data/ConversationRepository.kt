@@ -1,5 +1,6 @@
 package com.example.staaks_campsite_app.data
 
+import android.content.Context
 import androidx.compose.runtime.mutableStateListOf
 import com.example.staaks_campsite_app.data.model.Admin
 import com.example.staaks_campsite_app.data.model.Conversation
@@ -7,6 +8,7 @@ import com.example.staaks_campsite_app.data.model.Entrant
 import com.example.staaks_campsite_app.data.model.Message
 import com.example.staaks_campsite_app.data.model.Owner
 import com.example.staaks_campsite_app.data.model.User
+import com.example.staaks_campsite_app.data.model.UserType
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
@@ -34,13 +36,33 @@ class ConversationRepository {
      *
      * @param conversation the conversation we want to save
      */
-    fun createConversation(conversation: Conversation) {
+    fun createConversation2(conversation: Conversation) {
         if (conversation.conversationId.isBlank()) {
             conversation.conversationId = conversationsRef.document().id
         }
 
         conversationsRef.document(conversation.conversationId)
             .set(conversation)
+    }
+
+    // new ver of create conversation. kept old version just in case.
+    fun createConversation(fromId: String, toId: String) {
+        conversationsRef
+            .whereArrayContains("participantIds", fromId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val exists = snapshot.documents.any {
+                    (it.get("participantIds") as? List<*>)?.contains(toId) == true
+                }
+                if (exists) return@addOnSuccessListener
+
+                val conversation = Conversation()
+                conversation.participantIds = listOf(fromId, toId)
+                conversation.conversationId = conversationsRef.document().id
+                conversation.messages = emptyList()
+
+                conversationsRef.document(conversation.conversationId).set(conversation)
+            }
     }
 
     /**

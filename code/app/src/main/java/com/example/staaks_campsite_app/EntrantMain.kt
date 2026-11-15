@@ -61,10 +61,10 @@ import com.example.staaks_campsite_app.data.model.Campsite
 
 
 public val entrantTabs = listOf(
-    Tab("admin_main", "Reservations", Icons.AutoMirrored.Filled.List),
-    Tab("admin_users", "Inbox", Icons.Default.Search),
-    Tab("all_notifications", "Message", Icons.Default.Textsms),
-    Tab("all_messages", "Scan", Icons.Default.QrCode)
+    Tab("entree_main", "Reservations", Icons.AutoMirrored.Filled.List),
+    Tab("entree_main", "Inbox", Icons.Default.Search),
+    Tab("entree_main", "Message", Icons.Default.Textsms),
+    Tab("entree_main", "Scan", Icons.Default.QrCode)
 )
 
 /**

@@ -86,7 +86,7 @@ fun EntrantConversation(
                 navController = navController,
                 title = "Messages",
                 homeRoute = when (userType) {
-                    UserType.ENTRANT -> "entrant_main"
+                    UserType.ENTRANT -> "entree_main"
                     UserType.OWNER -> "owner_main"
                     UserType.ADMIN -> "admin_main"
                 }

@@ -1,6 +1,7 @@
 package com.example.staaks_campsite_app
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Home
@@ -25,6 +29,10 @@ import androidx.compose.material.icons.filled.Textsms
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -73,6 +81,8 @@ val ownerTabs = listOf(
  * @param campsites the campsites to list, normally those owned by the current owner.
  * @param onEditCampsite called with the campsite whose "Edit" button was pressed.
  */
+
+
 @Composable
 fun OwnerMain(
     navController: NavController,
@@ -83,29 +93,67 @@ fun OwnerMain(
 
     Scaffold(
         topBar = { UiTopRow(navController = navController, title = "Owner Main", homeRoute = "owner_main", isAdmin = session!!.isAdmin) },
-        bottomBar = { UiBottomRow(navController = navController, tabs = ownerTabs) }
+        bottomBar = { UiBottomRow(navController = navController, tabs = ownerTabs) },
+        floatingActionButton = {
+            NewCampsiteButton(onClick = { navController.navigate(route = "owner_campsite_new") })
+        },
+        floatingActionButtonPosition = FabPosition.Start
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Replaced placeholders with actual campsite data -Szymon
-            items(campsites, key = { it.id }) { campsite ->
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(campsite.name, fontSize = 20.sp)
-                        Text("Location: ${campsite.location}")
-                        Text("Capacity: ${campsite.capacity}  |  Price/night: ${campsite.price}")
-                        Text("Upcoming reservations: —")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { onEditCampsite(campsite) }) {
-                            Text("Edit")
-                        }
+        Column(modifier = Modifier.padding(innerPadding)) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Replaced placeholders with actual campsite data -Szymon
+                itemsIndexed(campsites) { index, campsite ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        CampsiteCard(
+                            campsite = campsite,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        )
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OwnerCampsiteCardActions(
+                        campsite = campsite,
+                        onPreviewCampsite = { navController.navigate("owner_campsite_preview/${campsite.id}") },
+                        onEditCampsite = { onEditCampsite(campsite) },
+                        onAddToLottery = { /* TODO : Add campsite to existing lottery */ }
+                    )
                 }
             }
         }
+
+    }
+}
+
+@Composable
+fun OwnerCampsiteCardActions(
+    campsite: Campsite,
+    onPreviewCampsite: (Campsite) -> Unit,
+    onEditCampsite: (Campsite) -> Unit,
+    onAddToLottery: (Campsite) -> Unit,
+) {
+    Row(modifier = Modifier.fillMaxWidth().background(color = Color.LightGray)) {
+        GenericButton (text="Preview",onClick = { onPreviewCampsite(campsite) })
+        GenericButton (text="Edit",onClick = { onEditCampsite(campsite) })
+        GenericButton (text="Delete",onClick = { onAddToLottery(campsite) })
+    }
+}
+
+@Composable
+fun NewCampsiteButton(onClick: () -> Unit) {
+    FloatingActionButton(
+        onClick = onClick,
+        shape = CircleShape
+    ) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "New campsite"
+        )
     }
 }

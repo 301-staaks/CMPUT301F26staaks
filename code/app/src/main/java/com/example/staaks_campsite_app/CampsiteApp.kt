@@ -13,6 +13,9 @@ import com.example.staaks_campsite_app.data.model.owner_campsite
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.staaks_campsite_app.Entree.OwnerCampsitePreview
 import com.example.staaks_campsite_app.data.getDeviceId
 import com.example.staaks_campsite_app.session.SessionManager
 
@@ -122,6 +125,10 @@ fun CampsiteApp() {
         composable("owner_messages") { OwnerMessages(navController) }
         composable("owner_conversation/{conversationId}") { OwnerConversation(navController) }
         composable("owner_notifications") { OwnerNotifications(navController) }
+        composable(
+            route = "owner_campsite_preview/{campsiteId}",
+            arguments = listOf( navArgument("campsiteId") { type = NavType.StringType })
+        ) { OwnerCampsitePreview(navController, it.arguments?.getString("campsiteId") ?: "",) }
 
         composable<owner_campsite> { backStackEntry ->
             val campsite = backStackEntry.toRoute<owner_campsite>()

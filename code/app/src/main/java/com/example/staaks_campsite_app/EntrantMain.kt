@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -249,13 +250,17 @@ fun CampsiteCard(
         Column(
             modifier = Modifier
                 .weight(0.4f)
+                .fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             /* TODO: Image*/
             Icon(
                 imageVector = Icons.Default.ImageNotSupported,
                 contentDescription = "Image not supported",
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.size(48.dp)
             )
+
         }
         Column(
             modifier = Modifier

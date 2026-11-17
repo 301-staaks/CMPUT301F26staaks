@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,156 +35,54 @@ import androidx.navigation.NavController
  */
 @Composable
 fun OwnerReservationsActive(navController: NavController) {
-    Column {
 
-        // Pinned Top Row
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()            // Makes the row span the full width
-                .background(color = Color(0xFF1B5E20))
-                .padding(16.dp)
-        ) {
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Button(
-                    onClick = {
-                        navController.popBackStack()
-                    }
-                ) {
-                    Text("Back")
-                }
-            }
+    Scaffold(
+        topBar = {UiTopRow(navController, "Reservations", "owner_main")},
+        bottomBar = {UiBottomRow(navController, ownerTabs)}
+    ) { innerPadding->
+        val reservations = listOf("#1001", "#1002", "#1003") // placeholder
 
-            Text(
-                text = "Active",
-                fontSize = 25.sp,
-                color = Color.White,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
-
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-
-            }
-        }
-
-        // This is for when the admin is spoofing a different user. Logic must be implemented here to allow this to pop up
-        if (false) {
+        Column(modifier = Modifier.padding(innerPadding)) {
+            // Switch between Active / Past / Cancelled
             Row(
-                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .fillMaxWidth()            // Makes the row span the full width
-                    .background(color = Color(0xFF63B267))
-                    .heightIn(max = 45.dp)
-                    .padding(5.dp),
+                    .fillMaxWidth()
+                    .padding(8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Text(
-                    text = "View:",
-                    fontSize = 15.sp,
-                    color = Color.White
-                )
-                Button(onClick = { /* ... */ }) { Text("Admin") }
-                Button(onClick = { /* ... */ }) { Text("Owner") }
-                Button(onClick = { /* ... */ }) { Text("Entree") }
+                Button(
+                    onClick = { navController.navigate("owner_reservations_active") { launchSingleTop = true } },
+                    enabled = false
+                ) { Text("Active") }
+                Button(
+                    onClick = { navController.navigate("owner_reservations_past") { launchSingleTop = true } },
+                    enabled = true
+                ) { Text("Past") }
+                Button(
+                    onClick = { navController.navigate("owner_reservations_cancelled") { launchSingleTop = true } },
+                    enabled = true
+                ) { Text("Cancelled") }
             }
-        }
 
-        Box(
-            modifier = Modifier
-                .weight(1f)
-        ) {
-            /*
-            -------------------------------------------------------------------------------------------------------------------------------------
-            Main Content of Page
-            -------------------------------------------------------------------------------------------------------------------------------------
-             */
-
-            val reservations = listOf("#1001", "#1002", "#1003") // placeholder
-
-            Column(modifier = Modifier.fillMaxSize()) {
-                // Switch between Active / Past / Cancelled
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Button(
-                        onClick = { navController.navigate("owner_reservations_active") { launchSingleTop = true } },
-                        enabled = false
-                    ) { Text("Active") }
-                    Button(
-                        onClick = { navController.navigate("owner_reservations_past") { launchSingleTop = true } },
-                        enabled = true
-                    ) { Text("Past") }
-                    Button(
-                        onClick = { navController.navigate("owner_reservations_cancelled") { launchSingleTop = true } },
-                        enabled = true
-                    ) { Text("Cancelled") }
-                }
-
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(reservations) { id ->
-                        Card(modifier = Modifier.fillMaxWidth()) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text("Reservation $id", fontSize = 18.sp)
-                                Text("Campsite: —  |  Site: —")
-                                Text("Guest: —")
-                                Text("Dates: —")
-                                Text("Status: Active")
-                            }
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(reservations) { id ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("Reservation $id", fontSize = 18.sp)
+                            Text("Campsite: —  |  Site: —")
+                            Text("Guest: —")
+                            Text("Dates: —")
+                            Text("Status: Active")
                         }
                     }
                 }
             }
-        }
-
-        // Pinned Bottom Row (Owner navigation)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .padding(5.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(
-                onClick = { navController.navigate("owner_reservations_active") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Reservations", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_notifications") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Notifs", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_messages") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Messages", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_lotteries") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Lotteries", fontSize = 11.sp) }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .heightIn(max = 16.dp)
-                .heightIn(min = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-
         }
     }
 }

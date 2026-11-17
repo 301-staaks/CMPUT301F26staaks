@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -29,7 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.SavedStateHandle
@@ -140,6 +143,25 @@ fun OwnerConversation(
 
             var draft by remember { mutableStateOf("") }
 
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 8.dp)
+            ) {
+                GenericButton(
+                    text = "Back",
+                    onClick = { navController.navigate("owner_messages") },
+                )
+                Text(
+                    text = viewModel.getUser(otherUserId ?: "")?.name ?: "",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+
+            HorizontalDivider()
+
+
             Column(modifier = Modifier.fillMaxSize()) {
                 LazyColumn(
                     modifier = Modifier
@@ -152,7 +174,7 @@ fun OwnerConversation(
                         val fromOwner = message.senderId == session?.userId
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = if (fromOwner) Arrangement.End else Arrangement.Start
+                            horizontalArrangement = if (fromOwner) Arrangement.End else Arrangement.Start,
                         ) {
                             Text(
                                 text = message.text,
@@ -160,7 +182,7 @@ fun OwnerConversation(
                                 modifier = Modifier
                                     .background(
                                         color = if (fromOwner) Color(0xFF1B5E20) else Color.LightGray,
-                                        shape = RoundedCornerShape(12.dp)
+                                        shape = RoundedCornerShape(12.dp),
                                     )
                                     .padding(10.dp)
                             )
@@ -183,14 +205,16 @@ fun OwnerConversation(
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = {
-                        if (draft.isNotBlank()) {
-                            viewModel.sendMessage(session?.userId ?: "", draft)
-                            draft = ""
+
+                    GenericButton(
+                        text = "Send",
+                        onClick = {
+                            if (draft.isNotBlank()) {
+                                viewModel.sendMessage(session?.userId ?: "", draft)
+                                draft = ""
+                            }
                         }
-                    }) {
-                        Text("Send")
-                    }
+                    )
                 }
             }
         }

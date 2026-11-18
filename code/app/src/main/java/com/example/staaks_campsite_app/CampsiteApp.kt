@@ -1,5 +1,7 @@
 package com.example.staaks_campsite_app
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.navigation.compose.NavHost
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -19,6 +21,7 @@ import com.example.staaks_campsite_app.Entree.OwnerCampsitePreview
 import com.example.staaks_campsite_app.data.getDeviceId
 import com.example.staaks_campsite_app.session.SessionManager
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CampsiteApp() {
     /*
@@ -29,6 +32,9 @@ fun CampsiteApp() {
     val campsiteRepository = remember {
         CampsiteRepository()
     }
+
+    val context = LocalContext.current
+    val currentUserId = remember(context) { getDeviceId(context) }
 
     val context = LocalContext.current
     val currentUserId = remember(context) { getDeviceId(context) }
@@ -51,7 +57,33 @@ fun CampsiteApp() {
                 loadError = campsiteRepository.loadError
             )
         }
-        composable("entree_main") { EntreeMain(navController) }
+        composable("entree_main") { EntrantMain(navController, selectedTab = "Home") }
+        composable("entrant_campsite/{campsiteId}") { backStackEntry ->
+            val campsiteId =
+                backStackEntry.arguments?.getString("campsiteId") ?: ""
+            EntreeCampsite(
+                navController = navController,
+                campsiteID = campsiteId
+            )
+        }
+        composable("entrant_campsite_review/{campsiteId}") { backStackEntry ->
+            val campsiteId =
+                backStackEntry.arguments?.getString("campsiteId") ?: ""
+            EntreeCampsite(
+                navController = navController,
+                campsiteID = campsiteId,
+                isReview = true
+            )
+        }
+        composable("entree_campsite_review/{campsiteId}") { backStackEntry ->
+            val campsiteId =
+                backStackEntry.arguments?.getString("campsiteId") ?: ""
+            EntreeCampsite(
+                navController = navController,
+                campsiteID = campsiteId,
+                isReview = true
+            )
+        }
         composable("profile_screen") { ProfileScreen(navController) }
         composable("policy_guidelines_screen") { PolicyGuidelinesPage(navController) }
         composable("entree_res_screen") { EntreeResScreen(navController) }
@@ -67,10 +99,17 @@ fun CampsiteApp() {
         //composable("sample_res_page") { SampleResPage(navController) }
         composable("admin_users") { AdminUsersScreen(navController) }
         composable("admin_user/{userId}") { AdminUserProfile(navController) }
+        composable("admin_user/{userId}") { AdminUserProfile(navController) }
         composable("all_notifications") { AllNotifications(navController) }
         composable("all_messages") { AllMessages(navController) }
         composable("images_screen") { ImagesScreen(navController) }
         composable("admin_conversation") { AdminConversation(navController) }
+
+        composable<admin_campsite> { backStackEntry ->
+            val campsite = backStackEntry.toRoute<admin_campsite>()
+            AdminCampsite(navController, campsiteId = campsite.campsiteID)
+        }
+
 
         composable<admin_campsite> { backStackEntry ->
             val campsite = backStackEntry.toRoute<admin_campsite>()

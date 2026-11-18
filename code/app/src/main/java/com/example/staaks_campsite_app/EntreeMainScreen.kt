@@ -41,7 +41,7 @@ import androidx.compose.material3.OutlinedTextField
  * @param navController controls navigation to other screens.
  */
 @Composable
-fun EntrantMain(navController: NavController) {
+fun EntreeMain(navController: NavController) {
     var campsiteSearchInput by remember { mutableStateOf("") }
     var showFilterOptions by remember { mutableStateOf(false) }
     var locationFilter by remember { mutableStateOf("") }

@@ -51,6 +51,8 @@ import com.example.staaks_campsite_app.data.model.Reservation
  * displays the reservation screen
  * @param userId the id of the user
  * @param userType the type of user
+ * @param showScreen the type of reservation to show
+ * @param onClicked the function to call when the campsite is clicked
  * @param onMessage the function to call when the message button is pressed
  * @param onReservation the function to call when the reservation button is pressed
  */
@@ -59,17 +61,21 @@ import com.example.staaks_campsite_app.data.model.Reservation
 fun ReservationScreen(
     userId: String,
     userType: String,
+    showScreen: String = "active",
+
+    onClicked: (reservation: Reservation) -> Unit = {},
     onMessage: (reservation: Reservation) -> Unit,
     onReservation: (reservation: Reservation) -> Unit
 ) {
     val reservationRepository = remember { ReservationRepository() }
     val campsites = remember { CampsiteRepository().campsites }
-    var showScreen by remember { mutableStateOf("active") }
+    var showScreen by remember { mutableStateOf(showScreen) }
 
     // check if the reservations are past
     reservationRepository.checkReservationPast()
 
     Column(modifier = Modifier.fillMaxWidth()) {
+        /*
         // switch between active, past, and cancelled reservations
         if (userType == "Owner") {
             Row(
@@ -100,7 +106,9 @@ fun ReservationScreen(
             }
         }
 
-        val filteredReservations = remember(reservationRepository.reservations, showScreen, userId, userType) {
+         */
+
+        val filteredReservations = run {
             val list = mutableListOf<Reservation>()
             if (userType == "Owner") {
                 val ownerCampsiteIds = campsites.filter { it.ownerId == userId }.map { it.id }
@@ -127,9 +135,9 @@ fun ReservationScreen(
         }
 
         when (showScreen) {
-            "active" -> activeReservationScreen(userType, filteredReservations, reservationRepository, onMessage, onReservation)
-            "past" -> pastReservationScreen(userType, filteredReservations, reservationRepository, onMessage, onReservation)
-            "cancelled" -> cancelledReservationScreen(userType, filteredReservations, reservationRepository, onMessage, onReservation)
+            "active" -> activeReservationScreen(userType, filteredReservations, onClicked, onMessage, onReservation)
+            "past" -> pastReservationScreen(userType, filteredReservations, onClicked, onMessage, onReservation)
+            "cancelled" -> cancelledReservationScreen(userType, filteredReservations, onClicked, onMessage, onReservation)
         }
     }
 }
@@ -138,7 +146,7 @@ fun ReservationScreen(
 fun activeReservationScreen(
     userType: String,
     reservations: List<Reservation>,
-    reservationRepository: ReservationRepository,
+    onClicked: (reservation: Reservation) -> Unit = {},
     onMessage: (reservation: Reservation) -> Unit = {},
     onReservation: (reservation: Reservation) -> Unit = {}
 ) {
@@ -170,7 +178,8 @@ fun activeReservationScreen(
                     reservation = reservation,
                     isActive = true,
                     onMessage = { onMessage(reservation) },
-                    onReservation = { onReservation(reservation) }
+                    onReservation = { onReservation(reservation) },
+                    onClicked = { onClicked(reservation) }
                 )
             }
         }
@@ -181,7 +190,7 @@ fun activeReservationScreen(
 fun pastReservationScreen(
     userType: String,
     reservations: List<Reservation>,
-    reservationRepository: ReservationRepository,
+    onClicked: (reservation: Reservation) -> Unit = {},
     onMessage: (reservation: Reservation) -> Unit = {},
     onReservation: (reservation: Reservation) -> Unit = {}
 ) {
@@ -208,7 +217,8 @@ fun pastReservationScreen(
                 reservation = reservation,
                 isActive = false,
                 onMessage = { onMessage(reservation) },
-                onReservation = { onReservation(reservation) }
+                onReservation = { onReservation(reservation) },
+                onClicked = { onClicked(reservation) }
             )
         }
     }
@@ -218,7 +228,7 @@ fun pastReservationScreen(
 fun cancelledReservationScreen(
     userType: String,
     reservations: List<Reservation>,
-    reservationRepository: ReservationRepository,
+    onClicked: (reservation: Reservation) -> Unit = {},
     onMessage: (reservation: Reservation) -> Unit = {},
     onReservation: (reservation: Reservation) -> Unit = {}
 ) {
@@ -245,7 +255,8 @@ fun cancelledReservationScreen(
                 reservation = reservation,
                 isActive = false,
                 onMessage = { onMessage(reservation) },
-                onReservation = { onReservation(reservation) }
+                onReservation = { onReservation(reservation) },
+                onClicked = { onClicked(reservation) }
             )
         }
     }
@@ -258,6 +269,7 @@ fun reservationCard(
     isActive: Boolean,
     onMessage: () -> Unit = {},
     onReservation: () -> Unit = {},
+    onClicked: () -> Unit = {}
 ) {
     val isActiveStatus = reservation.status.equals("Active", ignoreCase = true)
     val badgeContainerColor = if (isActiveStatus) Color(0xFFD8F3DC) else Color(0xFFE0E0E0)
@@ -269,6 +281,7 @@ fun reservationCard(
             .padding(horizontal = 12.dp, vertical = 4.dp),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
+        onClick = onClicked,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(

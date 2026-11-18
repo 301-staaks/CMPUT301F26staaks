@@ -1,5 +1,7 @@
 package com.example.staaks_campsite_app
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.navigation.compose.NavHost
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.composable
@@ -7,13 +9,14 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.admin_campsite
-import com.example.staaks_campsite_app.data.model.entree_campsite
 import com.example.staaks_campsite_app.data.model.owner_campsite
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import com.example.staaks_campsite_app.Entree.EntreeCampsite
 import com.example.staaks_campsite_app.data.getDeviceId
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CampsiteApp() {
     /*
@@ -45,7 +48,33 @@ fun CampsiteApp() {
                 loadError = campsiteRepository.loadError
             )
         }
-        composable("entree_main") { EntreeMain(navController) }
+        composable("entree_main") { EntrantMain(navController, selectedTab = "Home") }
+        composable("entrant_campsite/{campsiteId}") { backStackEntry ->
+            val campsiteId =
+                backStackEntry.arguments?.getString("campsiteId") ?: ""
+            EntreeCampsite(
+                navController = navController,
+                campsiteID = campsiteId
+            )
+        }
+        composable("entrant_campsite_review/{campsiteId}") { backStackEntry ->
+            val campsiteId =
+                backStackEntry.arguments?.getString("campsiteId") ?: ""
+            EntreeCampsite(
+                navController = navController,
+                campsiteID = campsiteId,
+                isReview = true
+            )
+        }
+        composable("entree_campsite_review/{campsiteId}") { backStackEntry ->
+            val campsiteId =
+                backStackEntry.arguments?.getString("campsiteId") ?: ""
+            EntreeCampsite(
+                navController = navController,
+                campsiteID = campsiteId,
+                isReview = true
+            )
+        }
         composable("profile_screen") { ProfileScreen(navController) }
         composable("policy_guidelines_screen") { PolicyGuidelinesPage(navController) }
         composable("entree_res_screen") { EntreeResScreen(navController) }

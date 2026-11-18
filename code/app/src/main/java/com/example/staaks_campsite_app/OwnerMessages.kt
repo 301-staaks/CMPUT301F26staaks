@@ -173,7 +173,8 @@ fun OwnerMessages(navController: NavController) {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 300.dp)
             ) {
                 items(conversations) { conversation ->
                     val otherUserId = conversation.participantIds.find { it != session?.userId }
@@ -203,7 +204,7 @@ fun OwnerMessages(navController: NavController) {
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { navController.navigate("owner_conversation/${conversation.conversationId}") }
+                            .clickable { navController.navigate("owner_conversation/${conversation.conversationId}")}
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(8.dp),

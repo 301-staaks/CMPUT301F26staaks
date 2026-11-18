@@ -237,7 +237,9 @@ fun TopRowHomeButton(onClick: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Default.Home,
-                contentDescription = "Home"
+                contentDescription = "Home",
+                modifier = Modifier.size(30.dp),
+                tint = Color.White
             )
         }
     }

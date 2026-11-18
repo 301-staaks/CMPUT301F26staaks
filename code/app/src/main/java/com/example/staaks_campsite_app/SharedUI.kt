@@ -31,6 +31,7 @@ import androidx.navigation.NavController
 
 data class Tab(val route: String, val label: String, val icon: ImageVector)
 
+// OLD CODE
 @Composable
 fun UiTopRow2(
     navController: NavController,
@@ -89,7 +90,7 @@ fun UiTopRow(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
+            .shadow(8.dp, RoundedCornerShape(bottomStart = 0.dp, bottomEnd = 0.dp))
             .background(
                 brush = Brush.verticalGradient(
                     // darker 0xFF1B5E20
@@ -98,7 +99,7 @@ fun UiTopRow(
                     // light 0xFF63B267
                     colors = listOf(Color(0xFF1B5E20), Color(0xFF1B5E20))
                 ),
-                shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+                shape = RoundedCornerShape(bottomStart = 0.dp, bottomEnd = 0.dp)
             )
             .statusBarsPadding()
             .padding(vertical = 0.dp, horizontal = 2.dp)
@@ -126,12 +127,17 @@ fun UiTopRow(
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Box(
-                    modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.CenterEnd
                 ) {
                     if (isAdmin) {
                         AdminTopRowToggleChangeView { changeViewVisible = !changeViewVisible }
                     }
+                }
+                Box(
+                    modifier = Modifier.weight(1f).padding(8.dp),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    UserProfileImagePreview(size = 40.dp)
                 }
             }
             if (changeViewVisible) {
@@ -141,6 +147,7 @@ fun UiTopRow(
     }
 }
 
+// OLD CODE
 @Composable
 fun UiBottomRow2(
     navController: NavController,
@@ -181,7 +188,7 @@ fun UiBottomRow(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .shadow(8.dp, RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp))
             .background(
                 brush = Brush.verticalGradient(
                     // darker 0xFF1B5E20
@@ -190,7 +197,7 @@ fun UiBottomRow(
                     // light 0xFF63B267
                     colors = listOf(Color(0xFF1B5E20), Color(0xFF1B5E20))
                 ),
-                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp)
             )
             .statusBarsPadding()
             .padding(vertical = 0.dp, horizontal = 2.dp)

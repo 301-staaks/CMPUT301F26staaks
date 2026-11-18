@@ -175,7 +175,8 @@ fun OwnerMain(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 300.dp)
             ) {
                 // Replaced placeholders with actual campsite data -Szymon
                 itemsIndexed(campsites) { index, campsite ->

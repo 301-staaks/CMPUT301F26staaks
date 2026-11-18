@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -18,6 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -27,7 +32,7 @@ import androidx.navigation.NavController
 data class Tab(val route: String, val label: String, val icon: ImageVector)
 
 @Composable
-fun UiTopRow(
+fun UiTopRow2(
     navController: NavController,
     title: String = "Title",
     homeRoute: String = "",
@@ -73,7 +78,71 @@ fun UiTopRow(
 }
 
 @Composable
-fun UiBottomRow(
+fun UiTopRow(
+    navController: NavController,
+    title: String = "Title",
+    homeRoute: String = "",
+    isAdmin: Boolean = false
+) {
+    var changeViewVisible by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(8.dp, RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
+            .background(
+                brush = Brush.verticalGradient(
+                    // darker 0xFF1B5E20
+                    // dark 0xFF3E8E45
+                    // lighter 0xFF7BC67F
+                    // light 0xFF63B267
+                    colors = listOf(Color(0xFF1B5E20), Color(0xFF1B5E20))
+                ),
+                shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+            )
+            .statusBarsPadding()
+            .padding(vertical = 0.dp, horizontal = 2.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color = Color(0xFF1B5E20))
+                    .padding(4.dp, bottom = 8.dp)
+
+            ) {
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    TopRowHomeButton(onClick = { navController.navigate(homeRoute) })
+                }
+
+                Text(
+                    text = title,
+                    fontSize = 25.sp,
+                    color = Color.White,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    if (isAdmin) {
+                        AdminTopRowToggleChangeView { changeViewVisible = !changeViewVisible }
+                    }
+                }
+            }
+            if (changeViewVisible) {
+                AdminViewChanger(navController = navController)
+            }
+        }
+    }
+}
+
+@Composable
+fun UiBottomRow2(
     navController: NavController,
     tabs: List<Tab>
 ) {
@@ -99,6 +168,55 @@ fun UiBottomRow(
                     unselectedTextColor = Color.White.copy(alpha = 0.8f),
                 )
             )
+        }
+    }
+}
+
+@Composable
+fun UiBottomRow(
+    navController: NavController,
+    tabs: List<Tab>
+) {
+    val currentRoute = navController.currentBackStackEntry?.destination?.route
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(8.dp, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .background(
+                brush = Brush.verticalGradient(
+                    // darker 0xFF1B5E20
+                    // dark 0xFF3E8E45
+                    // lighter 0xFF7BC67F
+                    // light 0xFF63B267
+                    colors = listOf(Color(0xFF1B5E20), Color(0xFF1B5E20))
+                ),
+                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+            )
+            .statusBarsPadding()
+            .padding(vertical = 0.dp, horizontal = 2.dp)
+    ) {
+        NavigationBar(containerColor = Color(0xFF1B5E20), modifier = Modifier.padding(all = 0.dp)) {
+            tabs.forEach { tab ->
+                NavigationBarItem(
+                    selected = currentRoute == tab.route,
+                    onClick = {
+                        navController.navigate(tab.route) {
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = { Icon(imageVector = tab.icon, contentDescription = tab.label, tint = Color.White, modifier = Modifier.size(30.dp)) },
+                    label = { Text(text = tab.label) },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = Color(0xFF63B267),
+                        selectedIconColor = Color.White,
+                        selectedTextColor = Color.White,
+                        unselectedIconColor = Color.White.copy(alpha = 0.8f),
+                        unselectedTextColor = Color.White.copy(alpha = 0.8f),
+                    )
+                )
+            }
         }
     }
 }

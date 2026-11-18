@@ -28,12 +28,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Forest
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.ImageNotSupported
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
@@ -110,20 +114,22 @@ fun OwnerMain(
     onEditCampsite: (Campsite) -> Unit
 ) {
     val session by SessionManager.state.collectAsState()
+    var expandedCampsite by remember { mutableStateOf(-1) }
 
     Scaffold(
-        topBar = { UiTopRow(navController = navController, title = "Owner Main", homeRoute = "owner_main", isAdmin = session!!.isAdmin) },
+        topBar = { UiTopRow(navController = navController, title = "Home", homeRoute = "owner_main", isAdmin = session!!.isAdmin) },
         bottomBar = { UiBottomRow(navController = navController, tabs = ownerTabs) },
         floatingActionButton = {
             NewCampsiteButton(onClick = { navController.navigate(route = "owner_campsite_new") })
         },
         floatingActionButtonPosition = FabPosition.Start
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding)) {
+        Column(modifier = Modifier.padding(innerPadding), horizontalAlignment = Alignment.CenterHorizontally) {
+            Spacer(modifier = Modifier.height(12.dp))
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(8.dp, RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                    .fillMaxWidth(0.96f)
+                    .shadow(8.dp, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp))
                     .background(
                         brush = Brush.verticalGradient(
                             // darker 0xFF1B5E20
@@ -132,10 +138,9 @@ fun OwnerMain(
                             // light 0xFF63B267
                             colors = listOf(Color(0xFF63B267), Color(0xFF63B267))
                         ),
-                        shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+                        shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
                     )
-                    .statusBarsPadding()
-                    .padding(vertical = 2.dp, horizontal = 16.dp)
+                    .padding(top=8.dp, bottom=4.dp)
             ) {
                 Column(
                     modifier = Modifier.align(Alignment.Center),
@@ -157,15 +162,16 @@ fun OwnerMain(
                             letterSpacing = 0.5.sp
                         )
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(0.dp))
                     Text(
                         text = "${campsites.size} saved",
                         color = Color.White.copy(alpha = 0.85f),
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                 }
             }
+            Spacer(modifier = Modifier.height(12.dp))
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -177,13 +183,18 @@ fun OwnerMain(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .clickable(onClick = { if (expandedCampsite == index) {expandedCampsite = -1} else {expandedCampsite = index} })
                     ) {
                         OwnerCampsiteCard(
                             campsite = campsite,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 150.dp)
-                                .padding(horizontal = 8.dp)
+                                .padding(horizontal = 8.dp),
+                            isExpanded = expandedCampsite == index,
+                            onPreviewCampsite = { navController.navigate("owner_campsite_preview/${campsite.id}") },
+                            onEditCampsite = { onEditCampsite(campsite) },
+                            onAddToLottery = { /* TODO : Add campsite to existing lottery */ },
                         )
                     }
 //                    OwnerCampsiteCardActions(
@@ -209,11 +220,14 @@ fun OwnerCampsiteCardActions(
     campsite: Campsite,
     onPreviewCampsite: (Campsite) -> Unit,
     onEditCampsite: (Campsite) -> Unit,
-    onAddToLottery: (Campsite) -> Unit,
-    modifier: Modifier = Modifier
+    onAddToLottery: (Campsite) -> Unit
 ) {
     Row(
-        modifier = modifier
+        modifier = Modifier
+        .fillMaxWidth()
+        .background(color = Color.LightGray)
+        .padding(5.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         GenericButton (text="Preview",onClick = { onPreviewCampsite(campsite) })
         GenericButton (text="Edit",onClick = { onEditCampsite(campsite) })
@@ -239,7 +253,10 @@ fun NewCampsiteButton(onClick: () -> Unit) {
 fun OwnerCampsiteCard(
     campsite: Campsite,
     modifier: Modifier = Modifier,
-    isExpanded: Boolean = false
+    isExpanded: Boolean = false,
+    onPreviewCampsite: (Campsite) -> Unit,
+    onEditCampsite: (Campsite) -> Unit,
+    onAddToLottery: (Campsite) -> Unit
 ) {
     Card(
         modifier = modifier,
@@ -359,13 +376,21 @@ fun OwnerCampsiteCard(
 
                     // Chevron icon replacing standard text ">"
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        imageVector = if (isExpanded) {Icons.Default.KeyboardArrowUp} else {Icons.Default.KeyboardArrowDown},
                         contentDescription = "View Details",
                         tint = MaterialTheme.colorScheme.outline,
                         modifier = Modifier.weight(0.1f)
                     )
                 }
             }
+        }
+        if (isExpanded) {
+            OwnerCampsiteCardActions(
+                campsite = campsite,
+                onPreviewCampsite = onPreviewCampsite,
+                onEditCampsite = onEditCampsite,
+                onAddToLottery = onAddToLottery
+            )
         }
     }
 }

@@ -317,7 +317,7 @@ fun CampsiteImagePreview(imageUrl: String) {
 
 @Composable
 fun UserProfileImagePreview(
-    size: Dp = 60.dp, imageUrl: String) {
+    size: Dp = 60.dp, imageUrl: String = "") {
 
 
     var showPlaceholder by remember(imageUrl) {

@@ -1,6 +1,7 @@
 package com.example.staaks_campsite_app
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Textsms
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
@@ -37,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -56,7 +59,6 @@ import com.google.firebase.firestore.firestore
 
 
 private val ownerTabs = listOf(
-    Tab("owner_main", "Main", Icons.Default.Home),
     Tab("owner_reservations_active", "Reservations", Icons.Default.CalendarMonth),
     Tab("owner_notifications", "Notifications", Icons.Default.Notifications),
     Tab("owner_messages", "Messages", Icons.Default.Textsms),
@@ -85,25 +87,99 @@ fun OwnerMain(
         topBar = { UiTopRow(navController = navController, title = "Owner Main", homeRoute = "owner_main", isAdmin = session!!.isAdmin) },
         bottomBar = { UiBottomRow(navController = navController, tabs = ownerTabs) }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Replaced placeholders with actual campsite data -Szymon
-            items(campsites, key = { it.id }) { campsite ->
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(campsite.name, fontSize = 20.sp)
-                        Text("Location: ${campsite.location}")
-                        Text("Capacity: ${campsite.capacity}  |  Price/night: ${campsite.price}")
-                        Text("Upcoming reservations: —")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { onEditCampsite(campsite) }) {
-                            Text("Edit")
+        Column(modifier = Modifier
+            .padding(innerPadding)
+            .fillMaxSize()) {
+
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth(),
+
+
+                ) {
+                Button(
+                    shape = RectangleShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF009E60),
+                        contentColor = Color.White
+                    ),
+                    onClick = {
+                    navController.navigate("owner_campsite_new")
+                }) { Text("New Campsite") }
+            }
+
+
+            LazyColumn(
+                modifier = Modifier,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Replaced placeholders with actual campsite data -Szymon
+                items(campsites, key = { it.id }) { campsite ->
+//                    Card(modifier = Modifier.fillMaxWidth()) {
+//                        Column(modifier = Modifier.padding(12.dp)) {
+//                            Text(campsite.name, fontSize = 20.sp)
+//                            Text("Location: ${campsite.location}")
+//                            Text("Capacity: ${campsite.capacity}  |  Price/night: $${campsite.price}")
+//                            Text("Upcoming reservations: —")
+//                            Spacer(modifier = Modifier.height(8.dp))
+//                            Button(onClick = { onEditCampsite(campsite) }) {
+//                                Text("Edit")
+//                            }
+//                        }
+//                    }
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(color= Color(0xFFD8FAD0))
+                            .border(width = 2.dp, color = Color.Gray)
+                    ) {
+
+                        Column(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+
+                            CampsiteImagePreview(
+                                imageUrl = campsite.images?.firstOrNull() ?: ""
+                            )
+
+                            Text(
+                                modifier = Modifier
+                                    .padding(16.dp),
+                                text = campsite.name,
+                                fontSize = 20.sp
+                            )
+
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceEvenly
+                            ) {
+                                Box(
+                                    modifier = Modifier.weight(1f),
+                                ){
+                                    GenericButton(
+                                        onClick = { onEditCampsite(campsite) },
+                                        text = "Edit Campsite"
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier.weight(1f),
+                                ){
+                                    Text(
+                                        fontSize = 10.sp,
+                                        lineHeight = 16.sp,
+                                        text = "📍: ${campsite.location}\n👥: ${campsite.capacity}\n💰: \$${String.format("%.2f", campsite.price)}"
+                                    )
+                                }
+                            }
+
+
                         }
                     }
+
                 }
             }
         }

@@ -283,7 +283,7 @@ fun CampsiteImagePreview(imageUrl: String) {
         modifier = Modifier
             .fillMaxWidth()
             .height(160.dp)
-            .background(Color.LightGray),
+            .background(color= Color(0xFFD8FAD0)),
 
         contentAlignment = Alignment.Center
     ) {

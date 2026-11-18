@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -31,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -158,7 +160,7 @@ fun AdminCampsite(navController: NavController, campsiteId: String) {
                         fontSize = 24.sp,
                         modifier = Modifier.weight(1f)
                     )
-                    Text("${campsite.rating} Stars")
+                    Text("⭐ ${String.format("%.1f", campsite.rating)} (${campsite.ratingCount})")
                 }
 
                 // Image carousel
@@ -183,27 +185,29 @@ fun AdminCampsite(navController: NavController, campsiteId: String) {
                 }
 
                 // Description
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.LightGray)
-                        .padding(12.dp)
-                ) {
-                    Text("Description", fontSize = 18.sp)
-                    Text(campsite.description)
-                }
+
 
                 // Details
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.LightGray)
+                        .background(color = Color(0xFFF1F8E9), shape = RoundedCornerShape(8.dp))
                         .padding(12.dp)
                 ) {
-                    Text("Details", fontSize = 18.sp)
-                    Text("Location: ${campsite.location}")
-                    Text("Capacity: ${campsite.capacity}")
-                    Text("Price: CAD ${campsite.price} / night")
+                    Text(text = "Details", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
+                    Text(text = "📍 Location: ${campsite.location}", fontSize = 14.sp)
+                    Text(text = "👥 Capacity: ${campsite.capacity} guests", fontSize = 14.sp)
+                    Text(text = "💰 Price per Night: \$${String.format("%.2f", campsite.price)}", fontSize = 14.sp)
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(8.dp))
+                        .padding(12.dp)
+                ) {
+                    Text(text = "Description", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
+                    Text(text = campsite.description.ifBlank { "No description available." }, fontSize = 14.sp)
                 }
 
                 // Delete

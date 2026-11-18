@@ -2,6 +2,7 @@ package com.example.staaks_campsite_app
 
 import android.widget.Button
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -133,7 +134,8 @@ fun AdminMain(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.LightGray)
+                        .background(color= Color(0xFFD8FAD0))
+                        .border(width = 2.dp, color = Color.Gray)
                 ) {
 
                     Column(
@@ -145,21 +147,42 @@ fun AdminMain(
                         )
 
                         Text(
+                            modifier = Modifier
+                                .padding(16.dp),
                             text = campsite.name,
                             fontSize = 20.sp
                         )
 
-                        Text(campsite.location)
 
-                        GenericButton(
-                            onClick = {
-                                // opens the details screen for the selected campsite
-                                navController.navigate(
-                                    "admin_campsite/${campsite.id}"
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Box(
+                                modifier = Modifier.weight(1f),
+                            ){
+                                GenericButton(
+                                    onClick = {
+                                        // opens the details screen for the selected campsite
+                                        navController.navigate(
+                                            "admin_campsite/${campsite.id}"
+                                        )
+                                    },
+                                    text = "View Campsite"
                                 )
-                            },
-                            text = "View Campsite"
-                        )
+                            }
+                            Box(
+                                modifier = Modifier.weight(1f),
+                            ){
+                                Text(
+                                    fontSize = 10.sp,
+                                    lineHeight = 16.sp,
+                                    text = "📍: ${campsite.location}\n👥: ${campsite.capacity}\n💰: \$${String.format("%.2f", campsite.price)}"
+                                )
+                            }
+                        }
+
+
                     }
                 }
             }

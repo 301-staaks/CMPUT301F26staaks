@@ -13,18 +13,32 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ConfirmationNumber
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Textsms
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.staaks_campsite_app.session.SessionManager
 
-
+private val ownerTabs = listOf(
+    Tab("owner_reservations_active", "Reservations", Icons.Default.CalendarMonth),
+    Tab("owner_notifications", "Notifications", Icons.Default.Notifications),
+    Tab("owner_messages", "Messages", Icons.Default.Textsms),
+    Tab("owner_lotteries", "Lotteries", Icons.Default.ConfirmationNumber)
+)
 /**
  * The owner's messages screen, it lists conversations with guests.
  *
@@ -35,69 +49,16 @@ import androidx.navigation.NavController
  */
 @Composable
 fun OwnerMessages(navController: NavController) {
-    Column {
 
-        // Pinned Top Row
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()            // Makes the row span the full width
-                .background(color = Color(0xFF1B5E20))
-                .padding(16.dp)
-        ) {
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Button(
-                    onClick = {
-                        navController.popBackStack()
-                    }
-                ) {
-                    Text("Back")
-                }
-            }
+    val session by SessionManager.state.collectAsState()
 
-            Text(
-                text = "Messages",
-                fontSize = 25.sp,
-                color = Color.White,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
-
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-
-            }
-        }
-
-        // This is for when the admin is spoofing a different user. Logic must be implemented here to allow this to pop up
-        if (false) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()            // Makes the row span the full width
-                    .background(color = Color(0xFF63B267))
-                    .heightIn(max = 45.dp)
-                    .padding(5.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Text(
-                    text = "View:",
-                    fontSize = 15.sp,
-                    color = Color.White
-                )
-                Button(onClick = { /* ... */ }) { Text("Admin") }
-                Button(onClick = { /* ... */ }) { Text("Owner") }
-                Button(onClick = { /* ... */ }) { Text("Entree") }
-            }
-        }
-
+    Scaffold(
+        topBar = { UiTopRow(navController = navController, title = "Owner Main", homeRoute = "owner_main", isAdmin = session!!.isAdmin) },
+        bottomBar = { UiBottomRow(navController = navController, tabs = ownerTabs) }
+    ) { innerPadding ->
         Box(
             modifier = Modifier
-                .weight(1f)
+                .padding(innerPadding)
         ) {
             /*
             -------------------------------------------------------------------------------------------------------------------------------------
@@ -127,42 +88,6 @@ fun OwnerMessages(navController: NavController) {
                     }
                 }
             }
-        }
-
-        // Pinned Bottom Row (Owner navigation)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .padding(5.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(
-                onClick = { navController.navigate("owner_reservations_active") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Reservations", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_notifications") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Notifs", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_messages") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Messages", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_lotteries") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Lotteries", fontSize = 11.sp) }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .heightIn(max = 16.dp)
-                .heightIn(min = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-
         }
     }
 }

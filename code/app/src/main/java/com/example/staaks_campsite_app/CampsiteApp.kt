@@ -2,19 +2,16 @@ package com.example.staaks_campsite_app
 
 import androidx.navigation.compose.NavHost
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.admin_campsite
-import com.example.staaks_campsite_app.data.model.entree_campsite
 import com.example.staaks_campsite_app.data.model.owner_campsite
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.example.staaks_campsite_app.data.getDeviceId
-import com.example.staaks_campsite_app.session.SessionManager
 
 @Composable
 fun CampsiteApp() {
@@ -97,8 +94,7 @@ fun CampsiteApp() {
                 navController = navController,
                 isNew = true,
                 ownerId = currentUserId,
-                onSave = { campsiteRepository.addOrUpdateCampsite(it) }
-            )
+            ) { campsiteRepository.addOrUpdateCampsite(it) }
         }
         composable("owner_campsite_edit/{campsiteId}") { backStackEntry ->
             val id = backStackEntry.arguments?.getString("campsiteId")
@@ -107,8 +103,7 @@ fun CampsiteApp() {
                 isNew = false,
                 ownerId = currentUserId,
                 existing = campsiteRepository.campsites.find { it.id == id },
-                onSave = { campsiteRepository.addOrUpdateCampsite(it) }
-            )
+            ) { campsiteRepository.addOrUpdateCampsite(it) }
         }
         composable("owner_reservations_active") { OwnerReservationsActive(navController) }
         composable("owner_reservations_past") { OwnerReservationsPast(navController) }

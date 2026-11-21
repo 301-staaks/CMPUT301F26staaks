@@ -29,6 +29,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavController
+import com.example.staaks_campsite_app.data.getDeviceId
+import androidx.compose.ui.platform.LocalContext
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -351,9 +353,14 @@ fun Profile(navController: NavController) {
 fun ReservationScreenContent() {
     NotFoundScreen()
 }
+/**
+ * the entrant's Inbox tab
+ */
 @Composable
 fun InboxContent() {
-    NotFoundScreen()
+    val context = LocalContext.current
+    val entrantId = remember(context) { getDeviceId(context) }
+    NotificationInbox(entrantId = entrantId)
 }
 @Composable
 fun MessageScreenContent() {

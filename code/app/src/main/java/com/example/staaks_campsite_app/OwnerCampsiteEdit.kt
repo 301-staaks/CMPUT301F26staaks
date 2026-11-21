@@ -12,10 +12,18 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ConfirmationNumber
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Textsms
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,8 +34,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.Campsite
+import com.example.staaks_campsite_app.session.SessionManager
+
+private val ownerTabs = listOf(
+    Tab("owner_reservations_active", "Reservations", Icons.Default.CalendarMonth),
+    Tab("owner_notifications", "Notifications", Icons.Default.Notifications),
+    Tab("owner_messages", "Messages", Icons.Default.Textsms),
+    Tab("owner_lotteries", "Lotteries", Icons.Default.ConfirmationNumber)
+)
 
 /**
  * The owner's screen for creating a new campsite or editing an existing one
@@ -46,75 +61,22 @@ fun OwnerCampsiteEdit(
     existing: Campsite? = null,
     onSave: (Campsite) -> Unit
 ) {
+    val session by SessionManager.state.collectAsState()
+
     var name by remember(existing?.id) { mutableStateOf(existing?.name ?: "") }
     var location by remember(existing?.id) { mutableStateOf(existing?.location ?: "") }
     var capacity by remember(existing?.id) { mutableStateOf(existing?.capacity?.toString() ?: "") }
     var price by remember(existing?.id) { mutableStateOf(existing?.price?.toString() ?: "") }
     var description by remember(existing?.id) { mutableStateOf(existing?.description ?: "") }
 
-    Column {
 
-        // Pinned Top Row
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()            // Makes the row span the full width
-                .background(color = Color(0xFF1B5E20))
-                .padding(16.dp)
-        ) {
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Button(
-                    onClick = {
-                        navController.popBackStack()
-                    }
-                ) {
-                    Text("Back")
-                }
-            }
-
-            Text(
-                text = if (isNew) "New Site" else "Edit Site",
-                fontSize = 25.sp,
-                color = Color.White,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
-
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-
-            }
-        }
-
-        // This is for when the admin is spoofing a different user. Logic must be implemented here to allow this to pop up
-        if (false) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()            // Makes the row span the full width
-                    .background(color = Color(0xFF63B267))
-                    .heightIn(max = 45.dp)
-                    .padding(5.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Text(
-                    text = "View:",
-                    fontSize = 15.sp,
-                    color = Color.White
-                )
-                Button(onClick = { /* ... */ }) { Text("Admin") }
-                Button(onClick = { /* ... */ }) { Text("Owner") }
-                Button(onClick = { /* ... */ }) { Text("Entree") }
-            }
-        }
-
+    Scaffold(
+        topBar = { UiTopRow(navController = navController, title = "Owner Main", homeRoute = "owner_main", isAdmin = session!!.isAdmin) },
+        bottomBar = { UiBottomRow(navController = navController, tabs = ownerTabs) }
+    ) { innerPadding ->
         Box(
             modifier = Modifier
-                .weight(1f)
+                .padding(innerPadding)
         ) {
             /*
             -------------------------------------------------------------------------------------------------------------------------------------
@@ -135,6 +97,10 @@ fun OwnerCampsiteEdit(
                 OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, minLines = 3, modifier = Modifier.fillMaxWidth())
 
                 Button( // creates a new campsite owned by owner or updates changed values of an existing one -Szymon
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF009E60),
+                        contentColor = Color.White
+                    ),
                     onClick = {
                         val campsiteToSave = if (existing != null) {
                             existing.copy(
@@ -162,42 +128,6 @@ fun OwnerCampsiteEdit(
                     Text(if (isNew) "Create Campsite" else "Save Changes")
                 }
             }
-        }
-
-        // Pinned Bottom Row (Owner navigation)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .padding(5.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(
-                onClick = { navController.navigate("owner_reservations_active") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Reservations", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_notifications") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Notifs", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_messages") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Messages", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_lotteries") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Lotteries", fontSize = 11.sp) }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .heightIn(max = 16.dp)
-                .heightIn(min = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-
         }
     }
 }

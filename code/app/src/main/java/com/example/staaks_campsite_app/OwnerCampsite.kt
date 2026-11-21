@@ -70,7 +70,6 @@ fun OwnerCampsite(navController: NavController, campsiteID: String) {
                 Button(
                     onClick = {
                         navController.navigate("owner_main")
-
                     },
 
                     ) {

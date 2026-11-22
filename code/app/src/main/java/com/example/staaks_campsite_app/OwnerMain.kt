@@ -106,8 +106,8 @@ fun OwnerMain(
                         contentColor = Color.White
                     ),
                     onClick = {
-                    navController.navigate("owner_campsite_new")
-                }) { Text("New Campsite") }
+                        navController.navigate("owner_campsite_new")
+                    }) { Text("New Campsite") }
             }
 
 
@@ -142,7 +142,7 @@ fun OwnerMain(
                         ) {
 
                             CampsiteImagePreview(
-                                imageUrl = campsite.images?.firstOrNull() ?: ""
+                                imageId = campsite.images.firstOrNull() ?: ""
                             )
 
                             Text(

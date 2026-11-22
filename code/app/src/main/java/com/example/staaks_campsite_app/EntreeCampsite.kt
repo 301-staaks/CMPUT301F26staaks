@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -27,9 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.Campsite
+import com.example.staaks_campsite_app.StoredImage
 
 /**
  * Looks up the campsite matching [campsiteID] in the [CampsiteRepository] and displays its name,
@@ -101,9 +102,13 @@ fun EntreeCampsite(navController: NavController, campsiteID: String) {
             ) { i ->
                 if (i in campsite.images.indices) {
                     val image = campsite.images[i]
-                    AsyncImage(
-                        model = image,
-                        contentDescription = null
+                    StoredImage(
+                        imageId = image,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .maskClip(RoundedCornerShape(8.dp))
                     )
                 }
             }

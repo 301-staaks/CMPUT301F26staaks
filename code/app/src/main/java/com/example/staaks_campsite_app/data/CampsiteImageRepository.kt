@@ -9,11 +9,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
 /**
- * saves campsite image details and links in firestore
+ * loads every photo record in firestore for the admin images screen,
+ * and deletes photos along with their campsite or profile references.
  *
- * still needed: upload and delete the image pictures themselves
+ * the photos themselves are stored as base64 text, see ImageEncoding and ImageStore
  *
- * @property images the image records loaded from firesxtore
+ * @property images the image records loaded from firestore
  */
 class CampsiteImageRepository {
     private val db = Firebase.firestore
@@ -25,12 +26,11 @@ class CampsiteImageRepository {
         get() = _images
 
     /**
-     * saves an image's details and link in firestore
+     * saves an image record, including the photo text, in firestore
      *
      * creates an id if the image record does not have one
-     * does not upload the image file itself
      *
-     * @param image the image details we want to save
+     * @param image the image record we want to save
      */
     fun saveImage(image: CampsiteImage) {
         if (image.imageId.isBlank()) {
@@ -96,7 +96,6 @@ class CampsiteImageRepository {
 
                 val campsiteId = image.getString("campsiteId") ?: ""
                 val userId = image.getString("userId") ?: ""
-                val imageUrl = image.getString("imageUrl") ?: ""
 
                 var removeProfilePhoto = false
 
@@ -112,19 +111,7 @@ class CampsiteImageRepository {
                         val profileImageId =
                             user.getString("profileImageId") ?: ""
 
-                        val profileImageUrl =
-                            user.getString("profileImageUrl") ?: ""
-
                         if (profileImageId == imageId) {
-
-                            removeProfilePhoto = true
-
-                        } else if (
-                            profileImageId.isBlank() &&
-                            imageUrl.isNotBlank() &&
-                            profileImageUrl == imageUrl
-                        ) {
-
                             removeProfilePhoto = true
                         }
                     }
@@ -148,10 +135,7 @@ class CampsiteImageRepository {
 
                                 if (savedImage is String) {
 
-                                    if (
-                                        savedImage != imageId &&
-                                        (imageUrl.isBlank() || savedImage != imageUrl)
-                                    ) {
+                                    if (savedImage != imageId) {
                                         remainingImages.add(savedImage)
                                     }
                                 }
@@ -174,8 +158,6 @@ class CampsiteImageRepository {
                     transaction.update(
                         userReference,
                         "profileImageId",
-                        "",
-                        "profileImageUrl",
                         ""
                     )
                 }
@@ -192,6 +174,7 @@ class CampsiteImageRepository {
         }.addOnCompleteListener { task ->
 
             if (task.isSuccessful && task.result == true) {
+                ImageStore.forget(imageId)
                 onSuccess()
             } else {
                 onError("Could not delete the image.")

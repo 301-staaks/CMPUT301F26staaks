@@ -3,6 +3,7 @@ package com.example.staaks_campsite_app
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -32,6 +33,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavController
+import com.example.staaks_campsite_app.data.getDeviceId
+import androidx.compose.ui.platform.LocalContext
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -247,15 +250,20 @@ fun CampsiteCard(
         Column(
             modifier = Modifier
                 .weight(0.4f)
-                .fillMaxHeight(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ) {
-            /* TODO: Image*/
-            Icon(
-                imageVector = Icons.Default.ImageNotSupported,
-                contentDescription = "Image not supported",
-                modifier = Modifier.fillMaxSize()
+            StoredImage(
+                imageId = campsite.images.firstOrNull() ?: "",
+                contentDescription = campsite.name,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f),
+                placeholder = {
+                    Icon(
+                        imageVector = Icons.Default.ImageNotSupported,
+                        contentDescription = "Image not supported",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             )
         }
         Column(
@@ -352,3 +360,69 @@ fun CampsiteCard(
 }
 
 
+
+@Composable
+fun Profile(navController: NavController) {
+    // TODO:    navController.navigate("profile")
+    NotFoundScreen()
+}
+@Composable
+fun ReservationScreenContent() {
+    NotFoundScreen()
+}
+/**
+ * the entrant's Inbox tab
+ */
+@Composable
+fun InboxContent() {
+    val context = LocalContext.current
+    val entrantId = remember(context) { getDeviceId(context) }
+    NotificationInbox(entrantId = entrantId)
+}
+@Composable
+fun MessageScreenContent() {
+    NotFoundScreen()
+}
+@Composable
+fun QRCodeScreenContent() {
+    NotFoundScreen()
+}
+@Composable
+fun CampsiteDetailsScreenContent(navController: NavController, campsiteId: String, onSelectedTabChange: (String) -> Unit = {}){
+    BackHandler(enabled = true) {
+        onSelectedTabChange("Home")
+    }
+    EntreeCampsite(navController, campsiteId)
+}
+
+@Composable
+fun NotFoundScreen() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = "404 Error",
+                modifier = Modifier.size(96.dp),
+                tint = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "404",
+                style = MaterialTheme.typography.displayLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Page Not Found",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}

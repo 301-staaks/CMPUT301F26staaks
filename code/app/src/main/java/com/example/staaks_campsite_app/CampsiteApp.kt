@@ -4,15 +4,14 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.navigation.compose.NavHost
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.admin_campsite
-import com.example.staaks_campsite_app.data.model.entree_campsite
 import com.example.staaks_campsite_app.data.model.owner_campsite
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
@@ -20,7 +19,6 @@ import androidx.navigation.navArgument
 import com.example.staaks_campsite_app.Entree.EntreeCampsite
 import com.example.staaks_campsite_app.Entree.OwnerCampsitePreview
 import com.example.staaks_campsite_app.data.getDeviceId
-import com.example.staaks_campsite_app.session.SessionManager
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -37,6 +35,7 @@ fun CampsiteApp() {
 
     val context = LocalContext.current
     val currentUserId = remember(context) { getDeviceId(context) }
+    LaunchedEffect(currentUserId) { android.util.Log.d("MyUserId", currentUserId) }
 
     DisposableEffect(campsiteRepository) {
         onDispose {
@@ -125,8 +124,7 @@ fun CampsiteApp() {
                 navController = navController,
                 isNew = true,
                 ownerId = currentUserId,
-                onSave = { campsiteRepository.addOrUpdateCampsite(it) }
-            )
+            ) { campsiteRepository.addOrUpdateCampsite(it) }
         }
         composable("owner_campsite_edit/{campsiteId}") { backStackEntry ->
             val id = backStackEntry.arguments?.getString("campsiteId")
@@ -135,8 +133,7 @@ fun CampsiteApp() {
                 isNew = false,
                 ownerId = currentUserId,
                 existing = campsiteRepository.campsites.find { it.id == id },
-                onSave = { campsiteRepository.addOrUpdateCampsite(it) }
-            )
+            ) { campsiteRepository.addOrUpdateCampsite(it) }
         }
         composable("owner_reservations") { OwnerReservationsScreen(navController) }
         composable("owner_lotteries") { OwnerLotteries(navController) }

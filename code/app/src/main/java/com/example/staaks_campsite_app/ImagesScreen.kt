@@ -53,7 +53,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
 import com.example.staaks_campsite_app.data.CampsiteImageRepository
 
 /**
@@ -176,7 +175,7 @@ fun ImagesScreen(navController: NavController) {
         topBar = { AdminTopRow(navController = navController, title = "Images") },
         bottomBar = { AdminBottomRow(navController = navController) }
     ) {
-        innerPadding ->
+            innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
@@ -239,7 +238,8 @@ fun ImagesScreen(navController: NavController) {
                         ) {
 
                             CampsiteImagePreview(
-                                imageUrl = image.imageUrl
+                                imageId = image.imageId,
+                                imageData = image.imageData
                             )
 
                             Text("Image ID: ${image.imageId}")
@@ -287,99 +287,82 @@ fun ImagesScreen(navController: NavController) {
 }
 
 /**
- * displays a photo from its url.
+ * displays a campsite photo in a 160dp box.
  *
- * shows a placeholder while loading, when the url is missing,
- * or when the image cannot be loaded.
+ * uses [imageData] when we already have the photo text (admin images screen),
+ * otherwise loads it by [imageId]. shows "No photo" when there isn't one.
+ *
+ * @param imageId the id of the image document
+ * @param imageData the photo as base64 text, if already loaded
  */
 @Composable
-fun CampsiteImagePreview(imageUrl: String) {
+fun CampsiteImagePreview(imageId: String, imageData: String = "") {
 
-    var showPlaceholder by remember(imageUrl) {
-        mutableStateOf(true)
-    }
+    val modifier = Modifier
+        .fillMaxWidth()
+        .height(160.dp)
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(160.dp)
-            .background(Color.LightGray),
-
-        contentAlignment = Alignment.Center
-    ) {
-
-        if (showPlaceholder) {
+    val placeholder: @Composable () -> Unit = {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = Color(0xFFD8FAD0)),
+            contentAlignment = Alignment.Center
+        ) {
             Text("No photo")
         }
+    }
 
-        if (imageUrl.startsWith("https://")) {
-
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = "Campsite or profile image",
-                modifier = Modifier.fillMaxSize(),
-
-                onLoading = {
-                    showPlaceholder = true
-                },
-
-                onSuccess = {
-                    showPlaceholder = false
-                },
-
-                onError = {
-                    showPlaceholder = true
-                }
-            )
-        }
+    if (imageData.isNotBlank()) {
+        EncodedImage(
+            cacheKey = imageId,
+            imageData = imageData,
+            contentDescription = "Campsite or profile image",
+            modifier = modifier,
+            placeholder = placeholder
+        )
+    } else {
+        StoredImage(
+            imageId = imageId,
+            contentDescription = "Campsite or profile image",
+            modifier = modifier,
+            placeholder = placeholder
+        )
     }
 }
 
+/**
+ * displays a user's profile photo as a circle, or a person icon if they have none.
+ *
+ * @param size the width and height of the circle
+ * @param imageId the user's profileImageId
+ */
 @Composable
 fun UserProfileImagePreview(
-    size: Dp = 60.dp, imageUrl: String = ""
-) {
-    var showPlaceholder by remember(imageUrl) {
-        mutableStateOf(true)
-    }
+    size: Dp = 60.dp, imageId: String) {
 
-
-    if (showPlaceholder) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(size)
-        ){
-            Image(
-                painter = ColorPainter(Color.LightGray),
-                contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .size(size)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop,
-            )
-            Icon(Icons.Default.Person, contentDescription = "Profile Picture",)
-        }
-    }
-
-    if (imageUrl.startsWith("https://")) {
-        AsyncImage(
-            model = imageUrl,
-            contentDescription = "Profile Picture",
-            modifier = Modifier
-                .size(size)
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop,
-            onLoading = {
-                showPlaceholder = true
-            },
-
-            onSuccess = {
-                showPlaceholder = false
-            },
-
-            onError = {
-                showPlaceholder = true
+    StoredImage(
+        imageId = imageId,
+        contentDescription = "Profile Picture",
+        modifier = Modifier
+            .size(size)
+            .clip(CircleShape),
+        contentScale = ContentScale.Crop,
+        placeholder = {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.size(size)
+            ) {
+                Image(
+                    painter = ColorPainter(Color.LightGray),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .size(size)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                )
+                Icon(Icons.Default.Person, contentDescription = "Profile Picture")
             }
-        )
-    }
+        }
+    )
 }

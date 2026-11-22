@@ -41,9 +41,7 @@ class OwnerCampsiteEditTest {
                 navController = rememberNavController(),
                 isNew = true,
                 ownerId = "owner1",
-                existing = null,
-                onSave = { saved = it }
-            )
+            ) { saved = it }
         }
         rule.onNodeWithText(NAME_LABEL).performTextInput("Lake Site")
         rule.onNodeWithText(LOCATION_LABEL).performTextInput("Jasper, AB")
@@ -64,8 +62,7 @@ class OwnerCampsiteEditTest {
                 isNew = false,
                 ownerId = "owner1",
                 existing = existingSite(),
-                onSave = {}
-            )
+            ) {}
         }
         rule.onNodeWithText("Old Name").assertIsDisplayed()
     }
@@ -80,8 +77,7 @@ class OwnerCampsiteEditTest {
                 isNew = false,
                 ownerId = "owner1",
                 existing = existingSite(),
-                onSave = { saved = it }
-            )
+            ) { saved = it }
         }
         rule.onNodeWithText(NAME_LABEL).performTextClearance()
         rule.onNodeWithText(NAME_LABEL).performTextInput("New Name")

@@ -1,5 +1,8 @@
 package com.example.staaks_campsite_app
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,24 +13,60 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ConfirmationNumber
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Textsms
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.staaks_campsite_app.data.CampsiteRepository
+import com.example.staaks_campsite_app.data.ImageEncoding
+import com.example.staaks_campsite_app.data.ImageStore
 import com.example.staaks_campsite_app.data.model.Campsite
+import com.example.staaks_campsite_app.data.model.CampsiteImage
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import com.example.staaks_campsite_app.session.SessionManager
+
+private val ownerTabs = listOf(
+    Tab("owner_reservations_active", "Reservations", Icons.Default.CalendarMonth),
+    Tab("owner_notifications", "Notifications", Icons.Default.Notifications),
+    Tab("owner_messages", "Messages", Icons.Default.Textsms),
+    Tab("owner_lotteries", "Lotteries", Icons.Default.ConfirmationNumber)
+)
 
 /**
  * The owner's screen for creating a new campsite or editing an existing one
@@ -46,75 +85,75 @@ fun OwnerCampsiteEdit(
     existing: Campsite? = null,
     onSave: (Campsite) -> Unit
 ) {
+    val session by SessionManager.state.collectAsState()
+
     var name by remember(existing?.id) { mutableStateOf(existing?.name ?: "") }
     var location by remember(existing?.id) { mutableStateOf(existing?.location ?: "") }
     var capacity by remember(existing?.id) { mutableStateOf(existing?.capacity?.toString() ?: "") }
     var price by remember(existing?.id) { mutableStateOf(existing?.price?.toString() ?: "") }
     var description by remember(existing?.id) { mutableStateOf(existing?.description ?: "") }
 
-    Column {
+    // photos already saved on the campsite. old "https://" links are dropped since they can't load
+    val savedImageIds = remember(existing?.id) {
+        mutableStateListOf<String>().apply {
+            addAll(existing?.images.orEmpty().filter { ImageStore.isValidImageId(it) })
+        }
+    }
+    // saved photos the owner removed, deleted from firestore on save
+    val removedImageIds = remember(existing?.id) { mutableStateListOf<String>() }
+    // photos picked on this screen, uploaded on save
+    val newImages = remember(existing?.id) { mutableStateListOf<CampsiteImage>() }
 
-        // Pinned Top Row
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()            // Makes the row span the full width
-                .background(color = Color(0xFF1B5E20))
-                .padding(16.dp)
-        ) {
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Button(
-                    onClick = {
-                        navController.popBackStack()
-                    }
-                ) {
-                    Text("Back")
+    var isProcessingPhotos by remember { mutableStateOf(false) }
+    var photoError by remember { mutableStateOf<String?>(null) }
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    val photoPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
+    ) { uris ->
+        if (uris.isEmpty()) return@rememberLauncherForActivityResult
+
+        isProcessingPhotos = true
+        photoError = null
+
+        scope.launch {
+            val appContext = context.applicationContext
+            var failed = 0
+
+            for (uri in uris) {
+                val imageData = withContext(Dispatchers.Default) {
+                    ImageEncoding.encodeFromUri(appContext, uri)
+                }
+
+                if (imageData == null) {
+                    failed++
+                } else {
+                    newImages.add(
+                        CampsiteImage(
+                            imageId = ImageStore.newImageId(),
+                            imageData = imageData
+                        )
+                    )
                 }
             }
 
-            Text(
-                text = if (isNew) "New Site" else "Edit Site",
-                fontSize = 25.sp,
-                color = Color.White,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
-
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-
+            if (failed > 0) {
+                photoError = "Couldn't read $failed of the photos you picked."
             }
+            isProcessingPhotos = false
         }
+    }
 
-        // This is for when the admin is spoofing a different user. Logic must be implemented here to allow this to pop up
-        if (false) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()            // Makes the row span the full width
-                    .background(color = Color(0xFF63B267))
-                    .heightIn(max = 45.dp)
-                    .padding(5.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Text(
-                    text = "View:",
-                    fontSize = 15.sp,
-                    color = Color.White
-                )
-                Button(onClick = { /* ... */ }) { Text("Admin") }
-                Button(onClick = { /* ... */ }) { Text("Owner") }
-                Button(onClick = { /* ... */ }) { Text("Entree") }
-            }
-        }
 
+    Scaffold(
+        topBar = { UiTopRow(navController = navController, title = "Owner Main", homeRoute = "owner_main", isAdmin = session!!.isAdmin) },
+        bottomBar = { UiBottomRow(navController = navController, tabs = ownerTabs) }
+    ) { innerPadding ->
         Box(
             modifier = Modifier
-                .weight(1f)
+                .padding(innerPadding)
         ) {
             /*
             -------------------------------------------------------------------------------------------------------------------------------------
@@ -134,15 +173,71 @@ fun OwnerCampsiteEdit(
                 OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Price per Night") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, minLines = 3, modifier = Modifier.fillMaxWidth())
 
-                Button( // creates a new campsite owned by owner or updates changed values of an existing one -Szymon
+                // Photos
+                Text("Photos", fontSize = 18.sp)
+
+                if (savedImageIds.isEmpty() && newImages.isEmpty()) {
+                    Text("No photos yet.", color = Color.Gray)
+                } else {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(savedImageIds.toList(), key = { it }) { imageId ->
+                            PhotoThumbnail(
+                                onRemove = {
+                                    savedImageIds.remove(imageId)
+                                    removedImageIds.add(imageId)
+                                }
+                            ) {
+                                StoredImage(
+                                    imageId = imageId,
+                                    contentDescription = "Campsite photo",
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
+                        items(newImages.toList(), key = { it.imageId }) { image ->
+                            PhotoThumbnail(onRemove = { newImages.remove(image) }) {
+                                EncodedImage(
+                                    cacheKey = image.imageId,
+                                    imageData = image.imageData,
+                                    contentDescription = "New campsite photo",
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
+                    }
+                }
+
+                OutlinedButton(
+                    enabled = !isProcessingPhotos,
                     onClick = {
+                        photoPicker.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(if (isProcessingPhotos) "Processing photos..." else "Add Photos")
+                }
+
+                photoError?.let { Text(it, color = Color.Red) }
+
+                Button( // creates a new campsite owned by owner or updates changed values of an existing one -Szymon
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF009E60),
+                        contentColor = Color.White
+                    ),
+                    enabled = !isProcessingPhotos,
+                    onClick = {
+                        val imageIds = (savedImageIds + newImages.map { it.imageId }).toMutableList()
+
                         val campsiteToSave = if (existing != null) {
                             existing.copy(
                                 name = name,
                                 location = location,
                                 capacity = capacity.toIntOrNull() ?: 0,
                                 price = price.toDoubleOrNull() ?: 0.0,
-                                description = description
+                                description = description,
+                                images = imageIds
                             )
                         } else {
                             Campsite(
@@ -151,9 +246,25 @@ fun OwnerCampsiteEdit(
                                 location = location,
                                 capacity = capacity.toIntOrNull() ?: 0,
                                 price = price.toDoubleOrNull() ?: 0.0,
-                                description = description
+                                description = description,
+                                images = imageIds
                             )
                         }
+
+                        if (newImages.isNotEmpty() || removedImageIds.isNotEmpty()) {
+                            // photos need the campsite id, so a new campsite gets one now
+                            if (campsiteToSave.id.isBlank()) {
+                                campsiteToSave.id = Firebase.firestore.collection("campsites").document().id
+                            }
+
+                            ImageStore.saveCampsiteImages(
+                                campsiteId = campsiteToSave.id,
+                                uploadedBy = ownerId,
+                                added = newImages.toList(),
+                                removedIds = removedImageIds.toList()
+                            )
+                        }
+
                         onSave(campsiteToSave)
                         navController.popBackStack()
                     },
@@ -163,41 +274,37 @@ fun OwnerCampsiteEdit(
                 }
             }
         }
+    }
+}
 
-        // Pinned Bottom Row (Owner navigation)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .padding(5.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(
-                onClick = { navController.navigate("owner_reservations_active") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Reservations", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_notifications") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Notifs", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_messages") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Messages", fontSize = 11.sp) }
-            Button(
-                onClick = { navController.navigate("owner_lotteries") { launchSingleTop = true } },
-                contentPadding = PaddingValues(horizontal = 8.dp)
-            ) { Text("Lotteries", fontSize = 11.sp) }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .heightIn(max = 16.dp)
-                .heightIn(min = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
+/**
+ * a square photo with an X button to remove it, used on the campsite edit screen
+ */
+@Composable
+private fun PhotoThumbnail(
+    onRemove: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(110.dp)
+            .clip(RoundedCornerShape(8.dp))
+    ) {
+        content()
 
+        IconButton(
+            onClick = onRemove,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(4.dp)
+                .size(28.dp)
+                .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Remove photo",
+                tint = Color.White
+            )
         }
     }
 }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,7 +32,6 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
 import com.example.staaks_campsite_app.data.CampsiteRepository
 
 /**
@@ -70,7 +70,6 @@ fun OwnerCampsite(navController: NavController, campsiteID: String) {
                 Button(
                     onClick = {
                         navController.navigate("owner_main")
-
                     },
 
                     ) {
@@ -170,7 +169,7 @@ fun OwnerCampsite(navController: NavController, campsiteID: String) {
                     Text(text = "${campsite?.rating} Stars")
                 }
 
-                if (ImageNum != null) {
+                if (campsite != null && ImageNum != null && ImageNum > 0) {
                     HorizontalMultiBrowseCarousel(
                         state = rememberCarouselState { ImageNum },
                         modifier = Modifier
@@ -182,9 +181,12 @@ fun OwnerCampsite(navController: NavController, campsiteID: String) {
                         contentPadding = PaddingValues(horizontal = 16.dp)
                     ) { i ->
                         val image = campsite.images[i]
-                        AsyncImage(
-                            model = image,
+                        StoredImage(
+                            imageId = image,
                             contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
                         )
 
 

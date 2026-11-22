@@ -26,20 +26,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
+import com.example.staaks_campsite_app.data.getDeviceId
 
 
 /**
- * Displays: a pinned top bar with a back button (to the entree main screen) and a profile button.
- * A "Clear All" button, and a pinned bottom row of navigation buttons to the reservations, messages
- * and QR scanner screens.
- *
- * The notification list and the "Clear All" action are not implemented yet.
+ * Displays: a pinned top bar with a back button (to the entree main screen) and a profile button,
+ * the entrant's notifications with a "Clear All" button, and a pinned bottom row of navigation
+ * buttons to the reservations, messages and QR scanner screens.
  *
  * @param navController controls navigation to other screens.
  */
 @Composable
 fun EntreeInboxScreen(navController: NavController) {
+    val context = LocalContext.current
+    val entrantId = remember(context) { getDeviceId(context) }
+
     Column(
 
     ) {
@@ -126,31 +129,7 @@ fun EntreeInboxScreen(navController: NavController) {
                 .weight(1f)
 
         ) {
-            /*
-            -------------------------------------------------------------------------------------------------------------------------------------
-            Create Main Content of Page Here
-            -------------------------------------------------------------------------------------------------------------------------------------
-             Think Lazy Column would work here but first need to know how we are implementing
-             notifications
-
-             */
-
-        }
-
-
-
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Button(
-                onClick = { /* To do: Clears all notifications */}
-            ) {
-                Text("Clear All")
-            }
+            NotificationInbox(entrantId = entrantId)
         }
 
 

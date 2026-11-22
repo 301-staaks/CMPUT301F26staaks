@@ -12,19 +12,34 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ConfirmationNumber
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Textsms
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.staaks_campsite_app.session.SessionManager
 
-
+private val ownerTabs = listOf(
+    Tab("owner_reservations_active", "Reservations", Icons.Default.CalendarMonth),
+    Tab("owner_notifications", "Notifications", Icons.Default.Notifications),
+    Tab("owner_messages", "Messages", Icons.Default.Textsms),
+    Tab("owner_lotteries", "Lotteries", Icons.Default.ConfirmationNumber)
+)
 /**
  * The owner's screen listing lotteries that are currently active.
  *

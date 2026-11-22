@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -27,7 +26,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Card
@@ -51,10 +49,7 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.graphics.painter.ColorPainter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -177,19 +172,6 @@ fun ImagesScreen(navController: NavController) {
             }
         )
     }
-
-    Scaffold(
-        topBar = { AdminTopRow(navController = navController, title = "Images") },
-        bottomBar = { AdminBottomRow(navController = navController) }
-    ) {
-        innerPadding ->
-        Column(
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            if (imageRepository.isLoading) {
-                Text("Loading images...")
-            }
-
     Scaffold(
         topBar = { AdminTopRow(navController = navController, title = "Images") },
         bottomBar = { AdminBottomRow(navController = navController) }
@@ -235,27 +217,12 @@ fun ImagesScreen(navController: NavController) {
             ) {
                 Text("No images found.")
             }
-            if (
-                !imageRepository.isLoading &&
-                imageRepository.loadError == null &&
-                imageRepository.images.isEmpty()
-            ) {
-                Text("No images found.")
-            }
 
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
 
-                items(
-                    items = imageRepository.images,
-                    key = { image -> image.imageId }
-                ) { image ->
                 items(
                     items = imageRepository.images,
                     key = { image -> image.imageId }
@@ -266,15 +233,7 @@ fun ImagesScreen(navController: NavController) {
                             .fillMaxWidth()
                             .background(Color.LightGray)
                     ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.LightGray)
-                    ) {
 
-                        Column(
-                            modifier = Modifier.padding(12.dp)
-                        ) {
                         Column(
                             modifier = Modifier.padding(12.dp)
                         ) {
@@ -282,16 +241,9 @@ fun ImagesScreen(navController: NavController) {
                             CampsiteImagePreview(
                                 imageUrl = image.imageUrl
                             )
-                            CampsiteImagePreview(
-                                imageUrl = image.imageUrl
-                            )
 
                             Text("Image ID: ${image.imageId}")
-                            Text("Image ID: ${image.imageId}")
 
-                            if (image.campsiteId.isNotBlank()) {
-                                Text("Campsite: ${image.campsiteId}")
-                            }
                             if (image.campsiteId.isNotBlank()) {
                                 Text("Campsite: ${image.campsiteId}")
                             }
@@ -299,20 +251,10 @@ fun ImagesScreen(navController: NavController) {
                             if (image.userId.isNotBlank()) {
                                 Text("Profile: ${image.userId}")
                             }
-                            if (image.userId.isNotBlank()) {
-                                Text("Profile: ${image.userId}")
-                            }
 
                             Button(
                                 enabled = !isDeleting,
-                            Button(
-                                enabled = !isDeleting,
 
-                                onClick = {
-                                    selectedImageId = image.imageId
-                                    deleteError = null
-                                }
-                            ) {
                                 onClick = {
                                     selectedImageId = image.imageId
                                     deleteError = null
@@ -329,29 +271,10 @@ fun ImagesScreen(navController: NavController) {
                     }
                 }
             }
-                                if (selectedImageId == image.imageId) {
-                                    Text("Selected")
-                                } else {
-                                    Text("Select")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
 
             Button(
                 enabled = selectedImage != null && !isDeleting,
-            Button(
-                enabled = selectedImage != null && !isDeleting,
 
-                onClick = {
-                    deleteError = null
-                    showDeleteDialog = true
-                }
-            ) {
-                Text("Delete Image")
-            }
                 onClick = {
                     deleteError = null
                     showDeleteDialog = true
@@ -414,9 +337,8 @@ fun CampsiteImagePreview(imageUrl: String) {
 
 @Composable
 fun UserProfileImagePreview(
-    size: Dp = 60.dp, imageUrl: String = "") {
-
-
+    size: Dp = 60.dp, imageUrl: String = ""
+) {
     var showPlaceholder by remember(imageUrl) {
         mutableStateOf(true)
     }

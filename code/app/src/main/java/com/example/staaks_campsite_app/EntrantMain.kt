@@ -61,15 +61,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.staaks_campsite_app.Entree.EntreeCampsite
 import com.example.staaks_campsite_app.Entree.EntreeCampsite
 import com.example.staaks_campsite_app.data.model.Campsite
+
+
+
+
+val entrantTabs = listOf(
+    Tab("entree_res_screen", "Reservations", icon = Icons.AutoMirrored.Filled.List),
+    Tab("entree_inbox", "Inbox", icon =Icons.Default.Search),
+    Tab("messages_screen", "Messages", icon =Icons.Default.Textsms),
+    Tab("qr_scan_screen", "Scan", icon =Icons.Default.QrCode)
+)
 
 /**
  * Displays: a top bar that has a home and profile button, a bottom navigation bar that has
@@ -90,16 +96,10 @@ fun EntrantMain(
     val campsites = remember { CampsiteRepository() }
     var selectedCampsite by remember { mutableStateOf<Campsite?>(null) }
 
-    val entrantTab = remember{ listOf(
-        Tab("entree_res_screen", "Reservations", icon = Icons.AutoMirrored.Filled.List),
-        Tab("entree_inbox", "Inbox", icon =Icons.Default.Search),
-        Tab("messages_screen", "Messages", icon =Icons.Default.Textsms),
-        Tab("qr_scan_screen", "Scan", icon =Icons.Default.QrCode)
-    )}
 
     Scaffold(
         topBar = { UiTopRow(navController, selectedTab, "entree_main")},
-        bottomBar = {UiBottomRow(navController, entrantTab )}
+        bottomBar = {UiBottomRow(navController, entrantTabs )}
             /*
             NavigationBar(containerColor = Color(0xFF1B5E20)) {
                 NavigationBarItem(
@@ -352,115 +352,3 @@ fun CampsiteCard(
 }
 
 
-
-@Composable
-fun Profile(navController: NavController) {
-    // TODO:    navController.navigate("profile")
-    NotFoundScreen()
-}
-@Composable
-fun ReservationScreenContent() {
-    NotFoundScreen()
-}
-@Composable
-fun InboxContent() {
-    NotFoundScreen()
-}
-@Composable
-fun MessageScreenContent() {
-    NotFoundScreen()
-}
-@Composable
-fun QRCodeScreenContent() {
-    NotFoundScreen()
-}
-    NotFoundScreen()
-}
-@Composable
-fun ReservationScreenContent() {
-    NotFoundScreen()
-}
-@Composable
-fun InboxContent() {
-    NotFoundScreen()
-}
-@Composable
-fun MessageScreenContent(navController: NavController) {
-    EntrantMessagesScreen(navController = navController)
-}
-@Composable
-fun QRCodeScreenContent() {
-    NotFoundScreen()
-}
-@Composable
-fun CampsiteDetailsScreenContent(navController: NavController, campsiteId: String, onSelectedTabChange: (String) -> Unit = {}){
-    BackHandler(enabled = true) {
-        onSelectedTabChange("Home")
-    }
-    EntreeCampsite(navController, campsiteId)
-}
-
-@Composable
-fun NotFoundScreen() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = Icons.Default.Warning,
-                contentDescription = "404 Error",
-                modifier = Modifier.size(96.dp),
-                tint = MaterialTheme.colorScheme.error
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "404",
-                style = MaterialTheme.typography.displayLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Page Not Found",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-    EntreeCampsite(navController, campsiteId)
-}
-
-@Composable
-fun NotFoundScreen() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = Icons.Default.Warning,
-                contentDescription = "404 Error",
-                modifier = Modifier.size(96.dp),
-                tint = MaterialTheme.colorScheme.error
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "404",
-                style = MaterialTheme.typography.displayLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Page Not Found",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}

@@ -73,7 +73,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -93,7 +92,7 @@ import com.google.firebase.firestore.firestore
 
 val ownerTabs = listOf(
     Tab("owner_main", "Main", Icons.Default.Home),
-    Tab("owner_reservations_active", "Reservations", Icons.Default.CalendarMonth),
+    Tab("owner_reservations", "Reservations", Icons.Default.CalendarMonth),
     Tab("owner_notifications", "Notifications", Icons.Default.Notifications),
     Tab("owner_messages", "Messages", Icons.Default.Textsms),
     Tab("owner_lotteries", "Lotteries", Icons.Default.ConfirmationNumber)
@@ -234,9 +233,9 @@ fun OwnerCampsiteCardActions(
         .padding(5.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        GenericButton (text="Preview",onClick = { onPreviewCampsite(campsite) })
-        GenericButton (text="Edit",onClick = { onEditCampsite(campsite) })
-        GenericButton (text="Delete",onClick = { onAddToLottery(campsite) })
+        GenericButton(text="Preview",onClick = { onPreviewCampsite(campsite) })
+        GenericButton(text="Edit",onClick = { onEditCampsite(campsite) })
+        GenericButton(text="Delete",onClick = { onAddToLottery(campsite) })
     }
 }
 

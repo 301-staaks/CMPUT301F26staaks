@@ -46,22 +46,30 @@ class ConversationRepository {
     }
 
     // new ver of create conversation. kept old version just in case.
-    fun createConversation(fromId: String, toId: String) {
+    fun createConversation(
+        fromId: String,
+        toId: String,
+        onResult: (conversationId: String) -> Unit = {}
+    ) {
         conversationsRef
             .whereArrayContains("participantIds", fromId)
             .get()
             .addOnSuccessListener { snapshot ->
-                val exists = snapshot.documents.any {
+                val existing = snapshot.documents.firstOrNull {
                     (it.get("participantIds") as? List<*>)?.contains(toId) == true
                 }
-                if (exists) return@addOnSuccessListener
+
+                if (existing != null) {
+                    onResult(existing.id)
+                    return@addOnSuccessListener
+                }
 
                 val conversation = Conversation()
                 conversation.participantIds = listOf(fromId, toId)
                 conversation.conversationId = conversationsRef.document().id
                 conversation.messages = emptyList()
 
-                conversationsRef.document(conversation.conversationId).set(conversation)
+                conversationsRef.document(conversation.conversationId).set(conversation).addOnSuccessListener { onResult(conversation.conversationId)}
             }
     }
 

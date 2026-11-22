@@ -1,5 +1,8 @@
 package com.example.staaks_campsite_app.data.model
 
+import com.example.staaks_campsite_app.data.CampsiteRepository
+import com.example.staaks_campsite_app.data.UserRepository
+
 /**
  * stores the details of an entrant campsite reservation
  *
@@ -48,5 +51,52 @@ class Reservation(
      */
     fun isPast(currentDate: String): Boolean {
         return endDate.isNotEmpty() && endDate < currentDate
+    }
+
+    /**
+     * gets the name of the entrant
+     * @return the name of the entrant
+     */
+    fun getEntrantName(): String {
+        val users = UserRepository()
+        for (user in users.users) {
+            if (user.id == entrantId) {
+                return user.name
+            }
+        }
+        return ""
+    }
+
+    /**
+     * gets the name of the Owner
+     * @return the name of the Owner
+     */
+    fun getOwnerName(): String {
+        val campsites = CampsiteRepository()
+        val users = UserRepository()
+        for (campsite in campsites.campsites) {
+            if (campsite.id == campsiteId) {
+                for (user in users.users) {
+                    if (user.id == campsite.ownerId) {
+                        return user.name
+                    }
+                }
+            }
+        }
+        return ""
+    }
+
+    /**
+     * gets the location of the campsite
+     * @return the location of the campsite
+     */
+    fun getCampsiteLocation(): String {
+        val campsites = CampsiteRepository()
+        for (campsite in campsites.campsites) {
+            if (campsite.id == campsiteId) {
+                return campsite.location
+            }
+        }
+        return ""
     }
 }

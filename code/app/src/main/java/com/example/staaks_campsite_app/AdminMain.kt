@@ -1,7 +1,6 @@
 package com.example.staaks_campsite_app
 
 import android.widget.Button
-import android.widget.Button
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,8 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.staaks_campsite_app.data.model.admin_campsite
-
 import com.example.staaks_campsite_app.data.model.admin_campsite
 
 import androidx.compose.foundation.lazy.LazyColumn
@@ -99,11 +95,6 @@ fun AdminMain(
         bottomBar = { AdminBottomRow(navController = navController) }
     ) { innerPadding ->
         LazyColumn(
-    Scaffold(
-        topBar = { AdminTopRow(navController = navController, title = "Admin Main") },
-        bottomBar = { AdminBottomRow(navController = navController) }
-    ) { innerPadding ->
-        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .fillMaxSize()
@@ -112,26 +103,13 @@ fun AdminMain(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                .padding(innerPadding),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
 
-                if (isLoading) {
-                    Text("Loading campsites...")
-                }
                 if (isLoading) {
                     Text("Loading campsites...")
                 }
 
                 loadError?.let { message ->
-                loadError?.let { message ->
 
-                    Text(
-                        text = message,
-                        color = Color.Red
-                    )
-                }
                     Text(
                         text = message,
                         color = Color.Red
@@ -146,19 +124,7 @@ fun AdminMain(
                     Text("No campsites found.")
                 }
             }
-                if (
-                    !isLoading &&
-                    loadError == null &&
-                    campsites.isEmpty()
-                ) {
-                    Text("No campsites found.")
-                }
-            }
 
-            items(
-                items = campsites,
-                key = { campsite -> campsite.id }
-            ) { campsite ->
             items(
                 items = campsites,
                 key = { campsite -> campsite.id }
@@ -169,22 +135,11 @@ fun AdminMain(
                         .fillMaxWidth()
                         .background(Color.LightGray)
                 ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.LightGray)
-                ) {
 
                     Column(
                         modifier = Modifier.padding(12.dp)
                     ) {
-                    Column(
-                        modifier = Modifier.padding(12.dp)
-                    ) {
 
-                        CampsiteImagePreview(
-                            imageUrl = campsite.images?.firstOrNull() ?: ""
-                        )
                         CampsiteImagePreview(
                             imageUrl = campsite.images?.firstOrNull() ?: ""
                         )
@@ -193,38 +148,8 @@ fun AdminMain(
                             text = campsite.name,
                             fontSize = 20.sp
                         )
-                        Text(
-                            text = campsite.name,
-                            fontSize = 20.sp
-                        )
 
                         Text(campsite.location)
-                        Text(campsite.location)
-
-                        GenericButton(
-                            onClick = {
-                                // opens the details screen for the selected campsite
-                                navController.navigate(
-                                    "admin_campsite/${campsite.id}"
-                                )
-                            },
-                            text = "View Campsite"
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-                        GenericButton(
-                            onClick = {
-                                // opens the details screen for the selected campsite
-                                navController.navigate(
-                                    "admin_campsite/${campsite.id}"
-                                )
-                            },
-                            text = "View Campsite"
-                        )
                     }
                 }
             }
@@ -232,12 +157,6 @@ fun AdminMain(
     }
 }
 
-@Composable
-fun AdminTopRow(navController: NavController, title: String = "Admin Main") {
-    var changeViewVisible by remember { mutableStateOf(false) }
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
 @Composable
 fun AdminTopRow(navController: NavController, title: String = "Admin Main") {
     var changeViewVisible by remember { mutableStateOf(false) }

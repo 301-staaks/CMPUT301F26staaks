@@ -163,9 +163,12 @@ fun OwnerMessages(navController: NavController) {
                 }
             )
         },
+        // no longer in use: button to create new conversation
+        /*
         floatingActionButton = {
             NewConversationButton(onClick = { showNewConversationDialog = true })
         },
+        */
         floatingActionButtonPosition = FabPosition.Start
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {

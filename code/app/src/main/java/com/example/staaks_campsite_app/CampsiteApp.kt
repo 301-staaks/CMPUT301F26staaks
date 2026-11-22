@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.staaks_campsite_app.Entree.EntreeCampsite
 import com.example.staaks_campsite_app.Entree.OwnerCampsitePreview
 import com.example.staaks_campsite_app.data.getDeviceId
 import com.example.staaks_campsite_app.session.SessionManager
@@ -33,8 +34,6 @@ fun CampsiteApp() {
         CampsiteRepository()
     }
 
-    val context = LocalContext.current
-    val currentUserId = remember(context) { getDeviceId(context) }
 
     val context = LocalContext.current
     val currentUserId = remember(context) { getDeviceId(context) }
@@ -61,27 +60,13 @@ fun CampsiteApp() {
         composable("entrant_campsite/{campsiteId}") { backStackEntry ->
             val campsiteId =
                 backStackEntry.arguments?.getString("campsiteId") ?: ""
-            EntreeCampsite(
-                navController = navController,
-                campsiteID = campsiteId
-            )
         }
         composable("entrant_campsite_review/{campsiteId}") { backStackEntry ->
             val campsiteId =
                 backStackEntry.arguments?.getString("campsiteId") ?: ""
             EntreeCampsite(
                 navController = navController,
-                campsiteID = campsiteId,
-                isReview = true
-            )
-        }
-        composable("entree_campsite_review/{campsiteId}") { backStackEntry ->
-            val campsiteId =
-                backStackEntry.arguments?.getString("campsiteId") ?: ""
-            EntreeCampsite(
-                navController = navController,
-                campsiteID = campsiteId,
-                isReview = true
+                campsiteID = campsiteId
             )
         }
         composable("profile_screen") { ProfileScreen(navController) }
@@ -153,13 +138,11 @@ fun CampsiteApp() {
                 onSave = { campsiteRepository.addOrUpdateCampsite(it) }
             )
         }
-        composable("owner_reservations_active") { OwnerReservationsActive(navController) }
-        composable("owner_reservations_past") { OwnerReservationsPast(navController) }
-        composable("owner_reservations_cancelled") { OwnerReservationsCancelled(navController) }
+        composable("owner_reservations") { OwnerReservationsScreen(navController) }
         composable("owner_lotteries") { OwnerLotteries(navController) }
         composable("owner_lottery_new") { OwnerLotteryEdit(navController, isNew = true) }
         composable("owner_lottery_edit") { OwnerLotteryEdit(navController, isNew = false) }
-        composable("owner_lotteries_past") { OwnerPastLotteries(navController) }
+        composable("owner_lotteries _past") { OwnerPastLotteries(navController) }
         composable("owner_lottery_notification") { OwnerLotteryNotification(navController) }
         composable("owner_messages") { OwnerMessages(navController) }
         composable("owner_conversation/{conversationId}") { OwnerConversation(navController) }

@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ImageNotSupported
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,14 +38,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.staaks_campsite_app.data.CampsiteRepository
+import com.example.staaks_campsite_app.data.ConversationRepository
 import com.example.staaks_campsite_app.data.ReservationRepository
+import com.example.staaks_campsite_app.data.getDeviceId
 import com.example.staaks_campsite_app.data.model.Reservation
+import com.example.staaks_campsite_app.data.model.User
+import com.example.staaks_campsite_app.data.model.UserType
+import com.example.staaks_campsite_app.session.SessionManager
+import com.google.firebase.firestore.FirebaseFirestore
 
 
 /**
@@ -59,25 +70,43 @@ import com.example.staaks_campsite_app.data.model.Reservation
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ReservationScreen(
-    userId: String,
-    userType: String,
-    showScreen: String = "active",
-
-    onClicked: (reservation: Reservation) -> Unit = {},
-    onMessage: (reservation: Reservation) -> Unit,
-    onReservation: (reservation: Reservation) -> Unit
+    navController: NavController
 ) {
     val reservationRepository = remember { ReservationRepository() }
     val campsites = remember { CampsiteRepository().campsites }
-    var showScreen by remember { mutableStateOf(showScreen) }
+    var showScreen by remember { mutableStateOf("active") }
 
+    val context = LocalContext.current
+    val session by SessionManager.state.collectAsState()
+    val userId = session?.userId ?: getDeviceId(context)
+    val userType = session?.type ?: UserType.OWNER
+
+    val onClicked: (reservation: Reservation) -> Unit = {
+        if (userType == UserType.OWNER) {
+            // TODO: navigate to owner campsite preview
+        } else {
+            // TODO: navigate to entrant campsite preview
+        }
+    }
+
+    val onMessage: (reservation: Reservation) -> Unit = { reservation ->
+        if (userType == UserType.OWNER) {
+            ConversationRepository().createConversation(userId, reservation.entrantId) { id ->
+                navController.navigate("owner_conversation/$id")
+            }
+        }
+    }
+
+    val onReservation: (reservation: Reservation) -> Unit = {
+       // TODO: create reservation
+    }
     // check if the reservations are past
     reservationRepository.checkReservationPast()
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        /*
+
         // switch between active, past, and cancelled reservations
-        if (userType == "Owner") {
+        if (userType == UserType.OWNER) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -92,7 +121,7 @@ fun ReservationScreen(
                     Text("Cancelled")
                 }
             }
-        } else if (userType == "Entrant") {
+        } else if (userType == UserType.ENTRANT) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -106,11 +135,9 @@ fun ReservationScreen(
             }
         }
 
-         */
-
         val filteredReservations = run {
             val list = mutableListOf<Reservation>()
-            if (userType == "Owner") {
+            if (userType == UserType.OWNER) {
                 val ownerCampsiteIds = campsites.filter { it.ownerId == userId }.map { it.id }
                 for (res in reservationRepository.reservations) {
                     if (res.campsiteId in ownerCampsiteIds) {
@@ -121,7 +148,7 @@ fun ReservationScreen(
                         }
                     }
                 }
-            } else if (userType == "Entrant") {
+            } else if (userType == UserType.ENTRANT) {
                 for (res in reservationRepository.reservations) {
                     if (res.entrantId == userId) {
                         when (showScreen) {
@@ -144,7 +171,7 @@ fun ReservationScreen(
 
 @Composable
 fun activeReservationScreen(
-    userType: String,
+    userType: UserType,
     reservations: List<Reservation>,
     onClicked: (reservation: Reservation) -> Unit = {},
     onMessage: (reservation: Reservation) -> Unit = {},
@@ -188,7 +215,7 @@ fun activeReservationScreen(
 
 @Composable
 fun pastReservationScreen(
-    userType: String,
+    userType: UserType,
     reservations: List<Reservation>,
     onClicked: (reservation: Reservation) -> Unit = {},
     onMessage: (reservation: Reservation) -> Unit = {},
@@ -226,7 +253,7 @@ fun pastReservationScreen(
 
 @Composable
 fun cancelledReservationScreen(
-    userType: String,
+    userType: UserType,
     reservations: List<Reservation>,
     onClicked: (reservation: Reservation) -> Unit = {},
     onMessage: (reservation: Reservation) -> Unit = {},
@@ -264,7 +291,7 @@ fun cancelledReservationScreen(
 
 @Composable
 fun reservationCard(
-    userType: String,
+    userType: UserType,
     reservation: Reservation,
     isActive: Boolean,
     onMessage: () -> Unit = {},
@@ -352,7 +379,7 @@ fun reservationCard(
                 )
 
 
-                if (userType == "Entrant") {
+                if (userType == UserType.OWNER) {
                     val ownerName = reservation.getOwnerName()
                     Text(
                         text = "Owner: $ownerName",
@@ -362,7 +389,7 @@ fun reservationCard(
                         overflow = TextOverflow.Ellipsis
                     )
 
-                } else if (userType == "Owner") {
+                } else if (userType == UserType.ENTRANT) {
                     val entrantName = reservation.getEntrantName()
                     Text(
                         text = "Entrant: $entrantName",
@@ -410,7 +437,7 @@ fun reservationCard(
                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
                             modifier = Modifier.weight(1f).height(32.dp)
                         ) {
-                            val actionText = if (userType == "Owner") "Reject" else "Cancel"
+                            val actionText = if (userType == UserType.OWNER) "Reject" else "Cancel"
                             Text(actionText, fontSize = 11.sp, maxLines = 1)
                         }
                     }

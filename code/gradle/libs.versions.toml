@@ -11,6 +11,7 @@ composeBom = "2026.02.01"
 foundation = "1.12.1"
 foundationLayout = "1.12.1"
 roomKtx = "2.8.5"
+uiText = "1.12.1"
 
 
 [libraries]
@@ -33,6 +34,7 @@ androidx-compose-foundation-layout = { group = "androidx.compose.foundation", na
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.8.0" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 androidx-compose-remote-creation-core = { group = "androidx.compose.remote", name = "remote-creation-core", version = "1.0.0-alpha23" }
+androidx-compose-ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiText" }
 
 
 [plugins]

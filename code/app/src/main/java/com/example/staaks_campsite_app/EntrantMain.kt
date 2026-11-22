@@ -3,6 +3,7 @@ package com.example.staaks_campsite_app
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -242,11 +243,19 @@ fun CampsiteCard(
             modifier = Modifier
                 .weight(0.4f)
         ) {
-            /* TODO: Image*/
-            Icon(
-                imageVector = Icons.Default.ImageNotSupported,
-                contentDescription = "Image not supported",
-                modifier = Modifier.fillMaxSize()
+            StoredImage(
+                imageId = campsite.images.firstOrNull() ?: "",
+                contentDescription = campsite.name,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f),
+                placeholder = {
+                    Icon(
+                        imageVector = Icons.Default.ImageNotSupported,
+                        contentDescription = "Image not supported",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             )
         }
         Column(

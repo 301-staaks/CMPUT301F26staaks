@@ -36,7 +36,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
 import com.example.staaks_campsite_app.data.CampsiteRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,7 +117,7 @@ fun AdminCampsite(navController: NavController, campsiteId: String) {
         topBar = { AdminTopRow(navController = navController, title = "Campsite") },
         bottomBar = { AdminBottomRow(navController = navController) }
     ) { innerPadding ->
-    
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -173,8 +172,8 @@ fun AdminCampsite(navController: NavController, campsiteId: String) {
                         preferredItemWidth = 186.dp,
                         itemSpacing = 8.dp
                     ) { i ->
-                        AsyncImage(
-                            model = images[i],
+                        StoredImage(
+                            imageId = images[i],
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier

@@ -143,7 +143,7 @@ fun AdminMain(
                     ) {
 
                         CampsiteImagePreview(
-                            imageUrl = campsite.images?.firstOrNull() ?: ""
+                            imageId = campsite.images.firstOrNull() ?: ""
                         )
 
                         Text(

@@ -9,6 +9,7 @@ import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.admin_campsite
 import com.example.staaks_campsite_app.data.model.owner_campsite
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.example.staaks_campsite_app.data.getDeviceId
@@ -26,6 +27,7 @@ fun CampsiteApp() {
 
     val context = LocalContext.current
     val currentUserId = remember(context) { getDeviceId(context) }
+    LaunchedEffect(currentUserId) { android.util.Log.d("MyUserId", currentUserId) }
 
     DisposableEffect(campsiteRepository) {
         onDispose {

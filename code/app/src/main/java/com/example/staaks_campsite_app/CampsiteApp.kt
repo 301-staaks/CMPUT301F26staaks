@@ -108,9 +108,54 @@ fun CampsiteApp() {
         composable("owner_reservations_active") { OwnerReservationsActive(navController) }
         composable("owner_reservations_past") { OwnerReservationsPast(navController) }
         composable("owner_reservations_cancelled") { OwnerReservationsCancelled(navController) }
-        composable("owner_lotteries") { OwnerLotteries(navController) }
-        composable("owner_lottery_new") { OwnerLotteryEdit(navController, isNew = true) }
-        composable("owner_lottery_edit") { OwnerLotteryEdit(navController, isNew = false) }
+        composable("owner_lotteries") {
+            val today = todayString()
+
+            // owner's active lotteries -> what the cards show
+            val activeLotteries = TempLotteryStore.getForOwner(currentUserId)
+                .filter { it.isActive(today) }
+                .map { lottery ->
+                    val ids = if (lottery.campsiteIds.isNotEmpty()) lottery.campsiteIds
+                    else listOf(lottery.campsiteId)
+                    lottery.toCardUi(
+                        campsiteNames = ids.mapNotNull { id ->
+                            campsiteRepository.campsites.find { it.id == id }?.name
+                        },
+                        waitlistCount = 0, // TODO (back end): real waitlist count
+                        today = today
+                    )
+                }
+
+            OwnerLotteries(
+                navController = navController,
+                lotteries = activeLotteries,
+                isLoading = false,
+                loadError = null
+            )
+        }
+        composable("owner_lottery_new") {
+            OwnerLotteryEdit(
+                navController = navController,
+                isNew = true,
+                ownerId = currentUserId,
+                ownerCampsites = campsiteRepository.getCampsitesByOwner(currentUserId),
+                existingLotteries = TempLotteryStore.getForOwner(currentUserId),
+                onSave = { TempLotteryStore.save(it) } // TODO: real save
+            )
+        }
+        composable("owner_lottery_edit/{lotteryId}") { backStackEntry ->
+            val lotteryId = backStackEntry.arguments?.getString("lotteryId") ?: ""
+            OwnerLotteryEdit(
+                navController = navController,
+                isNew = false,
+                ownerId = currentUserId,
+                ownerCampsites = campsiteRepository.getCampsitesByOwner(currentUserId),
+                existingLotteries = TempLotteryStore.getForOwner(currentUserId),
+                existing = TempLotteryStore.get(lotteryId),
+                currentWaitlistCount = 0, // TODO: real waitlist count
+                onSave = { TempLotteryStore.save(it) } // TODO real save
+            )
+        }
         composable("owner_lotteries_past") { OwnerPastLotteries(navController) }
         composable("owner_lottery_notification") { OwnerLotteryNotification(navController) }
         composable("owner_messages") { OwnerMessages(navController) }

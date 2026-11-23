@@ -12,6 +12,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.example.staaks_campsite_app.data.getDeviceId
+import com.example.staaks_campsite_app.data.LotteryRepository
 
 @Composable
 fun CampsiteApp() {
@@ -20,9 +21,8 @@ fun CampsiteApp() {
      */
 
     val navController = rememberNavController()
-    val campsiteRepository = remember {
-        CampsiteRepository()
-    }
+    val campsiteRepository = remember { CampsiteRepository() }
+    val lotteryRepository = remember { LotteryRepository() }
 
     val context = LocalContext.current
     val currentUserId = remember(context) { getDeviceId(context) }
@@ -108,12 +108,12 @@ fun CampsiteApp() {
         composable("owner_reservations_active") { OwnerReservationsActive(navController) }
         composable("owner_reservations_past") { OwnerReservationsPast(navController) }
         composable("owner_reservations_cancelled") { OwnerReservationsCancelled(navController) }
+
         composable("owner_lotteries") {
             val today = todayString()
 
-            // owner's active lotteries -> what the cards show
-            val activeLotteries = TempLotteryStore.getForOwner(currentUserId)
-                .filter { it.isActive(today) }
+            val activeLotteries = lotteryRepository.lotteries
+                .filter { it.ownerId == currentUserId && it.isActive(today) }
                 .map { lottery ->
                     val ids = if (lottery.campsiteIds.isNotEmpty()) lottery.campsiteIds
                     else listOf(lottery.campsiteId)
@@ -121,7 +121,7 @@ fun CampsiteApp() {
                         campsiteNames = ids.mapNotNull { id ->
                             campsiteRepository.campsites.find { it.id == id }?.name
                         },
-                        waitlistCount = 0, // TODO (back end): real waitlist count
+                        waitlistCount = lotteryRepository.getWaitlistEntries(lottery.lotteryId).size,
                         today = today
                     )
                 }
@@ -129,8 +129,8 @@ fun CampsiteApp() {
             OwnerLotteries(
                 navController = navController,
                 lotteries = activeLotteries,
-                isLoading = false,
-                loadError = null
+                isLoading = false,  // TODO: LotteryRepository has no loading flag yet
+                loadError = null    // TODO: LotteryRepository has no error state yet
             )
         }
         composable("owner_lottery_new") {
@@ -139,8 +139,8 @@ fun CampsiteApp() {
                 isNew = true,
                 ownerId = currentUserId,
                 ownerCampsites = campsiteRepository.getCampsitesByOwner(currentUserId),
-                existingLotteries = TempLotteryStore.getForOwner(currentUserId),
-                onSave = { TempLotteryStore.save(it) } // TODO: real save
+                existingLotteries = lotteryRepository.lotteries.filter { it.ownerId == currentUserId },
+                onSave = { lotteryRepository.saveLottery(it) }   // writes to Firestore
             )
         }
         composable("owner_lottery_edit/{lotteryId}") { backStackEntry ->
@@ -150,10 +150,10 @@ fun CampsiteApp() {
                 isNew = false,
                 ownerId = currentUserId,
                 ownerCampsites = campsiteRepository.getCampsitesByOwner(currentUserId),
-                existingLotteries = TempLotteryStore.getForOwner(currentUserId),
-                existing = TempLotteryStore.get(lotteryId),
-                currentWaitlistCount = 0, // TODO: real waitlist count
-                onSave = { TempLotteryStore.save(it) } // TODO real save
+                existingLotteries = lotteryRepository.lotteries.filter { it.ownerId == currentUserId },
+                existing = lotteryRepository.getLottery(lotteryId),
+                currentWaitlistCount = lotteryRepository.getWaitlistEntries(lotteryId).size,
+                onSave = { lotteryRepository.saveLottery(it) }
             )
         }
         composable("owner_lotteries_past") { OwnerPastLotteries(navController) }

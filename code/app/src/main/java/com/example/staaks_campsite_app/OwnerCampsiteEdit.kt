@@ -61,12 +61,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.example.staaks_campsite_app.session.SessionManager
 
-private val ownerTabs = listOf(
-    Tab("owner_reservations_active", "Reservations", Icons.Default.CalendarMonth),
-    Tab("owner_notifications", "Notifications", Icons.Default.Notifications),
-    Tab("owner_messages", "Messages", Icons.Default.Textsms),
-    Tab("owner_lotteries", "Lotteries", Icons.Default.ConfirmationNumber)
-)
 
 /**
  * The owner's screen for creating a new campsite or editing an existing one

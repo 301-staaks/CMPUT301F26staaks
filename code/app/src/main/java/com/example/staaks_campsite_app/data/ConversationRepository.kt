@@ -168,6 +168,17 @@ class ConversationRepository {
         awaitClose { reg.remove() }
     }
 
+    fun observeAllConversations(): Flow<List<Conversation>> = callbackFlow {
+        val reg = conversationsRef
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) { close(); return@addSnapshotListener }
+                trySend(snapshot?.documents?.mapNotNull { doc ->
+                    doc.toObject(Conversation::class.java)?.apply {conversationId = doc.id}
+                } ?: emptyList())
+            }
+        awaitClose { reg.remove() }
+    }
+
     fun deleteConversation(conversation: Conversation) {
         conversationsRef.document(conversation.conversationId).delete()
     }

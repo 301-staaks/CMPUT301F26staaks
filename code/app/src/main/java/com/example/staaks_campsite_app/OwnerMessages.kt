@@ -217,7 +217,7 @@ fun OwnerMessages(navController: NavController) {
                                     .size(100.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                UserProfileImagePreview(size=80.dp)
+                                UserProfileImagePreview(size=80.dp, imageId = "")
                             }
 
                             Column(modifier = Modifier.padding(12.dp)) {

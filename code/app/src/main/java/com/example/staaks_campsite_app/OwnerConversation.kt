@@ -9,24 +9,35 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ConfirmationNumber
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Textsms
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -155,15 +166,32 @@ fun OwnerConversation(
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 8.dp)
             ) {
-                GenericButton(
-                    text = "Back",
-                    onClick = { navController.navigate("owner_messages") },
-                )
-                Text(
-                    text = viewModel.getUser(otherUserId ?: "")?.name ?: "",
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Center)
-                )
+                IconButton(
+                    onClick = {
+                        navController.navigate("owner_messages")
+                    },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = Color(0xFF009E60),
+                        contentColor = Color.White
+                    )
+                ){
+                    Icon(
+                        imageVector = Icons.Default.ArrowBackIosNew,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Column(modifier = Modifier.align(Alignment.Center)) {
+                    UserProfileImagePreview(size = 70.dp, imageId = "")
+                    Text(
+                        text = viewModel.getUser(otherUserId ?: "")?.name ?: "",
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+
+
+
             }
 
             HorizontalDivider()
@@ -178,24 +206,18 @@ fun OwnerConversation(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     itemsIndexed(messages) { index, message ->
-                        val fromOwner = message.senderId == session?.userId
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = if (fromOwner) Arrangement.End else Arrangement.Start,
-                        ) {
-                            Text(
-                                text = message.text,
-                                color = if (fromOwner) Color.White else Color.Black,
-                                modifier = Modifier
-                                    .background(
-                                        color = if (fromOwner) Color(0xFF1B5E20) else Color.LightGray,
-                                        shape = RoundedCornerShape(12.dp),
-                                    )
-                                    .padding(10.dp)
-                            )
-                        }
+                        val isFromMe = message.senderId == session?.userId
+                        val timestampFull = message.sentDate?.toDate().toString()
+                        val timestamp = if (message.sentDate == null) {""} else {timestampFull.substring(4, 16)}
+                        MessageBubble(
+                            text = message.text,
+                            timestamp = timestamp,
+                            isFromMe = isFromMe,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
+                HorizontalDivider()
 
                 Row(
                     modifier = Modifier
@@ -213,17 +235,97 @@ fun OwnerConversation(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    GenericButton(
-                        text = "Send",
+
+                    IconButton(
                         onClick = {
                             if (draft.isNotBlank()) {
                                 viewModel.sendMessage(session?.userId ?: "", draft)
                                 draft = ""
                             }
-                        }
-                    )
+                        },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = Color(0xFF009E60),
+                            contentColor = Color.White,
+                            disabledContainerColor = Color.LightGray
+                        ),
+                        enabled = draft.isNotBlank()
+                    ){
+                        Icon(
+                            imageVector = Icons.Default.ArrowUpward,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
                 }
             }
         }
+    }
+}
+
+@Composable
+fun MessageBubble(
+    text: String,
+    timestamp: String,
+    isFromMe: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val horizontalAlignment = if (isFromMe) Alignment.End else Alignment.Start
+
+    val containerColor = if (isFromMe) {
+        Color(0xFF1B5E20)
+    } else {
+        Color.LightGray
+    }
+
+    val textColor = if (isFromMe) {
+        Color.White
+    } else {
+        Color.Black
+    }
+
+    val bubbleShape = if (isFromMe) {
+        RoundedCornerShape(
+            topStart = 16.dp,
+            topEnd = 16.dp,
+            bottomStart = 16.dp,
+            bottomEnd = 4.dp
+        )
+    } else {
+        RoundedCornerShape(
+            topStart = 16.dp,
+            topEnd = 16.dp,
+            bottomStart = 4.dp,
+            bottomEnd = 16.dp
+        )
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalAlignment = horizontalAlignment
+    ) {
+        Surface(
+            color = containerColor,
+            shape = bubbleShape,
+            modifier = Modifier.widthIn(max = 280.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = textColor
+                )
+            }
+        }
+        Text(
+            text = timestamp,
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.Gray,
+            modifier = Modifier.align(horizontalAlignment),
+        )
     }
 }

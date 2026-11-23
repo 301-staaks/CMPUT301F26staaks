@@ -109,15 +109,28 @@ fun ReservationScreen(
         if (userType == UserType.OWNER) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(onClick = { showScreen = "active" }) {
+                Button(
+                    modifier = Modifier.width(120.dp),
+                    onClick = { showScreen = "active" },
+                    colors = ButtonDefaults.buttonColors(containerColor = if (showScreen == "active") {Color(0xFF009E60)} else {Color.Gray})
+                ) {
                     Text("Active")
                 }
-                Button(onClick = { showScreen = "past" }) {
+                Button(
+                    modifier = Modifier.width(120.dp),
+                    onClick = { showScreen = "past" },
+                    colors = ButtonDefaults.buttonColors(containerColor = if (showScreen == "past") {Color(0xFF009E60)} else {Color.Gray})
+                ) {
                     Text("Past")
                 }
-                Button(onClick = { showScreen = "cancelled" }) {
+                Button(
+                    modifier = Modifier.width(120.dp),
+                    onClick = { showScreen = "cancelled" },
+                    colors = ButtonDefaults.buttonColors(containerColor = if (showScreen == "cancelled") {Color(0xFF009E60)} else {Color.Gray})
+                ) {
                     Text("Cancelled")
                 }
             }
@@ -307,9 +320,9 @@ fun reservationCard(
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 4.dp),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
         onClick = onClicked,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier

@@ -1,15 +1,24 @@
 package com.example.staaks_campsite_app
 
+import android.graphics.drawable.GradientDrawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -21,9 +30,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -97,7 +108,7 @@ fun UiTopRow(
                     // dark 0xFF3E8E45
                     // lighter 0xFF7BC67F
                     // light 0xFF63B267
-                    colors = listOf(Color(0xFF1B5E20), Color(0xFF1B5E20))
+                    colors = listOf(Color(0xFF1B5E20), Color(0xFF3E8E45))
                 ),
                 shape = RoundedCornerShape(bottomStart = 0.dp, bottomEnd = 0.dp)
             )
@@ -109,7 +120,7 @@ fun UiTopRow(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(color = Color(0xFF1B5E20))
+                    .background(color = Color.Transparent)
                     .padding(4.dp, bottom = 8.dp)
 
             ) {
@@ -137,7 +148,7 @@ fun UiTopRow(
                     modifier = Modifier.weight(1f).padding(8.dp),
                     contentAlignment = Alignment.CenterEnd
                 ) {
-                    UserProfileImagePreview(size = 40.dp)
+                    UserProfileImagePreview(size = 40.dp, imageId="")
                 }
             }
             if (changeViewVisible) {
@@ -195,15 +206,18 @@ fun UiBottomRow(
                     // dark 0xFF3E8E45
                     // lighter 0xFF7BC67F
                     // light 0xFF63B267
-                    colors = listOf(Color(0xFF1B5E20), Color(0xFF1B5E20))
+                    colors = listOf(Color(0xFF3E8E45), Color(0xFF1B5E20))
                 ),
                 shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp)
             )
-            .statusBarsPadding()
-            .padding(vertical = 0.dp, horizontal = 2.dp)
+            .padding(vertical = 4.dp, horizontal = 2.dp)
     ) {
-        NavigationBar(containerColor = Color(0xFF1B5E20), modifier = Modifier.padding(all = 0.dp)) {
+        NavigationBar(containerColor = Color.Transparent, modifier = Modifier.padding(all = 0.dp)) {
             tabs.forEach { tab ->
+                val tabGradient = Brush.radialGradient(
+                    colors = listOf(Color(0xFF7BC67F), Color.Transparent)
+                )
+
                 NavigationBarItem(
                     selected = currentRoute == tab.route,
                     onClick = {
@@ -213,11 +227,33 @@ fun UiBottomRow(
                             restoreState = true
                         }
                     },
-                    icon = { Icon(imageVector = tab.icon, contentDescription = tab.label, tint = Color.White, modifier = Modifier.size(30.dp)) },
+                    icon = {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(75.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    brush = if (currentRoute == tab.route) {tabGradient} else {
+                                        SolidColor(Color.Transparent)
+                                    }
+                                )
+                        ) {
+                            Icon(
+                                imageVector = tab.icon,
+                                contentDescription = tab.label,
+                                tint = Color.White,
+                                modifier = Modifier.size(30.dp)
+                            )
+                        }
+
+
+
+                    },
                     label = { Text(text = tab.label) },
                     colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = Color(0xFF63B267),
-                        selectedIconColor = Color.White,
+                        //indicatorColor = Color(0xFF63B267),
+                        indicatorColor = Color.Transparent,
                         selectedTextColor = Color.White,
                         unselectedIconColor = Color.White.copy(alpha = 0.8f),
                         unselectedTextColor = Color.White.copy(alpha = 0.8f),

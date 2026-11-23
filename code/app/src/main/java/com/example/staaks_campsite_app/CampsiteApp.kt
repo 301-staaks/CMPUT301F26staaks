@@ -72,9 +72,13 @@ fun CampsiteApp() {
         composable("policy_guidelines_screen") { PolicyGuidelinesPage(navController) }
         composable("entree_res_screen") { EntreeResScreen(navController) }
         composable("entree_inbox_screen") { EntreeInboxScreen(navController) }
-        composable("messages_screen") { MessagesScreen(navController) }
+        composable("entrant_messages_screen") { OwnerMessages(navController) }
         composable("qr_scanner_screen") { QRScannerScreen(navController) }
         composable("entrant_conversation/{conversationId}") { EntrantConversation(navController) }
+        composable("entrant_campsite/{campsiteId}") { backStackEntry ->
+            val campsiteId = backStackEntry.arguments?.getString("campsiteId") ?: ""
+            EntrantCampsiteScreen(navController, campsiteId)
+        }
 //        composable<entree_campsite> { backStackEntry ->
 //            val campsite = backStackEntry.toRoute<entree_campsite>()
 //            EntreeCampsite(navController, campsiteID = campsite.campsiteID)
@@ -87,7 +91,10 @@ fun CampsiteApp() {
         composable("all_notifications") { AllNotifications(navController) }
         composable("all_messages") { AllMessages(navController) }
         composable("images_screen") { ImagesScreen(navController) }
-        composable("admin_conversation") { AdminConversation(navController) }
+        composable("admin_conversation/{conversationId}") { backStackEntry ->
+            val conversationId = backStackEntry.arguments?.getString("conversationId") ?: ""
+            AdminConversation(navController, conversationId)
+        }
 
         composable<admin_campsite> { backStackEntry ->
             val campsite = backStackEntry.toRoute<admin_campsite>()

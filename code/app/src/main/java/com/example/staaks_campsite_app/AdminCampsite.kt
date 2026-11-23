@@ -114,8 +114,8 @@ fun AdminCampsite(navController: NavController, campsiteId: String) {
     }
 
     Scaffold(
-        topBar = { AdminTopRow(navController = navController, title = "Campsite") },
-        bottomBar = { AdminBottomRow(navController = navController) }
+        topBar = { UiTopRow(navController = navController, title = "Campsite", homeRoute = "admin_main") },
+        bottomBar = { UiBottomRow(navController = navController, tabs = adminTabs) }
     ) { innerPadding ->
 
         Column(

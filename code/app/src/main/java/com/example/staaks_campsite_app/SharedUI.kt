@@ -24,6 +24,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.staaks_campsite_app.session.SessionManager
 
 data class Tab(val route: String, val label: String, val icon: ImageVector)
 
@@ -97,6 +99,8 @@ fun UiTopRow(
     isAdmin: Boolean = false
 ) {
     var changeViewVisible by remember { mutableStateOf(false) }
+    val session by SessionManager.state.collectAsState()
+    val isAdmin = session?.isAdmin
 
     Box(
         modifier = Modifier
@@ -140,7 +144,7 @@ fun UiTopRow(
                 Box(
                     contentAlignment = Alignment.CenterEnd
                 ) {
-                    if (isAdmin) {
+                    if (isAdmin != null && isAdmin) {
                         AdminTopRowToggleChangeView { changeViewVisible = !changeViewVisible }
                     }
                 }

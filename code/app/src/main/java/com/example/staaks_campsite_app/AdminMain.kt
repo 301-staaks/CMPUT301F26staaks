@@ -53,6 +53,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.remote.core.operations.ColorTheme
 import androidx.compose.remote.creation.Rc
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,6 +62,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import com.example.staaks_campsite_app.data.model.Campsite
+import com.example.staaks_campsite_app.session.SessionManager
 
 // light green 0xFF63B267
 // dark green 0xFF1B5E20
@@ -92,8 +94,8 @@ fun AdminMain(
     loadError: String?
 ) {
     Scaffold(
-        topBar = { AdminTopRow(navController = navController, title = "Admin Main") },
-        bottomBar = { AdminBottomRow(navController = navController) }
+        topBar = { UiTopRow(navController = navController, title = "Admin Main", homeRoute = "admin_main") },
+        bottomBar = { UiBottomRow(navController = navController, tabs = adminTabs) }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -230,6 +232,9 @@ fun AdminTopRow(navController: NavController, title: String = "Admin Main") {
 
 @Composable
 fun AdminViewChanger(navController: NavController) {
+    val session by SessionManager.state.collectAsState()
+    val currentView = session?.adminView
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -245,9 +250,9 @@ fun AdminViewChanger(navController: NavController) {
             fontSize = 15.sp,
             color = Color.White
         )
-        AdminChangeViewButton(text = "Admin", onClick = { navController.navigate("admin_main") }, selected = true)
-        AdminChangeViewButton(text = "Owner", onClick = { navController.navigate("owner_main") })
-        AdminChangeViewButton(text = "Entree", onClick = { /* ... */ })
+        AdminChangeViewButton(text = "Admin", onClick = { session?.adminView="admin"; navController.navigate("admin_main") }, selected = currentView=="admin")
+        AdminChangeViewButton(text = "Owner", onClick = { session?.adminView="owner"; navController.navigate("owner_main") }, selected = currentView=="owner")
+        AdminChangeViewButton(text = "Entree", onClick = { session?.adminView="entrant"; navController.navigate("entree_main") }, selected = currentView=="entrant")
     }
 }
 
@@ -277,7 +282,9 @@ fun AdminTopRowToggleChangeView(onClick: () -> Unit) {
     ) {
 
         IconButton(
-            onClick = { onClick() }
+            onClick = {
+                onClick()
+            }
         ) {
             Icon(
                 imageVector = Icons.Default.Menu,

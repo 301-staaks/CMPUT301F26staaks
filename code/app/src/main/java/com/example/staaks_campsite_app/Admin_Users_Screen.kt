@@ -98,8 +98,8 @@ fun AdminUsersScreen(
     val userListFilter = remember { mutableStateListOf(UserType.ADMIN, UserType.OWNER, UserType.ENTRANT) }
 
     Scaffold(
-        topBar = { AdminTopRow(navController = navController, title = "Users") },
-        bottomBar = { AdminBottomRow(navController = navController)}
+        topBar = { UiTopRow(navController = navController, title = "Users", homeRoute = "admin_main") },
+        bottomBar = { UiBottomRow(navController = navController, tabs = adminTabs)}
     ) {
             innerPadding ->
         Column(

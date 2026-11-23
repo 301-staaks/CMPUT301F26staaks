@@ -149,7 +149,13 @@ fun OwnerMessages(navController: NavController) {
                 homeRoute = when (userType) {
                     UserType.ENTRANT -> "entrant_main"
                     UserType.OWNER -> "owner_main"
-                    UserType.ADMIN -> "admin_main"
+                    UserType.ADMIN -> {
+                        when (session?.adminView) {
+                            "owner" -> "owner_main"
+                            "entrant" -> "entrant_main"
+                            else -> "admin_main"
+                        }
+                    }
                 }
             )
         },
@@ -159,7 +165,13 @@ fun OwnerMessages(navController: NavController) {
                 tabs = when (userType) {
                     UserType.ENTRANT -> entrantTabs
                     UserType.OWNER -> ownerTabs
-                    UserType.ADMIN -> adminTabs
+                    UserType.ADMIN -> {
+                        when (session?.adminView) {
+                            "owner" -> ownerTabs
+                            "entrant" -> entrantTabs
+                            else -> adminTabs
+                        }
+                    }
                 }
             )
         },

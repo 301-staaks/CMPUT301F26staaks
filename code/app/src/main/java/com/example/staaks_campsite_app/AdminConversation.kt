@@ -48,8 +48,8 @@ import com.example.staaks_campsite_app.session.SessionManager
 fun AdminConversation(navController: NavController, conversationId: String) {
 
     Scaffold(
-        topBar = { AdminTopRow(navController = navController, title = "Conversation") },
-        bottomBar = { AdminBottomRow(navController = navController)}
+        topBar = { UiTopRow(navController = navController, title = "Conversation", homeRoute = "admin_main") },
+        bottomBar = { UiBottomRow(navController = navController, tabs = adminTabs)}
     ) {
         innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {

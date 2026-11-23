@@ -63,8 +63,8 @@ fun AllNotifications(navController: NavController) {
     var selected by remember { mutableStateOf<NotificationSend?>(null) }
 
     Scaffold(
-        topBar = { AdminTopRow(navController = navController, title = "All Notifications") },
-        bottomBar = { AdminBottomRow(navController = navController) }
+        topBar = { UiTopRow(navController = navController, title = "All Notifications", homeRoute = "admin_main") },
+        bottomBar = { UiBottomRow(navController = navController, tabs = adminTabs) }
     ) { innerPadding ->
         Column(
             modifier = Modifier

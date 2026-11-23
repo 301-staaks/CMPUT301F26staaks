@@ -69,8 +69,8 @@ fun AllMessages(navController: NavController) {
 
 
     Scaffold(
-        topBar = { AdminTopRow(navController = navController, title = "Users") },
-        bottomBar = { AdminBottomRow(navController = navController)}
+        topBar = { UiTopRow(navController = navController, title = "Users", homeRoute = "admin_main") },
+        bottomBar = { UiBottomRow(navController = navController, tabs = adminTabs)}
     ) {
             innerPadding ->
         Column(

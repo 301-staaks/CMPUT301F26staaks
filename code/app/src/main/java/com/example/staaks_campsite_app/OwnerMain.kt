@@ -122,7 +122,7 @@ fun OwnerMain(
     var expandedCampsite by remember { mutableStateOf(-1) }
 
     Scaffold(
-        topBar = { UiTopRow(navController = navController, title = "Home", homeRoute = "owner_main", isAdmin = session!!.isAdmin) },
+        topBar = { UiTopRow(navController = navController, title = "Home", homeRoute = "owner_main") },
         bottomBar = { UiBottomRow(navController = navController, tabs = ownerTabs) },
         floatingActionButton = {
             NewCampsiteButton(onClick = { navController.navigate(route = "owner_campsite_new") })

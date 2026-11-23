@@ -172,8 +172,8 @@ fun ImagesScreen(navController: NavController) {
         )
     }
     Scaffold(
-        topBar = { AdminTopRow(navController = navController, title = "Images") },
-        bottomBar = { AdminBottomRow(navController = navController) }
+        topBar = { UiTopRow(navController = navController, title = "Images", homeRoute = "admin_main") },
+        bottomBar = { UiBottomRow(navController = navController, tabs = adminTabs) }
     ) {
             innerPadding ->
         Column(

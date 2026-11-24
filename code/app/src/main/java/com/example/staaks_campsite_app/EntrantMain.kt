@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.staaks_campsite_app.Entree.EntreeCampsite
 import com.example.staaks_campsite_app.data.model.Campsite
+import com.example.staaks_campsite_app.data.LotteryRepository
 
 /**
  * Displays: a top bar that has a home and profile button, a bottom navigation bar that has
@@ -65,8 +66,10 @@ import com.example.staaks_campsite_app.data.model.Campsite
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EntreeMain(
-    navController: NavController
+fun EntrantMain(
+    navController: NavController,
+    lotteryRepository: LotteryRepository,
+    currentUserId: String
 ) {
     // Selected inner screen (home, profile, reservations, inbox, messages, scan )
     var selectedTab by remember { mutableStateOf("Home") }
@@ -148,7 +151,11 @@ fun EntreeMain(
                 .padding(innerPadding) // Fits exactly between Top & Bottom menus
         ) {
             when (selectedTab) {
-                "Home" -> Home(campsites, onCampsiteChange = { selectedCampsite = it}, onSelectedTabChange = { selectedTab = it})
+                "Home" -> Home(
+                    campsites,
+                    onCampsiteChange = { selectedCampsite = it },
+                    onSelectedTabChange = { selectedTab = it }
+                )
                 "Profile" -> Profile(navController)
                 "Reservations" -> ReservationScreenContent()
                 "Inbox" -> InboxContent()
@@ -157,7 +164,13 @@ fun EntreeMain(
                 "Campsite Details" -> {
                     val currentCampsite = selectedCampsite
                     if (currentCampsite != null) {
-                        CampsiteDetailsScreenContent(navController, campsiteId = currentCampsite.id, onSelectedTabChange = { selectedTab = it})
+                        CampsiteDetailsScreenContent(
+                            navController,
+                            campsiteId = currentCampsite.id,
+                            lotteryRepository = lotteryRepository,
+                            entrantId = currentUserId,
+                            onSelectedTabChange = { selectedTab = it }
+                        )
                     } else {
                         LaunchedEffect(Unit) {
                             selectedTab = "Home"
@@ -364,11 +377,17 @@ fun QRCodeScreenContent() {
     NotFoundScreen()
 }
 @Composable
-fun CampsiteDetailsScreenContent(navController: NavController, campsiteId: String, onSelectedTabChange: (String) -> Unit = {}){
+fun CampsiteDetailsScreenContent(
+    navController: NavController,
+    campsiteId: String,
+    entrantId: String,
+    lotteryRepository: LotteryRepository,
+    onSelectedTabChange: (String) -> Unit = {}
+){
     BackHandler(enabled = true) {
         onSelectedTabChange("Home")
     }
-    EntreeCampsite(navController, campsiteId)
+    EntreeCampsite(navController, campsiteId, lotteryRepository, entrantId)
 }
 
 @Composable

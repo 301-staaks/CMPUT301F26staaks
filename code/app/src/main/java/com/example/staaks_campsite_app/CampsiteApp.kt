@@ -45,7 +45,7 @@ fun CampsiteApp() {
                 loadError = campsiteRepository.loadError
             )
         }
-        composable("entree_main") { EntreeMain(navController) }
+        composable("entree_main") { EntrantMain(navController, lotteryRepository, currentUserId) }
         composable("profile_screen") { ProfileScreen(navController) }
         composable("policy_guidelines_screen") { PolicyGuidelinesPage(navController) }
         composable("entree_res_screen") { EntreeResScreen(navController) }

@@ -34,7 +34,6 @@ class LotteryRepository {
      *
      * @param lottery the lottery we want to save
      */
-
     fun saveLottery(lottery: Lottery) {
         if (lottery.lotteryId.isBlank()) {
             lottery.lotteryId = lotteriesRef.document().id
@@ -77,20 +76,63 @@ class LotteryRepository {
         return result
     }
 
+    fun hasEntrantAlreadyJoined(lotteryId: String, entrantId: String): Boolean {
+        for (entry in _waitlistEntries) {
+            if (entry.lotteryId == lotteryId &&
+                entry.entrantId == entrantId
+            ) {
+                return true
+            }
+        }
+        return false
+    }
+
     /**
-     * adds an entrant to a lottery waitlist
+     * adds an entrant to a lottery waitlist. Checks that the entrant is eligible to join the lottery
+     * waitlist (i.e. checks lottery exists, valid entrant id, registration is open, has already
+     * joined the waitlist, and lottery is not full).
      *
      * @param lotteryId the id of the lottery
      * @param entrantId the id of the entrant joining
      * @param joinedDate the date they joined written as YYYY-MM-DD
      */
-
     fun addEntrantToWaitlist(
         lotteryId: String,
         entrantId: String,
-        joinedDate: String
+        joinedDate: String,
+        onSuccess: () -> Unit = {},
+        onFailure: (String) -> Unit = {}
     ) {
-        val entryReference = waitlistRef.document()
+        val lottery = getLottery(lotteryId)
+
+        // added possible edge cases -Szymon
+        if (lottery == null) {
+            onFailure("Lottery not found")
+            return
+        }
+
+        if (entrantId.isBlank()) {
+            onFailure("Entrant ID cannot be blank, you were not added to the waitlist")
+            return
+        }
+
+        if (!lottery.isRegistrationOpen(joinedDate)) {
+            onFailure("Registration is closed for this lottery, you were not added to the waitlist")
+            return
+        }
+
+        if (hasEntrantAlreadyJoined(lotteryId, entrantId)) {
+            onFailure("You have already joined this lottery")
+            return
+        }
+
+        if (lottery.isWaitlistFull(getWaitlistEntries(lotteryId).size)) {
+            onFailure("This lottery is full")
+            return
+        }
+
+
+        val entryReference = waitlistRef.document("${lotteryId}_${entrantId}")
 
         val entry = WaitlistEntry(
             entryId = entryReference.id,
@@ -99,7 +141,8 @@ class LotteryRepository {
             joinedDate = joinedDate
         )
 
-        entryReference.set(entry)
+        entryReference.set(entry).addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { onFailure("Could not add to waitlist. Please try again.") }
     }
 
     /**

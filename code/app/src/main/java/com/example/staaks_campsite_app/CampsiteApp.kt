@@ -2,7 +2,6 @@ package com.example.staaks_campsite_app
 
 import androidx.navigation.compose.NavHost
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
@@ -25,13 +24,10 @@ fun CampsiteApp() {
      */
 
     val navController = rememberNavController()
-    val campsiteRepository = remember {
-        CampsiteRepository()
-    }
+    val campsiteRepository = remember { CampsiteRepository() }
+    val lotteryRepository = remember { LotteryRepository() }
 
-    val lotteryRepository = remember {
-        LotteryRepository()
-    }
+
 
     val context = LocalContext.current
     val currentUserId = remember(context) { getDeviceId(context) }
@@ -54,7 +50,7 @@ fun CampsiteApp() {
                 loadError = campsiteRepository.loadError
             )
         }
-        composable("entree_main") { EntreeMain(navController) }
+        composable("entree_main") { EntrantMain(navController, lotteryRepository, currentUserId) }
         composable("profile_screen") { ProfileScreen(navController) }
         composable("policy_guidelines_screen") { PolicyGuidelinesPage(navController) }
         composable("entree_res_screen") { EntreeResScreen(navController) }
@@ -69,7 +65,7 @@ fun CampsiteApp() {
         composable("entree_campsite/{campsiteId}") { entry ->
             val campsiteId = entry.arguments?.getString("campsiteId") ?: ""
 
-            EntreeCampsite(navController, campsiteId)
+            EntreeCampsite(navController, campsiteId, lotteryRepository, currentUserId)
         }
 
         //composable("sample_res_page") { SampleResPage(navController) }
@@ -128,16 +124,7 @@ fun CampsiteApp() {
                 campsiteRepository.addOrUpdateCampsite(campsite)
             }
         }
-        composable("owner_campsite_edit/{campsiteId}") { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("campsiteId")
-            OwnerCampsiteEdit(
-                navController = navController,
-                isNew = false,
-                ownerId = currentUserId,
-                existing = campsiteRepository.campsites.find { it.id == id },
-                onSave = { campsiteRepository.addOrUpdateCampsite(it) }
-            )
-        }
+
         composable("owner_reservations_active") { OwnerReservationsActive(navController) }
         composable("owner_reservations_past") { OwnerReservationsPast(navController) }
         composable("owner_reservations_cancelled") { OwnerReservationsCancelled(navController) }

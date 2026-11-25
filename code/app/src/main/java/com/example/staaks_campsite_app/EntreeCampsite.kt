@@ -32,6 +32,8 @@ import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.Campsite
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.DisposableEffect
+import com.example.staaks_campsite_app.data.LotteryRepository
+import com.example.staaks_campsite_app.EntrantLotteryJoin
 
 /**
  * Looks up the campsite matching [campsiteID] in the [CampsiteRepository] and displays its name,
@@ -42,10 +44,17 @@ import androidx.compose.runtime.DisposableEffect
  *
  * @param navController controls navigation to other screens
  * @param campsiteID the id of the campsite to display.
+ * @param lotteryRepository repository for lottery data
+ * @param entrantId the id of the current user
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EntreeCampsite(navController: NavController, campsiteID: String) {
+fun EntreeCampsite(
+    navController: NavController,
+    campsiteID: String,
+    lotteryRepository: LotteryRepository,
+    entrantId: String
+) {
 
     // this whole new block is for when an entrant is seeing the campsite and the admin deletes it
     // it changes to This campsite is no longer available
@@ -222,20 +231,10 @@ fun EntreeCampsite(navController: NavController, campsiteID: String) {
             }
         }
 
-        // TODO Implement lottery joining
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Button(
-                onClick = {/* ### */},
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1B5E20),
-                    contentColor = Color.White
-                )
-            ) { Text("View Lotteries") }
-        }
+        EntrantLotteryJoin(
+            campsiteId = campsite.id,
+            lotteryRepository = lotteryRepository,
+            entrantId = entrantId
+        )
     }
 }

@@ -1,9 +1,9 @@
 package com.example.staaks_campsite_app.data.model
 
 /**
- * A lottery for one or more of an owner's campsites.
+ * stores a campsite lottery and its registration and booking dates
  *
- * Dates are YYYY-MM-DD strings, so comparing them as text compares them as dates.
+ * --------GUYS WRITE ALL DATES AS YYYY-MM-DD--------
  *
  * @property lotteryId the ID of this lottery
  * @property campsiteId the ID of the campsite offering the lottery

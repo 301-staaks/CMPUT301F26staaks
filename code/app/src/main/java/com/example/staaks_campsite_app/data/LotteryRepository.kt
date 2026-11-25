@@ -213,22 +213,27 @@ class LotteryRepository {
         return result
     }
 
-    /**
-     * checks the loaded entries for an existing participation record
-     */
-    fun hasEntrantAlreadyJoined(
-        lotteryId: String,
-        entrantId: String
-    ): Boolean {
-        return _waitlistEntries.any {
-            it.lotteryId == lotteryId &&
-                    it.entrantId == entrantId
+    fun hasEntrantAlreadyJoined(lotteryId: String, entrantId: String): Boolean {
+        for (entry in _waitlistEntries) {
+            if (entry.lotteryId == lotteryId &&
+                entry.entrantId == entrantId
+            ) {
+                return true
+            }
         }
+        return false
     }
 
     /**
-     * joins a lottery using a stable entry id and an atomic participant count
+     * adds an entrant to a lottery waitlist. Checks that the entrant is eligible to join the lottery
+     * waitlist (i.e. checks lottery exists, valid entrant id, registration is open, has already
+     * joined the waitlist, and lottery is not full).
+     *
+     * @param lotteryId the id of the lottery
+     * @param entrantId the id of the entrant joining
+     * @param joinedDate the date they joined written as YYYY-MM-DD
      */
+
     fun addEntrantToWaitlist(
         lotteryId: String,
         entrantId: String,
@@ -250,7 +255,7 @@ class LotteryRepository {
 
         val lotteryReference = lotteriesRef.document(lotteryId)
 
-        // matches the entry id format used by szymon's join flow
+        // uses a consistent entry ID for each lottery and entrant pair
         val entryReference =
             waitlistRef.document("${lotteryId}_${entrantId}")
 
@@ -367,7 +372,6 @@ class LotteryRepository {
                 "waitlistCount",
                 count + 1L
             )
-
             null
         }.addOnCompleteListener { task ->
             if (task.isSuccessful) {
@@ -428,7 +432,6 @@ class LotteryRepository {
         check(lottery.getLong("membershipVersion") == 1L) {
             "This older lottery needs participant migration"
         }
-
         val count = lottery.getLong("waitlistCount")
 
         check(count != null && count > 0L) {
@@ -465,171 +468,26 @@ class LotteryRepository {
         return result
     }
 
-    /**
-     * returns selected and accepted entries from the locally loaded waitlist.
-     *
-     * an empty result may mean that firestore has not finished loading.
-     *
-     * @param lotteryId the lottery whose selected entrants are requested
-     * @return the matching entries currently loaded by the snapshot listener
-     */
-    fun getSelectedEntries(lotteryId: String): List<WaitlistEntry> {
-        val result = mutableListOf<WaitlistEntry>()
-
-        for (entry in _waitlistEntries) {
-            if (
-                entry.lotteryId == lotteryId &&
-                (entry.status == "Selected" || entry.status == "Accepted")
-            ) {
-                result.add(entry)
-            }
-        }
-
-        return result
-    }
-
-    /**
-     * finds the first loaded entry matching a lottery and entrant.
-     *
-     * this method does not fetch missing data or resolve duplicate entries.
-     *
-     * @param lotteryId the lottery to search
-     * @param entrantId the participant's user document id
-     * @return the first matching entry, or null if no match is loaded
-     */
-    fun getEntrantEntry(
-        lotteryId: String,
-        entrantId: String
-    ): WaitlistEntry? {
-
-        for (entry in _waitlistEntries) {
-            if (entry.lotteryId == lotteryId && entry.entrantId == entrantId)
-            {
-                return entry
-            }
-        }
-
-        return null
-    }
-
-    /**
-     * updates the winner count and registration deadline before closing.
-     *
-     * updates only these settings to preserve existing draw results.
-     * time checks use the device clock and need server-side enforcement.
-     *
-     * @param lotteryId the lottery document id
-     * @param numberOfWinners the positive number of winners
-     * @param registrationClosesAt the new deadline in milliseconds
-     * @return the task used to observe success or failure
-     */
-    fun updateLotterySettings(
-        lotteryId: String,
-        numberOfWinners: Int,
-        registrationClosesAt: Long
-    ) = db.runTransaction { transaction ->
-
-        require(numberOfWinners > 0) {
-            "The number of winners must be greater than zero."
-        }
-
-        val currentTime = System.currentTimeMillis()
-
-        require(registrationClosesAt > currentTime) {
-            "The registration deadline must be in the future."
-        }
-
-        val reference = lotteriesRef.document(lotteryId)
-        val snapshot = transaction.get(reference)
-
-        check(snapshot.exists()) {
-            "Lottery not found."
-        }
-
-        check(snapshot.getBoolean("drawCompleted") != true) {
-            "The lottery has already been drawn."
-        }
-
-        check(snapshot.getString("status") == "Open") {
-            "The lottery is not open."
-        }
-
-        // uses zero when an older document has no exact deadline
-        val previousDeadline =
-            snapshot.getLong("registrationClosesAt") ?: 0L
-
-        check(previousDeadline == 0L || currentTime < previousDeadline) {
-            "Registration has already closed."
-        }
-
-        transaction.update(
-            reference,
-            mapOf(
-                "numberOfWinners" to numberOfWinners,
-                "registrationClosesAt" to registrationClosesAt
-            )
-        )
-    }
-
-    /**
-     * marks a selected invitation as declined.
-     *
-     * repeated declines do not reset replacement progress.
-     * this method does not select a replacement.
-     * firestore rules must enforce who can change the entry.
-     *
-     * @param entryId the waitlist document id
-     * @param entrantId the user associated with the entry
-     * @return the task used to observe success or failure
-     */
-    fun declineInvitation(
-        entryId: String,
-        entrantId: String
-    ) = db.runTransaction { transaction ->
-
-        val reference = waitlistRef.document(entryId)
-        val snapshot = transaction.get(reference)
-
-        check(snapshot.exists()) {
-            "Waitlist entry not found."
-        }
-
-        check(snapshot.getString("entrantId") == entrantId) {
-            "This entry belongs to another entrant."
-        }
-
-        val status = snapshot.getString("status")
-
-        // leaves already declined invitations unchanged
-        if (status != "Declined") {
-            check(status == "Selected") {
-                "Only a selected invitation can be declined."
-            }
-
-            transaction.update(
-                reference,
-                mapOf(
-                    "status" to "Declined",
-                    "replacementProcessed" to false
-                )
-            )
-        }
-    }
-
     init {
         lotteriesRef.addSnapshotListener { snapshot, error ->
-            lotteriesLoading = false
+            if (error != null) {
+                lotteryError = error.localizedMessage
+                    ?: "Could not load lotteries"
+                lotteriesLoading = false
+                return@addSnapshotListener
+            }
 
-            if (error != null || snapshot == null) {
-                lotteryError =
-                    error?.localizedMessage ?: "Could not load lotteries"
+            if (snapshot == null) {
+                lotteryError = "Could not load lotteries"
+                lotteriesLoading = false
                 return@addSnapshotListener
             }
 
             lotteryError = null
+
             _lotteries.clear()
 
-            for (document in snapshot.documents) {
+            snapshot?.documents?.forEach { document ->
                 val lottery = document.toObject(Lottery::class.java)
 
                 if (lottery != null) {
@@ -637,6 +495,7 @@ class LotteryRepository {
                     _lotteries.add(lottery)
                 }
             }
+            lotteriesLoading = false
         }
 
         waitlistRef.addSnapshotListener { snapshot, error ->

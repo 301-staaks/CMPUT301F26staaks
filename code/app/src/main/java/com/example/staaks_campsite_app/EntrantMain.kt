@@ -85,7 +85,7 @@ import com.example.staaks_campsite_app.data.model.Campsite
 val entrantTabs = listOf(
     Tab("entree_main", "Home", icon = Icons.Default.Home),
     Tab("entree_res_screen", "Reservations", icon = Icons.AutoMirrored.Filled.List),
-    Tab("entree_inbox_screen", "Inbox", icon =Icons.Default.Search),
+    Tab("entree_inbox_screen", "Inbox", icon =Icons.Default.Notifications),
     Tab("entrant_messages_screen", "Messages", icon =Icons.Default.Textsms),
     Tab("qr_scanner_screen", "Scan", icon =Icons.Default.QrCode)
 )

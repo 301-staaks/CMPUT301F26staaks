@@ -152,6 +152,7 @@ fun QRScannerScreen(navController: NavController) {
         val observer = LifecycleEventObserver { _, _ -> updateCamera() }
         lifecycleOwner.lifecycle.addObserver(observer)
         updateCamera()
+        updateCamera()
 
         onDispose {
             screenActive = false

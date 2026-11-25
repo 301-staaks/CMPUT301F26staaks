@@ -1,37 +1,35 @@
 package worker
 
 import com.example.staaks_campsite_app.data.model.WaitlistEntry
+import com.google.cloud.firestore.DocumentReference
 import com.google.cloud.firestore.DocumentSnapshot
 import com.google.cloud.firestore.Firestore
+import com.google.cloud.firestore.Transaction
 import java.security.SecureRandom
 import java.time.Instant
 import java.time.ZoneId
 
-/**
- * reads fresh data and saves each draw in one transaction
- */
+// reads lottery data and saves the draw results
 class LotteryWorkerRepository(private val db: Firestore) {
     private val planner = DrawPlanner()
     private val random = SecureRandom()
 
-    /**
-     * displays the configuration without changing documents
-     */
+    // shows the lottery settings and the number of waitlist entries
     fun check(lotteryId: String) {
-        val document = db.collection("lotteries")
+        val lottery = db.collection("lotteries")
             .document(lotteryId)
             .get()
             .get()
 
-        check(document.exists()) {
+        check(lottery.exists()) {
             "Lottery $lotteryId was not found"
         }
 
-        println("Lottery: ${document.id}")
-        println("status: ${document.getString("status")}")
-        println("drawCompleted: ${document.getBoolean("drawCompleted")}")
-        println("registrationClosesAt: ${document.getLong("registrationClosesAt")}")
-        println("numberOfWinners: ${document.getLong("numberOfWinners")}")
+        println("Lottery: ${lottery.id}")
+        println("status: ${lottery.getString("status")}")
+        println("drawCompleted: ${lottery.getBoolean("drawCompleted")}")
+        println("registrationClosesAt: ${lottery.getLong("registrationClosesAt")}")
+        println("numberOfWinners: ${lottery.getLong("numberOfWinners")}")
 
         val entries = db.collection("waitlist")
             .whereEqualTo("lotteryId", lotteryId)
@@ -42,50 +40,44 @@ class LotteryWorkerRepository(private val db: Firestore) {
         println("Check complete - no documents were changed")
     }
 
-    /**
-     * processes an initial draw or pending replacements
-     */
+    // runs the first draw or fills spots that became available
     fun process(lotteryId: String): String? {
         // keeps the same seed if firestore retries the transaction
         val seed = random.nextLong()
 
         return db.runTransaction<String?> { transaction ->
-            val reference = db.collection("lotteries")
-                .document(lotteryId)
-
-            val lottery = transaction.get(reference).get()
+            val lotteryRef = db.collection("lotteries").document(lotteryId)
+            val lottery = transaction.get(lotteryRef).get()
 
             if (!lottery.exists()) {
                 return@runTransaction null
             }
 
-            val completed = lottery.getBoolean("drawCompleted") == true
             val status = lottery.getString("status")
+            val drawCompleted = lottery.getBoolean("drawCompleted") == true
+            val needsFirstDraw = status == "Open" && !drawCompleted
+            val canCheckReplacements =
+                drawCompleted && (status == "Drawn" || status == "Ongoing")
 
-            val initial = status == "Open" && !completed
-            val replacement =
-                status in setOf("Drawn", "Ongoing") && completed
-
-            if (!initial && !replacement) {
+            if (!needsFirstDraw && !canCheckReplacements) {
                 return@runTransaction null
             }
 
+            // skips lotteries whose booking period has ended
             val now = System.currentTimeMillis()
             val today = Instant.ofEpochMilli(now)
                 .atZone(ZoneId.of("America/Edmonton"))
                 .toLocalDate()
                 .toString()
 
-            val bookingEnd =
-                lottery.getString("bookingEndDate") ?: ""
-
+            val bookingEnd = lottery.getString("bookingEndDate") ?: ""
             if (bookingEnd.isNotBlank() && today > bookingEnd) {
                 return@runTransaction null
             }
 
-            if (initial) {
-                val closesAt =
-                    lottery.getLong("registrationClosesAt") ?: 0L
+            // waits for the exact registration deadline before the first draw
+            if (needsFirstDraw) {
+                val closesAt = lottery.getLong("registrationClosesAt") ?: 0L
 
                 check(closesAt > 0L) {
                     "Set registrationClosesAt to epoch milliseconds first"
@@ -96,134 +88,115 @@ class LotteryWorkerRepository(private val db: Firestore) {
                 }
             }
 
-            val count = lottery.getLong("numberOfWinners")
-
-            require(
-                count != null &&
-                    count in 1L..Int.MAX_VALUE.toLong()
-            ) {
+            val winnerCount = lottery.getLong("numberOfWinners")
+            require(winnerCount != null && winnerCount in 1L..Int.MAX_VALUE.toLong()) {
                 "numberOfWinners must be a positive integer"
             }
 
-            val campsiteId =
-                lottery.getString("campsiteId") ?: ""
-
-            require(
-                campsiteId.isNotBlank() &&
-                    "/" !in campsiteId &&
-                    campsiteId !in setOf(".", "..")
-            ) {
+            // checks that every campsite in the lottery still exists
+            val campsiteId = lottery.getString("campsiteId") ?: ""
+            require(isValidId(campsiteId)) {
                 "Set campsiteId to a valid campsite document id"
             }
 
-            val campsiteIds =
-                readIds(lottery, "campsiteIds") + campsiteId
-
+            val campsiteIds = readIds(lottery, "campsiteIds") + campsiteId
             check(campsiteIds.size <= 50) {
                 "This version supports up to 50 campsites per lottery"
             }
 
             for (id in campsiteIds) {
-                check(
-                    id.isNotBlank() &&
-                        "/" !in id &&
-                        id !in setOf(".", "..")
-                ) {
+                check(isValidId(id)) {
                     "Invalid campsite id"
                 }
 
-                val campsite = transaction.get(
-                    db.collection("campsites").document(id)
-                ).get()
+                val campsiteRef = db.collection("campsites").document(id)
+                val campsite = transaction.get(campsiteRef).get()
 
                 check(campsite.exists()) {
                     "A campsite no longer exists"
                 }
             }
 
-            val query = db.collection("waitlist")
+            // loads only the waitlist entries for this lottery
+            val waitlistQuery = db.collection("waitlist")
                 .whereEqualTo("lotteryId", lotteryId)
 
-            val documents = transaction.get(query)
-                .get()
+            val documents = transaction.get(waitlistQuery).get()
                 .documents
                 .sortedBy { it.id }
 
-            // keeps this first version within small project limits
             check(documents.size <= 200) {
                 "This worker supports up to 200 waitlist records per lottery"
             }
 
-            val entries = documents.map { document ->
-                val selectedAt =
-                    document.getLong("selectedAt") ?: 0L
+            // reads the entry data and collects each entrant id once
+            val entries = mutableListOf<WaitlistEntry>()
+            val entrantIds = mutableSetOf<String>()
 
+            for (document in documents) {
+                val selectedAt = document.getLong("selectedAt") ?: 0L
                 require(selectedAt >= 0L) {
                     "selectedAt cannot be negative"
                 }
 
-                WaitlistEntry(
-                    entryId = document.id,
-                    lotteryId = lotteryId,
-                    entrantId =
-                        document.getString("entrantId") ?: "",
-                    joinedDate =
-                        document.getString("joinedDate") ?: "",
-                    status =
-                        document.getString("status") ?: "Waiting",
-                    selectedAt = selectedAt,
-                    replacementProcessed =
-                        document.getBoolean("replacementProcessed") == true
+                val entrantId = document.getString("entrantId") ?: ""
+                entrantIds.add(entrantId)
+
+                entries.add(
+                    WaitlistEntry(
+                        entryId = document.id,
+                        lotteryId = lotteryId,
+                        entrantId = entrantId,
+                        joinedDate = document.getString("joinedDate") ?: "",
+                        status = document.getString("status") ?: "Waiting",
+                        selectedAt = selectedAt,
+                        replacementProcessed =
+                            document.getBoolean("replacementProcessed") == true
+                    )
                 )
             }
 
-            val existing = mutableSetOf<String>()
+            // checks which entrants still have a user document
+            val existingIds = mutableSetOf<String>()
+            for (entrantId in entrantIds) {
+                if (!isValidId(entrantId)) continue
 
-            for (id in entries.map { it.entrantId }.distinct()) {
-                if (
-                    id.isBlank() ||
-                    "/" in id ||
-                    id in setOf(".", "..")
-                ) {
-                    continue
-                }
-
-                val user = transaction.get(
-                    db.collection("users").document(id)
-                ).get()
+                val userRef = db.collection("users").document(entrantId)
+                val user = transaction.get(userRef).get()
 
                 if (user.exists()) {
-                    existing.add(id)
+                    existingIds.add(entrantId)
                 }
             }
 
-            val plan = if (initial) {
+            // asks the planner which fields need to change
+            val plan = if (needsFirstDraw) {
                 planner.initial(
-                    lotteryId,
-                    entries,
-                    existing,
-                    count.toInt(),
-                    seed,
-                    now
+                    lotteryId = lotteryId,
+                    entries = entries,
+                    existingIds = existingIds,
+                    winnerCount = winnerCount.toInt(),
+                    seed = seed,
+                    now = now
                 )
             } else {
                 check(lottery.contains("eligibleEntrantIds")) {
                     "This lottery has no saved original pool and cannot be replaced safely"
                 }
 
-                val history =
-                    readIds(lottery, "previouslySelectedEntrantIds") +
+                val originalPool = readIds(lottery, "eligibleEntrantIds")
+                val history = readIds(lottery, "previouslySelectedEntrantIds") +
                         readIds(lottery, "winnerEntrantIds")
 
                 planner.replacements(
-                    lotteryId,
-                    entries,
-                    existing,
-                    readIds(lottery, "eligibleEntrantIds"),
-                    history,
-                    count.toInt(),
-                    seed,
-                    now
+                    lotteryId = lotteryId,
+                    entries = entries,
+                    existingIds = existingIds,
+                    originalPool = originalPool,
+                    savedHistory = history,
+                    winnerCount = winnerCount.toInt(),
+                    seed = seed,
+                    now = now
                 )
             }
 
@@ -231,27 +204,19 @@ class LotteryWorkerRepository(private val db: Firestore) {
                 return@runTransaction null
             }
 
-            // all reads finish before the first write
-            val references = documents.associate {
-                it.id to it.reference
+            // applies the plan after all firestore reads are done
+            for (entryChange in plan.entryChanges) {
+                val document = documents.first { it.id == entryChange.entryId }
+                saveChanges(transaction, document.reference, entryChange.changes)
             }
 
-            for ((id, fields) in plan.entryChanges) {
-                transaction.update(
-                    references.getValue(id),
-                    fields
-                )
-            }
-
-            transaction.update(reference, plan.lotteryChanges)
+            saveChanges(transaction, lotteryRef, plan.lotteryChanges)
 
             plan.message
         }.get()
     }
 
-    /**
-     * checks open lotteries and lotteries with possible replacements
-     */
+    // checks every lottery that may need a draw or a replacement
     fun processAll() {
         val lotteries = db.collection("lotteries")
             .whereIn("status", listOf("Open", "Drawn", "Ongoing"))
@@ -259,28 +224,57 @@ class LotteryWorkerRepository(private val db: Firestore) {
             .get()
             .documents
 
-        for (document in lotteries) {
+        for (lottery in lotteries) {
             try {
-                val message = process(document.id)
+                println("Lottery: ${lottery.id}")
+                println("status: ${lottery.getString("status")}")
+                println("drawCompleted: ${lottery.getBoolean("drawCompleted")}")
+                println("registrationClosesAt: ${lottery.getLong("registrationClosesAt")}")
+                println("numberOfWinners: ${lottery.getLong("numberOfWinners")}")
 
+                val message = process(lottery.id)
                 if (message != null) {
-                    println("${document.id}: $message")
+                    println("\u001B[32m${lottery.id}: $message\u001B[0m")
                 }
             } catch (error: Exception) {
-                System.err.println(
-                    "Lottery ${document.id} failed: ${error.message}"
-                )
+                System.err.println("Lottery ${lottery.id} failed: ${error.message}")
             }
         }
     }
 
-    private fun readIds(
-        document: DocumentSnapshot,
-        field: String
-    ): Set<String> {
-        val values =
-            document.get(field) as? List<*> ?: return emptySet()
+    // sends all the field changes for one document in one update
+    private fun saveChanges(
+        transaction: Transaction,
+        reference: DocumentReference,
+        changes: List<Change>
+    ) {
+        if (changes.isEmpty()) return
 
+        val first = changes[0]
+        val otherFieldsAndValues = mutableListOf<Any>()
+
+        for (index in 1 until changes.size) {
+            val change = changes[index]
+            otherFieldsAndValues.add(change.fieldName)
+            otherFieldsAndValues.add(change.newValue)
+        }
+
+        transaction.update(
+            reference,
+            first.fieldName,
+            first.newValue,
+            *otherFieldsAndValues.toTypedArray()
+        )
+    }
+
+    // reads a list of ids and keeps each string once
+    private fun readIds(document: DocumentSnapshot, field: String): Set<String> {
+        val values = document.get(field) as? List<*> ?: return emptySet()
         return values.filterIsInstance<String>().toSet()
+    }
+
+    // checks that the id can be used as a document name
+    private fun isValidId(id: String): Boolean {
+        return id.isNotBlank() && "/" !in id && id != "." && id != ".."
     }
 }

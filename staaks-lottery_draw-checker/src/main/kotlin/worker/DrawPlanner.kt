@@ -3,21 +3,30 @@ package worker
 import com.example.staaks_campsite_app.data.LotteryDraw
 import com.example.staaks_campsite_app.data.model.WaitlistEntry
 
-/**
- * describes the changes that one transaction will save
- */
+// holds the name of a field and the value to save
+data class Change(
+    val fieldName: String,
+    val newValue: Any
+)
+
+// holds all the changes for one waitlist entry
+data class WaitlistChange(
+    val entryId: String,
+    val changes: List<Change>
+)
+
+// holds the changes the repository will save and the message it will show
 data class DrawPlan(
-    val entryChanges: Map<String, Map<String, Any>>,
-    val lotteryChanges: Map<String, Any>,
+    val entryChanges: List<WaitlistChange>,
+    val lotteryChanges: List<Change>,
     val message: String
 )
 
-/**
- * prepares results without reading or writing firestore
- */
+// prepares the changes for the first draw and for replacements
 class DrawPlanner {
     private val draw = LotteryDraw()
 
+    // chooses winners for the first draw
     fun initial(
         lotteryId: String,
         entries: List<WaitlistEntry>,
@@ -26,17 +35,19 @@ class DrawPlanner {
         seed: Long,
         now: Long
     ): DrawPlan {
-        // prevents overwriting invitations from an earlier draw
+        // stops the first draw if anyone was already selected
         check(entries.none { wasSelected(it) }) {
             "The initial draw already has invitation records but drawCompleted is false"
         }
 
-        val candidates = entries.filter {
-            it.status == "Waiting" &&
-                it.selectedAt == 0L &&
-                it.entrantId in existingIds
+        // keeps waiting entrants who still have an account and have never been selected
+        val candidates = entries.filter { entry ->
+            entry.status == "Waiting" &&
+                    entry.selectedAt == 0L &&
+                    entry.entrantId in existingIds
         }
 
+        // uses the seed to make the random selection repeatable
         val winners = draw.selectWinners(
             lotteryId,
             candidates,
@@ -45,31 +56,40 @@ class DrawPlanner {
             seed
         )
 
-        val winnerIds = winners.map { it.entrantId }
-        val changes = winners.associate {
-            it.entryId to selectedFields(now)
+        val winnerIds = mutableListOf<String>()
+        val entryChanges = mutableListOf<WaitlistChange>()
+
+        // records each winner and prepares the change to their waitlist entry
+        for (winner in winners) {
+            winnerIds.add(winner.entrantId)
+            entryChanges.add(selectEntry(winner, now))
         }
 
+        // saves each eligible entrant once for future replacements
+        val eligibleIds = mutableSetOf<String>()
+        for (candidate in candidates) {
+            eligibleIds.add(candidate.entrantId)
+        }
+
+        // marks the lottery as drawn and records the results
         return DrawPlan(
-            entryChanges = changes,
-            lotteryChanges = mapOf(
-                "status" to "Drawn",
-                "drawCompleted" to true,
-                "drawnAt" to now,
-                "drawSeed" to seed,
-                "drawAlgorithm" to "kotlin-fisher-yates-v1",
-                "eligibleEntrantIds" to candidates
-                    .map { it.entrantId }
-                    .distinct()
-                    .sorted(),
-                "winnerEntrantIds" to winnerIds,
-                "winnerIds" to winnerIds,
-                "previouslySelectedEntrantIds" to winnerIds
+            entryChanges = entryChanges,
+            lotteryChanges = listOf(
+                Change("status", "Drawn"),
+                Change("drawCompleted", true),
+                Change("drawnAt", now),
+                Change("drawSeed", seed),
+                Change("drawAlgorithm", "kotlin-fisher-yates-v1"),
+                Change("eligibleEntrantIds", eligibleIds.sorted()),
+                Change("winnerEntrantIds", winnerIds),
+                Change("winnerIds", winnerIds),
+                Change("previouslySelectedEntrantIds", winnerIds)
             ),
-            message = "initial draw saved with ${winners.size} winners"
+            message = "INITIAL DRAW SAVED WITH ${winners.size} WINNERS"
         )
     }
 
+    // fills spots that became available after the first draw
     fun replacements(
         lotteryId: String,
         entries: List<WaitlistEntry>,
@@ -81,40 +101,57 @@ class DrawPlanner {
         now: Long
     ): DrawPlan? {
         val history = savedHistory.toMutableSet()
+        val activeIds = mutableSetOf<String>()
 
-        entries.filter { wasSelected(it) }.forEach {
-            history.add(it.entrantId)
+        for (entry in entries) {
+            // adds anyone who already received an invitation to the history
+            if (wasSelected(entry)) {
+                history.add(entry.entrantId)
+            }
+
+            // accepted entrants and selected entrants with an account still hold a spot
+            if (
+                entry.status == "Accepted" ||
+                (entry.status == "Selected" && entry.entrantId in existingIds)
+            ) {
+                activeIds.add(entry.entrantId)
+            }
         }
 
-        // accepted reservations remain under the reservation system
-        val active = entries.filter {
-            it.status == "Accepted" ||
-                (it.status == "Selected" && it.entrantId in existingIds)
-        }.map { it.entrantId }.toSet()
+        // finds declined invitations and selected entrants whose accounts are gone
+        val releasedEntries = entries.filter { entry ->
+            val declined = entry.status == "Declined" && entry.entrantId in history
+            val entrantRemoved = entry.status == "Selected" &&
+                    entry.entrantId !in existingIds
 
-        // groups duplicates so one entrant releases only one place
-        val released = entries.filter {
-            !it.replacementProcessed &&
-                it.entrantId !in active &&
-                (
-                    (it.status == "Declined" && it.entrantId in history) ||
-                    (it.status == "Selected" && it.entrantId !in existingIds)
-                )
-        }.groupBy { it.entrantId }.toSortedMap()
-
-        if (released.isEmpty()) return null
-
-        val count = minOf(
-            released.size,
-            (winnerCount - active.size).coerceAtLeast(0)
-        )
-
-        val candidates = entries.filter {
-            it.entrantId in originalPool &&
-                it.entrantId !in history &&
-                it.selectedAt == 0L
+            // skips entries that were already handled or still hold a spot
+            !entry.replacementProcessed &&
+                    entry.entrantId !in activeIds &&
+                    (declined || entrantRemoved)
         }
 
+        // returns early when there are no released invitations to handle
+        if (releasedEntries.isEmpty()) return null
+
+        // counts one released spot per entrant even if they have multiple entries
+        val releasedIds = mutableSetOf<String>()
+        for (entry in releasedEntries) {
+            releasedIds.add(entry.entrantId)
+        }
+
+        // limits replacements to the number of spots that are actually free
+        val remaining = winnerCount - activeIds.size
+        val availableSpots = if (remaining < 0) 0 else remaining
+        val count = minOf(releasedIds.size, availableSpots)
+
+        // only considers entrants from the first draw who have never been selected
+        val candidates = entries.filter { entry ->
+            entry.entrantId in originalPool &&
+                    entry.entrantId !in history &&
+                    entry.selectedAt == 0L
+        }
+
+        // chooses replacements only when there are spots to fill
         val replacements = if (count == 0) {
             emptyList()
         } else {
@@ -127,56 +164,74 @@ class DrawPlanner {
             )
         }
 
-        val changes = mutableMapOf<String, Map<String, Any>>()
-
-        for (entry in replacements) {
-            changes[entry.entryId] = selectedFields(now)
-            history.add(entry.entrantId)
+        // prepares the new invitations and records who now holds a spot
+        val entryChanges = mutableListOf<WaitlistChange>()
+        for (replacement in replacements) {
+            entryChanges.add(selectEntry(replacement, now))
+            history.add(replacement.entrantId)
+            activeIds.add(replacement.entrantId)
         }
 
-        for ((index, releasedEntries) in released.values.withIndex()) {
-            val replacement = replacements.getOrNull(index)
+        // pairs each released spot with a replacement if one is available
+        for ((index, entrantId) in releasedIds.sorted().withIndex()) {
+            val replacement = if (index < replacements.size) {
+                replacements[index]
+            } else {
+                null
+            }
 
+            // records the same result on every released entry for this entrant
             for (entry in releasedEntries) {
-                changes[entry.entryId] = mapOf(
-                    "status" to if (entry.status == "Declined") {
-                        "Declined"
-                    } else {
-                        "Removed"
-                    },
-                    "replacementProcessed" to true,
-                    "replacementProcessedAt" to now,
-                    "replacementEntrantId" to
-                        (replacement?.entrantId ?: ""),
-                    "replacementEntryId" to
-                        (replacement?.entryId ?: "")
+                if (entry.entrantId != entrantId) continue
+
+                val status = if (entry.status == "Declined") "Declined" else "Removed"
+
+                entryChanges.add(
+                    WaitlistChange(
+                        entryId = entry.entryId,
+                        changes = listOf(
+                            Change("status", status),
+                            Change("replacementProcessed", true),
+                            Change("replacementProcessedAt", now),
+                            Change("replacementEntrantId", replacement?.entrantId ?: ""),
+                            Change("replacementEntryId", replacement?.entryId ?: "")
+                        )
+                    )
                 )
             }
         }
 
+        // saves the updated history and the entrants who now hold a spot
         return DrawPlan(
-            entryChanges = changes,
-            lotteryChanges = mapOf(
-                "previouslySelectedEntrantIds" to history.sorted(),
-                "winnerIds" to (
-                    active + replacements.map { it.entrantId }
-                ).sorted(),
-                "lastReplacementAt" to now,
-                "lastReplacementSeed" to seed
+            entryChanges = entryChanges,
+            lotteryChanges = listOf(
+                Change("previouslySelectedEntrantIds", history.sorted()),
+                Change("winnerIds", activeIds.sorted()),
+                Change("lastReplacementAt", now),
+                Change("lastReplacementSeed", seed)
             ),
-            message =
-                "processed ${released.size} released invitations " +
-                "and selected ${replacements.size} replacements"
+            message = "processed ${releasedIds.size} released invitations " +
+                    "and selected ${replacements.size} replacements"
         )
     }
 
-    private fun selectedFields(now: Long): Map<String, Any> = mapOf(
-        "status" to "Selected",
-        "selectedAt" to now,
-        "replacementProcessed" to false
-    )
+    // prepares the fields for a new invitation
+    private fun selectEntry(entry: WaitlistEntry, now: Long): WaitlistChange {
+        return WaitlistChange(
+            entryId = entry.entryId,
+            changes = listOf(
+                Change("status", "Selected"),
+                Change("selectedAt", now),
+                Change("replacementProcessed", false)
+            )
+        )
+    }
 
-    private fun wasSelected(entry: WaitlistEntry): Boolean =
-        entry.selectedAt > 0L ||
-            entry.status in setOf("Selected", "Accepted", "Declined")
+    // checks the selection time and status for signs of a past invitation
+    private fun wasSelected(entry: WaitlistEntry): Boolean {
+        return entry.selectedAt > 0L ||
+                entry.status == "Selected" ||
+                entry.status == "Accepted" ||
+                entry.status == "Declined"
+    }
 }

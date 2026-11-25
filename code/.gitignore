@@ -18,3 +18,6 @@ local.properties
 /staaks-lottery_draw-checker/.kotlin/
 /staaks-lottery_draw-checker/build/
 /staaks-lottery_draw-checker/.idea/
+/functions/
+/.firebaserc
+/firebase.json

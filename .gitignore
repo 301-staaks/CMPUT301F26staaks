@@ -72,3 +72,15 @@ node_modules/
 functions/venv/
 functions/__pycache__/
 functions/.env.local
+
+# Unused Cloud Functions files
+/functions/
+/.firebaserc
+/firebase.json
+
+# Generated checker files and local configuration
+/staaks-lottery_draw-checker/.gradle/
+/staaks-lottery_draw-checker/.kotlin/
+/staaks-lottery_draw-checker/.idea/
+/staaks-lottery_draw-checker/build/
+/staaks-lottery_draw-checker/local.properties

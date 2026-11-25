@@ -326,7 +326,6 @@ fun OwnerLotteryEdit(
                                 .map { it.id }
                                 .toMutableList()
 
-                            // TODO (back end): persist this lottery
                             val deadline = try {
                                 // preserves the exact deadline when the end date is unchanged
                                 if (

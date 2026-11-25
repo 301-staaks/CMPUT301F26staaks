@@ -38,7 +38,9 @@ class Lottery(
     var waitlistCount: Int = 0,
     var membershipVersion: Int = 0
 ) {
-    /** true while entrants can join: open and inside the registration period */
+    /**
+     * true while entrants can join: open and inside the registration period
+     */
     fun isRegistrationOpen(currentDate: String): Boolean {
         return status == "Open" &&
                 !drawCompleted &&
@@ -46,49 +48,67 @@ class Lottery(
                 currentDate <= registrationEndDate
     }
 
-    /** true once the booking period is over */
+    /**
+     * true once the booking period is over
+     */
     fun hasEnded(currentDate: String): Boolean {
         return bookingEndDate.isNotEmpty() &&
                 currentDate > bookingEndDate
     }
 
-    /** true before the registration start date */
+    /**
+     * true before the registration start date
+     */
     fun registrationNotStarted(currentDate: String): Boolean {
         return registrationStartDate.isNotEmpty() && currentDate < registrationStartDate
     }
 
-    /** true after the registration end date */
+    /**
+     * true after the registration end date
+     */
     fun registrationEnded(currentDate: String): Boolean {
         return registrationEndDate.isNotEmpty() && currentDate > registrationEndDate
     }
 
-    /** true for lotteries that belong under Active Lotteries */
+    /**
+     * true for lotteries that belong under Active Lotteries
+     */
     fun isActive(currentDate: String): Boolean {
         return (status == "Open" || status == "Drawn") && !hasEnded(currentDate)
     }
 
-    /** true if this lottery includes the campsite (works for single-campsite lotteries too) */
+    /**
+     true if this lottery includes the campsite (works for single-campsite lotteries too)
+     */
     fun includesCampsite(id: String): Boolean {
         return id.isNotBlank() && (campsiteId == id || campsiteIds.contains(id))
     }
 
-    /** true if the given booking dates overlap this lottery's booking period */
+    /**
+     true if the given booking dates overlap this lottery's booking period
+     */
     fun bookingOverlaps(start: String, end: String): Boolean {
         return bookingStartDate <= end && start <= bookingEndDate
     }
 
-    /** true if the date is inside the booking period (for the Lottery Win calendar) */
+    /**
+     true if the date is inside the booking period (for the Lottery Win calendar)
+     */
     fun isDateInBookingPeriod(date: String): Boolean {
         return date >= bookingStartDate && date <= bookingEndDate
     }
 
-    /** true once the waitlist has reached its capacity (never full if there is no capacity) */
+    /**
+     true once the waitlist has reached its capacity (never full if there is no capacity)
+     */
     fun isWaitlistFull(waitlistCount: Int): Boolean {
         val capacity = waitlistCapacity
         return capacity != null && waitlistCount >= capacity
     }
 
-    /** "Waitlist: 15/30", or just "Waitlist: 15" when there is no capacity */
+    /**
+     "Waitlist: 15/30", or just "Waitlist: 15" when there is no capacity
+     */
     fun waitlistLabel(waitlistCount: Int): String {
         val capacity = waitlistCapacity
         return if (capacity == null) "Waitlist: $waitlistCount"

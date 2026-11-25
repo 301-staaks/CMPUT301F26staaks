@@ -49,26 +49,19 @@ fun CampsiteQrSection(campsiteId: String) {
         imageToSave = null
 
         if (uri != null) {
-            try {
-                checkNotNull(image)
-
-                val output = context.contentResolver
-                    .openOutputStream(uri)
-                    ?: error("Could not open the selected file.")
-
-                output.use { stream ->
-                    val saved = image.compress(
-                        Bitmap.CompressFormat.PNG,
-                        100,
-                        stream
-                    )
-
-                    check(saved)
-                }
-
-                message = "QR code saved."
+            val saved = try {
+                image != null &&
+                        context.contentResolver.openOutputStream(uri)?.use { stream ->
+                            image.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                        } == true
             } catch (_: Exception) {
-                message = "Could not save the QR code. Please try again."
+                false
+            }
+
+            message = if (saved) {
+                "QR code saved."
+            } else {
+                "Could not save the QR code. Please try again."
             }
         }
     }

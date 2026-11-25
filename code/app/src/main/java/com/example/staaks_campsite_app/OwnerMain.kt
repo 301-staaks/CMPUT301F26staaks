@@ -178,6 +178,8 @@ fun OwnerMain(
 
 
                         }
+                        // shows the qr controls for this campsite
+                        CampsiteQrSection(campsiteId = campsite.id)
                     }
 
                 }

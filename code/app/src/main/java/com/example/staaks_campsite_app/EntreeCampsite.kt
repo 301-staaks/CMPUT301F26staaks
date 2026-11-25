@@ -30,6 +30,8 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.Campsite
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.DisposableEffect
 
 /**
  * Looks up the campsite matching [campsiteID] in the [CampsiteRepository] and displays its name,
@@ -45,20 +47,63 @@ import com.example.staaks_campsite_app.data.model.Campsite
 @Composable
 fun EntreeCampsite(navController: NavController, campsiteID: String) {
 
-    val campRepo = CampsiteRepository()
-    val campsitesList = campRepo.campsites
-    val campsite = campsitesList.find { it.id == campsiteID } ?: Campsite(
-        id = campsiteID,
-        ownerId = campsitesList.firstOrNull()?.ownerId ?: "",
-        name = "Loading Campsite...",
-        location = "",
-        capacity = 0,
-        date = mutableListOf(),
-        price = 0.0,
-        images = mutableListOf(),
-        description = "Please wait while campsite details load."
-    )
+    // this whole new block is for when an entrant is seeing the campsite and the admin deletes it
+    // it changes to This campsite is no longer available
+    // keeps one repository while this campsite screen is open
+    val campRepo = remember(campsiteID) {
+        CampsiteRepository()
+    }
 
+    // stops listening when the screen leaves
+    DisposableEffect(campRepo) {
+        onDispose {
+            campRepo.close()
+        }
+    }
+
+    // waits for the campsite data before checking whether it exists
+    if (campRepo.isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Loading campsite...")
+        }
+
+        return
+    }
+
+    val loadError = campRepo.loadError
+
+    // shows a connection error instead of saying the campsite was deleted
+    if (loadError != null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(loadError)
+        }
+
+        return
+    }
+
+    // finds the campsite in the current list
+    val campsite = campRepo.campsites.find {
+        it.id == campsiteID
+    }
+
+    // hides the details and buttons if the campsite no longer exists
+    if (campsite == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("This campsite is no longer available.")
+        }
+
+        return
+    }
+// until here
     val imageNum = campsite.images.size
 
     Column(

@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.staaks_campsite_app.Entree.EntreeCampsite
 import com.example.staaks_campsite_app.data.model.Campsite
+import androidx.compose.runtime.DisposableEffect
 
 /**
  * Displays: a top bar that has a home and profile button, a bottom navigation bar that has
@@ -73,6 +74,11 @@ fun EntreeMain(
 
     // Sample list of campsites
     val campsites = remember { CampsiteRepository() }
+    DisposableEffect(campsites) {
+        onDispose {
+            campsites.close()
+        }
+    }
     var selectedCampsite by remember { mutableStateOf<Campsite?>(null) }
 
 
@@ -84,7 +90,10 @@ fun EntreeMain(
             NavigationBar(containerColor = Color(0xFF1B5E20)) {
                 NavigationBarItem(
                     selected = selectedTab == "Reservations",
-                    onClick = { selectedTab = "Reservations" },
+                    onClick = {
+                        // opens the reservations screen, where entrants can view cancelled bookings in history
+                        navController.navigate("entree_res_screen")
+                    },
                     icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Reservations") },
                     label = { Text("Reservations")},
                     colors = NavigationBarItemDefaults.colors(
@@ -124,7 +133,13 @@ fun EntreeMain(
                 )
                 NavigationBarItem(
                     selected = selectedTab == "Scan",
-                    onClick = { selectedTab = "Scan" },
+
+                    // opens the actual qr scanner
+                    onClick = {
+                        navController.navigate("qr_scanner_screen") {
+                            launchSingleTop = true
+                        }
+                    },
                     icon = { Icon(Icons.Default.QrCode, contentDescription = "Scan") },
                     label = { Text("Scan") },
                     colors = NavigationBarItemDefaults.colors(
@@ -186,8 +201,21 @@ fun Home(
     onCampsiteChange: (Campsite) -> Unit = {},
     onSelectedTabChange: (String) -> Unit = {}
 ){
-    var filteredCampsites by remember { mutableStateOf<List<Campsite>?>(null) }
-    val displayCampsites = filteredCampsites ?: campsites.campsites
+    var filteredCampsites by remember {
+        mutableStateOf<List<Campsite>?>(null)
+    }
+
+    val savedResults = filteredCampsites
+
+    val displayCampsites = if (savedResults == null) {
+        campsites.campsites
+    } else {
+        campsites.campsites.filter { currentCampsite ->
+            savedResults.any { result ->
+                result.id == currentCampsite.id
+            }
+        }
+    }
     Column(modifier = Modifier.fillMaxSize()) {
         CampsiteSearchBar(
             campsites = campsites,

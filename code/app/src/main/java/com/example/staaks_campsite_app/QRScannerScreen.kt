@@ -23,18 +23,154 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.Source
+import com.google.firebase.firestore.firestore
+import com.google.zxing.BarcodeFormat
+import com.journeyapps.barcodescanner.BarcodeCallback
+import com.journeyapps.barcodescanner.BarcodeResult
+import com.journeyapps.barcodescanner.DecoratedBarcodeView
+import com.journeyapps.barcodescanner.DefaultDecoderFactory
 
 
 /**
- * The QR scanner screen for entree users.
-
- * The scanner itself is not implemented yet, and the fourth bottom button
- * (this screen) does nothing.
+ * Scans campsite QR codes and opens the matching campsite details.
  *
  * @param navController controls navigation to other screens.
  */
 @Composable
 fun QRScannerScreen(navController: NavController) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    var permissionGranted by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    var message by remember { mutableStateOf<String?>(null) }
+    var scanFinished by remember { mutableStateOf(false) }
+    var checkingCampsite by remember { mutableStateOf(false) }
+    var screenActive by remember { mutableStateOf(false) }
+
+    val scanner = remember(context) {
+        DecoratedBarcodeView(context).apply {
+            setDecoderFactory(DefaultDecoderFactory(listOf(BarcodeFormat.QR_CODE)))
+            setStatusText("")
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        permissionGranted = granted
+    }
+
+    val scanCallback = remember(scanner, navController) {
+        object : BarcodeCallback {
+            override fun barcodeResult(result: BarcodeResult) {
+                if (!screenActive || scanFinished) return
+
+                scanFinished = true
+                val campsiteId = CampsiteQrCode.readCampsiteId(result.text.orEmpty())
+
+                if (campsiteId == null) {
+                    message = "This is not a valid campsite QR code."
+                    return
+                }
+
+                checkingCampsite = true
+                message = "Checking campsite..."
+
+                Firebase.firestore.collection("campsites")
+                    .document(campsiteId)
+                    .get(Source.SERVER)
+                    .addOnCompleteListener { task ->
+                        if (!screenActive) return@addOnCompleteListener
+
+                        checkingCampsite = false
+
+                        when {
+                            !task.isSuccessful -> {
+                                message = "Could not check the campsite. Try again."
+                            }
+
+                            task.result?.exists() != true -> {
+                                message = "This campsite is no longer available."
+                            }
+
+                            else -> {
+                                navController.navigate(
+                                    "entree_campsite/${Uri.encode(campsiteId)}"
+                                ) {
+                                    popUpTo("qr_scanner_screen") {
+                                        inclusive = true
+                                    }
+                                    launchSingleTop = true
+                                }
+                            }
+                        }
+                    }
+            }
+        }
+    }
+
+    DisposableEffect(scanner, lifecycleOwner, permissionGranted) {
+        screenActive = true
+
+        fun updateCamera() {
+            val resumed = lifecycleOwner.lifecycle.currentState
+                .isAtLeast(Lifecycle.State.RESUMED)
+
+            if (permissionGranted && resumed) {
+                scanner.resume()
+            } else {
+                scanner.pause()
+            }
+        }
+
+        val observer = LifecycleEventObserver { _, _ -> updateCamera() }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        updateCamera()
+
+        onDispose {
+            screenActive = false
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            scanner.pause()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (!permissionGranted) {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    LaunchedEffect(permissionGranted) {
+        if (permissionGranted) {
+            scanner.decodeSingle(scanCallback)
+        }
+    }
     Column(
 
     ) {
@@ -118,7 +254,9 @@ fun QRScannerScreen(navController: NavController) {
 
         Box(
             modifier = Modifier
-                .weight(1f)
+                .fillMaxWidth()
+                .weight(1f),
+            contentAlignment = Alignment.Center
 
         ) {
             /*
@@ -126,6 +264,24 @@ fun QRScannerScreen(navController: NavController) {
             Create Main Content of Page Here
             -------------------------------------------------------------------------------------------------------------------------------------
              */
+            if (permissionGranted) {
+                AndroidView(
+                    factory = { scanner },
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Camera access is needed to scan QR codes.")
+
+                    Button(
+                        onClick = {
+                            permissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    ) {
+                        Text("Allow camera")
+                    }
+                }
+            }
 
         }
 
@@ -134,6 +290,19 @@ fun QRScannerScreen(navController: NavController) {
 
 
 
+        message?.let { Text(it) }
+
+        if (permissionGranted && scanFinished && !checkingCampsite) {
+            Button(
+                onClick = {
+                    message = null
+                    scanFinished = false
+                    scanner.decodeSingle(scanCallback)
+                }
+            ) {
+                Text("Scan again")
+            }
+        }
 
         // Pinned Bottom Row
         Row(

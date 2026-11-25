@@ -75,4 +75,5 @@ dependencies {
     testImplementation("io.mockk:mockk:1.13.12")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 }

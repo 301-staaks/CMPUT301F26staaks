@@ -14,3 +14,7 @@
 .cxx
 local.properties
 /.idea/deviceManager.xml
+/staaks-lottery_draw-checker/.gradle/
+/staaks-lottery_draw-checker/.kotlin/
+/staaks-lottery_draw-checker/build/
+/staaks-lottery_draw-checker/.idea/

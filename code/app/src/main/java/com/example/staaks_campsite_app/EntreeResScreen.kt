@@ -50,6 +50,8 @@ fun EntreeResScreen(navController: NavController) {
     val context = LocalContext.current
     val entrantId = getDeviceId(context)
 
+    var selectedTab by remember { mutableStateOf("Reservations") }
+
     val cancelledReservations = remember {
         mutableStateListOf<Reservation>()
     }
@@ -110,248 +112,131 @@ fun EntreeResScreen(navController: NavController) {
             listener.remove()
         }
     }
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        var selectedTab by remember { mutableStateOf("Reservations") }
-
-        /*
-        Pinned Top Row
-         */
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()            // Makes the row span the full width
-                .background(color = Color(0xFF1B5E20))
-                .padding(16.dp)
-
-        ) {
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Button(
-                    onClick = {
-                        navController.navigate("entree_main")
-
-                    },
-
-                    ) {
-                    Text("Back")
-                }
-            }
-
-            // Title of the screen changes depending on what sub tab user is on
-            Text(
-                text = if (selectedTab == "Reservations") "Reservations"
-                else if (selectedTab == "Lotteries") "Lotteries"
-                else "History",
-                fontSize = 25.sp,
-                color = Color.White,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-
-                Button(
-                    onClick = { navController.navigate("profile_screen") }
-                ) {
-                    Text("Profile")
-                }
-            }
-        }
-
-        // This is for when the admin is spoofing a different user. Logic must be implemented here to allow this to pop up
-        if (false) {
+    Scaffold(
+        topBar = { UiTopRow(navController = navController, title = "Reservations", homeRoute = "entree_main") },
+        bottomBar = { UiBottomRow(navController = navController, tabs = entrantTabs) }
+    ) { innerPadding ->
+        Column(modifier = Modifier.padding(innerPadding)) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .fillMaxWidth()            // Makes the row span the full width
-                    .background(color = Color(0xFF63B267))
-                    .heightIn(max = 45.dp)
-                    .padding(5.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-
+                    .fillMaxWidth()
+                    .background(color = Color.LightGray)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "View:",
-                    fontSize = 15.sp,
-                    color = Color.White
-                )
-                Button(onClick = { /* ... */ }) { Text("Admin") }
-                Button(onClick = { /* ... */ }) { Text("Owner") }
-                Button(onClick = { /* ... */ }) { Text("Entree") }
-
-
+                Button(
+                    onClick = { selectedTab = "Lotteries" },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Lotteries", fontSize = 12.sp)
+                }
+                Button(
+                    onClick = { selectedTab = "Reservations" },
+                    modifier = Modifier.weight(1.2f)
+                ) {
+                    Text("Reservations", fontSize = 12.sp)
+                }
+                Button(
+                    onClick = { selectedTab = "History" }, modifier = Modifier.weight(1f)
+                ) {
+                    Text("History", fontSize = 12.sp)
+                }
             }
-        }
+            if (selectedTab == "Reservations") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
 
-
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Button(
-                onClick = { selectedTab = "Lotteries" },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Lotteries", fontSize = 12.sp)
-            }
-            Button(
-                onClick = { selectedTab = "Reservations" },
-                modifier = Modifier.weight(1.2f)
-            ) {
-                Text("Reservations", fontSize = 12.sp)
-            }
-            Button(
-                onClick = { selectedTab = "History" }, modifier = Modifier.weight(1f)
-            ) {
-                Text("History", fontSize = 12.sp)
-            }
-        }
-
-
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-
-        ) {
-            /*
-            -------------------------------------------------------------------------------------------------------------------------------------
-            Create Main Content of Page Here
-            -------------------------------------------------------------------------------------------------------------------------------------
-             */
-            Column() {
-                // display all the tabs in this section, probably need to implement a lazy column
-                // for each tab
-                if (selectedTab == "Reservations") {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Button(
+                        onClick = { },
+                        modifier = Modifier.weight(1f),
                     ) {
+                        Text("Sample Reservation View")
+                    }
+                }
 
-                        Button(
-                            onClick = { },
-                            modifier = Modifier.weight(1f),
+            } else if (selectedTab == "Lotteries") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Button(
+                        onClick = { },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text("Sample Lotteries View")
+                    }
+                }
+            } else {
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    item {
+
+                        if (isLoadingHistory) {
+                            Text("Loading booking history...")
+                        }
+
+                        if (historyError.isNotBlank()) {
+                            Text(
+                                text = historyError,
+                                color = Color.Red
+                            )
+                        }
+
+                        if (
+                            !isLoadingHistory &&
+                            historyError.isBlank() &&
+                            cancelledReservations.isEmpty()
                         ) {
-                            Text("Sample Reservation View")
+                            Text("No cancelled reservations.")
                         }
                     }
 
-                } else if (selectedTab == "Lotteries") {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    items(
+                        items = cancelledReservations,
+                        key = { reservation -> reservation.reservationId }
+                    ) { reservation ->
 
-                        Button(
-                            onClick = { },
-                            modifier = Modifier.weight(1f),
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.LightGray)
+                                .padding(12.dp)
                         ) {
-                            Text("Sample Lotteries View")
-                        }
-                    }
-                } else {
 
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
+                            // uses the saved name even after the campsite is deleted.
+                            if (reservation.campsiteName.isNotBlank()) {
 
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-
-                        item {
-
-                            if (isLoadingHistory) {
-                                Text("Loading booking history...")
-                            }
-
-                            if (historyError.isNotBlank()) {
                                 Text(
-                                    text = historyError,
-                                    color = Color.Red
+                                    text = reservation.campsiteName,
+                                    fontSize = 20.sp
                                 )
+
+                            } else {
+
+                                Text("Campsite: ${reservation.campsiteId}")
                             }
 
-                            if (
-                                !isLoadingHistory &&
-                                historyError.isBlank() &&
-                                cancelledReservations.isEmpty()
-                            ) {
-                                Text("No cancelled reservations.")
-                            }
-                        }
-
-                        items(
-                            items = cancelledReservations,
-                            key = { reservation -> reservation.reservationId }
-                        ) { reservation ->
-
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(Color.LightGray)
-                                    .padding(12.dp)
-                            ) {
-
-                                // uses the saved name even after the campsite is deleted.
-                                if (reservation.campsiteName.isNotBlank()) {
-
-                                    Text(
-                                        text = reservation.campsiteName,
-                                        fontSize = 20.sp
-                                    )
-
-                                } else {
-
-                                    Text("Campsite: ${reservation.campsiteId}")
-                                }
-
-                                Text("Start date: ${reservation.startDate}")
-                                Text("End date: ${reservation.endDate}")
-                                Text("Status: ${reservation.status}")
-                            }
+                            Text("Start date: ${reservation.startDate}")
+                            Text("End date: ${reservation.endDate}")
+                            Text("Status: ${reservation.status}")
                         }
                     }
                 }
             }
         }
-
-
-                    // Pinned Bottom Row
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(color = Color.LightGray)
-                            .padding(5.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        Button(onClick = { /* ... */ }) { Text("1") }
-                        Button(onClick = { navController.navigate("entree_inbox_screen") }) { Text("2") }
-                        Button(onClick = { navController.navigate("messages_screen") }) { Text("3") }
-                        Button(onClick = { navController.navigate("qr_scanner_screen") }) { Text("4") }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(color = Color.LightGray)
-                            .heightIn(max = 16.dp)
-                            .heightIn(min = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-
-                    }
-                }
-            }
+    }
+}

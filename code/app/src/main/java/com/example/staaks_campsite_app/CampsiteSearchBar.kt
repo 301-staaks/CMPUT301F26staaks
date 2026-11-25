@@ -77,7 +77,8 @@ fun CampsiteSearchBar(
                 onClick = {
                     onChangeCampsites(campsites.filterCampsites(keyword, location, date, capacity))
                 },
-                modifier = Modifier.padding(top = 8.dp, start = 4.dp, end = 4.dp).weight(0.1f)
+                modifier = Modifier.padding(top = 8.dp, start = 4.dp, end = 4.dp).weight(0.1f),
+                containerColor = Color(0xFF63B267)
             ) {
                 Icon(Icons.Default.Search, contentDescription = "Search")
             }
@@ -85,7 +86,8 @@ fun CampsiteSearchBar(
             // filter button
             FloatingActionButton(
                 onClick = { showFilter = !showFilter },
-                modifier = Modifier.padding(top = 8.dp, start = 4.dp, end = 4.dp).weight(0.1f)
+                modifier = Modifier.padding(top = 8.dp, start = 4.dp, end = 4.dp).weight(0.1f),
+                containerColor = Color(0xFF63B267)
             ) {
                 Icon(Icons.Default.FilterList, contentDescription = "Filter")
             }

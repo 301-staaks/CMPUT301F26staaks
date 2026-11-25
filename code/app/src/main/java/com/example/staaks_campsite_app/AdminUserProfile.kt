@@ -50,8 +50,8 @@ fun AdminUserProfile(
     val user by viewModel.user.collectAsStateWithLifecycle()
 
     Scaffold(
-        topBar = { AdminTopRow(navController = navController, title = "User Profile") },
-        bottomBar = { AdminBottomRow(navController = navController)}
+        topBar = { UiTopRow(navController = navController, title = "User Profile", homeRoute = "admin_main") },
+        bottomBar = { UiBottomRow(navController = navController, tabs = adminTabs)}
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             user?.let {

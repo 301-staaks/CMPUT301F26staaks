@@ -125,6 +125,10 @@ class CampsiteRepository(
         return campsites.filter { it.ownerId == ownerId }
     }
 
+    fun getCampsiteById(campsiteId: String): Campsite? {
+        return campsites.find { it.id == campsiteId }
+    }
+
     /**
      * Retrieves the total counts of the campsites
      * @return The total counts of the campsites

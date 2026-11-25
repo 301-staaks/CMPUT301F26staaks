@@ -33,12 +33,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.staaks_campsite_app.session.SessionManager
 
-private val ownerTabs = listOf(
-    Tab("owner_reservations_active", "Reservations", Icons.Default.CalendarMonth),
-    Tab("owner_notifications", "Notifications", Icons.Default.Notifications),
-    Tab("owner_messages", "Messages", Icons.Default.Textsms),
-    Tab("owner_lotteries", "Lotteries", Icons.Default.ConfirmationNumber)
-)
 /**
  * The owner's "Past" reservations screen.
  *
@@ -53,7 +47,7 @@ fun OwnerReservationsPast(navController: NavController) {
     val session by SessionManager.state.collectAsState()
 
     Scaffold(
-        topBar = { UiTopRow(navController = navController, title = "Owner Main", homeRoute = "owner_main", isAdmin = session!!.isAdmin) },
+        topBar = { UiTopRow(navController = navController, title = "Owner Main", homeRoute = "owner_main") },
         bottomBar = { UiBottomRow(navController = navController, tabs = ownerTabs) }
     ) { innerPadding ->
         Box(

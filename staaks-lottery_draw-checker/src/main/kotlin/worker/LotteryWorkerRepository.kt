@@ -267,10 +267,18 @@ class LotteryWorkerRepository(private val db: Firestore) {
         )
     }
 
-    // reads a list of ids and keeps each string once
+    // Reads IDs from a Firestore field and keeps each string only once.
     private fun readIds(document: DocumentSnapshot, field: String): Set<String> {
+        // document.get(field) reads the value stored under the given field name
+        // as? List<*> checks whether that value is a list of any element type
+        //ff the field is missing or the value is not a list return an empty set
         val values = document.get(field) as? List<*> ?: return emptySet()
-        return values.filterIsInstance<String>().toSet()
+
+        // keep only the values that are strings, ignoring numbers, nulls, and other types
+        val ids = values.filterIsInstance<String>()
+
+        // convert the list to a set so each ID appears only once
+        return ids.toSet()
     }
 
     // checks that the id can be used as a document name

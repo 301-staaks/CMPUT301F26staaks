@@ -26,156 +26,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
+import com.example.staaks_campsite_app.data.getDeviceId
 
 
 /**
- * Displays: a pinned top bar with a back button (to the entree main screen) and a profile button.
- * A "Clear All" button, and a pinned bottom row of navigation buttons to the reservations, messages
- * and QR scanner screens.
- *
- * The notification list and the "Clear All" action are not implemented yet.
+ * Displays: a pinned top bar with a back button (to the entree main screen) and a profile button,
+ * the entrant's notifications with a "Clear All" button, and a pinned bottom row of navigation
+ * buttons to the reservations, messages and QR scanner screens.
  *
  * @param navController controls navigation to other screens.
  */
 @Composable
 fun EntreeInboxScreen(navController: NavController) {
-    Column(
+    val context = LocalContext.current
+    val entrantId = remember(context) { getDeviceId(context) }
 
-    ) {
-        /*
-        Pinned Top Row
-         */
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()            // Makes the row span the full width
-                .background(color = Color(0xFF1B5E20))
-                .padding(16.dp)
-
-        ){
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Button(
-                    onClick = {
-                        navController.navigate("entree_main")
-
-                    },
-
-                    ) {
-                    Text("Back")
-                }
-            }
-
-
-            Text(
-                text = "Inbox",
-                fontSize = 25.sp,
-                color = Color.White,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-
-                Button(
-                    onClick = { navController.navigate("profile_screen") }
-                ) {
-                    Text("Profile")
-                }
-
-            }
-        }
-
-        // This is for when the admin is spoofing a different user. Logic must be implemented here to allow this to pop up
-        if (false){
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()            // Makes the row span the full width
-                    .background(color = Color(0xFF63B267))
-                    .heightIn(max = 45.dp)
-                    .padding(5.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-
-            ) {
-                Text(
-                    text = "View:",
-                    fontSize = 15.sp,
-                    color = Color.White
-                )
-                Button(onClick = { /* ... */ }) { Text("Admin") }
-                Button(onClick = { /* ... */ }) { Text("Owner") }
-                Button(onClick = { /* ... */ }) { Text("Entree") }
-
-
-            }
-        }
-
-
-
-
-
-
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-
-        ) {
-            /*
-            -------------------------------------------------------------------------------------------------------------------------------------
-            Create Main Content of Page Here
-            -------------------------------------------------------------------------------------------------------------------------------------
-             Think Lazy Column would work here but first need to know how we are implementing
-             notifications
-
-             */
-
-        }
-
-
-
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Button(
-                onClick = { /* To do: Clears all notifications */}
-            ) {
-                Text("Clear All")
-            }
-        }
-
-
-        // Pinned Bottom Row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .padding(5.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(onClick = { navController.navigate("entree_res_screen") }) { Text("1") }
-            Button(onClick = { /* ... */ }) { Text("2") }
-            Button(onClick = { navController.navigate("messages_screen") }) { Text("3") }
-            Button(onClick = { navController.navigate("qr_scanner_screen") }) { Text("4") }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .heightIn(max = 16.dp)
-                .heightIn(min = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-
+    Scaffold(
+        topBar = {UiTopRow(navController = navController, title = "Inbox", homeRoute = "entree_main")},
+        bottomBar = {UiBottomRow(navController = navController, tabs = entrantTabs)}
+    ) { innerPadding ->
+        Column(modifier = Modifier.padding(innerPadding)) {
+            NotificationInbox(entrantId = entrantId)
         }
     }
 }

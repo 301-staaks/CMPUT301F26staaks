@@ -1,9 +1,12 @@
 package com.example.staaks_campsite_app.data
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateListOf
 import com.example.staaks_campsite_app.data.model.Reservation
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
+import java.time.LocalDate
 
 /**
  * saves reservations in firestore
@@ -118,6 +121,19 @@ class ReservationRepository {
     ) {
         reservationsRef.document(reservationId)
             .update("status", status)
+    }
+
+    /**
+     * checks if the last day of a reservation has passed
+     * and updates its status accordingly
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun checkReservationPast() {
+        for (reservation in _reservations) {
+            if (reservation.status == "Active" && reservation.isPast(LocalDate.now().toString())) {
+                updateReservationStatus(reservation.reservationId, "Past")
+            }
+        }
     }
 
     init {

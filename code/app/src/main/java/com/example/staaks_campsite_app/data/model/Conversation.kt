@@ -1,5 +1,7 @@
 package com.example.staaks_campsite_app.data.model
 
+import com.google.firebase.firestore.DocumentId
+
 /**
  * stores the users and latest message details of a conversation
  * the messages themselves are stored separately
@@ -11,11 +13,12 @@ package com.example.staaks_campsite_app.data.model
  * @property updatedDate the date the conversation was last updated
  */
 class Conversation(
-    var conversationId: String = "",
+    @DocumentId var conversationId: String = "",
     var participantIds: List<String> = emptyList(),
     var campsiteId: String = "",
     var lastMessageText: String = "",
-    var updatedDate: String = ""
+    var updatedDate: String = "",
+    var messages: List<Message> = emptyList()
 ) {
     /**
      * checks if a user is part of this conversation

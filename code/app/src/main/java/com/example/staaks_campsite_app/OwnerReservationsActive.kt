@@ -21,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -33,12 +34,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.staaks_campsite_app.session.SessionManager
 
-private val ownerTabs = listOf(
-    Tab("owner_reservations_active", "Reservations", Icons.Default.CalendarMonth),
-    Tab("owner_notifications", "Notifications", Icons.Default.Notifications),
-    Tab("owner_messages", "Messages", Icons.Default.Textsms),
-    Tab("owner_lotteries", "Lotteries", Icons.Default.ConfirmationNumber)
-)
 /**
  * The owner's screen listing lotteries that are currently active.
  *
@@ -50,74 +45,49 @@ private val ownerTabs = listOf(
 @Composable
 fun OwnerReservationsActive(navController: NavController) {
 
-    val session by SessionManager.state.collectAsState()
-
     Scaffold(
-        topBar = { UiTopRow(navController = navController, title = "Owner Main", homeRoute = "owner_main", isAdmin = session!!.isAdmin) },
-        bottomBar = { UiBottomRow(navController = navController, tabs = ownerTabs) }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .padding(innerPadding)
-        ) {
-            /*
-            -------------------------------------------------------------------------------------------------------------------------------------
-            Main Content of Page
-            -------------------------------------------------------------------------------------------------------------------------------------
-             */
+        topBar = {UiTopRow(navController, "Reservations", "owner_main")},
+        bottomBar = {UiBottomRow(navController, ownerTabs)}
+    ) { innerPadding->
+        val reservations = listOf("#1001", "#1002", "#1003") // placeholder
 
-            val reservations = listOf("#1001", "#1002", "#1003") // placeholder
+        Column(modifier = Modifier.padding(innerPadding)) {
+            // Switch between Active / Past / Cancelled
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Button(
+                    onClick = { navController.navigate("owner_reservations_active") { launchSingleTop = true } },
+                    enabled = false
+                ) { Text("Active") }
+                Button(
+                    onClick = { navController.navigate("owner_reservations_past") { launchSingleTop = true } },
+                    enabled = true
+                ) { Text("Past") }
+                Button(
+                    onClick = { navController.navigate("owner_reservations_cancelled") { launchSingleTop = true } },
+                    enabled = true
+                ) { Text("Cancelled") }
+            }
 
-            Column(modifier = Modifier.fillMaxSize()) {
-                // Switch between Active / Past / Cancelled
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Button(
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF009E60),
-                            contentColor = Color.White
-                        ),
-                        onClick = { navController.navigate("owner_reservations_active") { launchSingleTop = true } },
-                        enabled = false
-                    ) { Text("Active") }
-                    Button(
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF009E60),
-                            contentColor = Color.White
-                        ),
-                        onClick = { navController.navigate("owner_reservations_past") { launchSingleTop = true } },
-                        enabled = true
-                    ) { Text("Past") }
-                    Button(
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF009E60),
-                            contentColor = Color.White
-                        ),
-                        onClick = { navController.navigate("owner_reservations_cancelled") { launchSingleTop = true } },
-                        enabled = true
-                    ) { Text("Cancelled") }
-                }
-
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(reservations) { id ->
-                        Card(modifier = Modifier.fillMaxWidth()) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text("Reservation $id", fontSize = 18.sp)
-                                Text("Campsite: —  |  Site: —")
-                                Text("Guest: —")
-                                Text("Dates: —")
-                                Text("Status: Active")
-                            }
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(reservations) { id ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("Reservation $id", fontSize = 18.sp)
+                            Text("Campsite: —  |  Site: —")
+                            Text("Guest: —")
+                            Text("Dates: —")
+                            Text("Status: Active")
                         }
                     }
                 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -53,6 +54,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.remote.core.operations.ColorTheme
 import androidx.compose.remote.creation.Rc
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,19 +63,18 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import com.example.staaks_campsite_app.data.model.Campsite
+import com.example.staaks_campsite_app.session.SessionManager
 
 // light green 0xFF63B267
 // dark green 0xFF1B5E20
 // shamrock 0xFF009E60
 
-private data class AdminTab(val route: String, val label: String, val icon: ImageVector)
-
-private val adminTabs = listOf(
-    AdminTab("admin_reviews", "Reviews", Icons.Default.Star),
-    AdminTab("admin_users", "Users", Icons.Default.Person),
-    AdminTab("all_notifications", "Notifications", Icons.Default.Notifications),
-    AdminTab("all_messages", "Messages", Icons.Default.Textsms),
-    AdminTab("images_screen", "Images", Icons.Default.Image)
+public val adminTabs = listOf(
+    Tab("admin_reviews", "Reviews", Icons.Default.Star),
+    Tab("admin_users", "Users", Icons.Default.Person),
+    Tab("all_notifications", "Notifications", Icons.Default.Notifications),
+    Tab("all_messages", "Messages", Icons.Default.Textsms),
+    Tab("images_screen", "Images", Icons.Default.Image)
 )
 
 /**
@@ -94,11 +95,12 @@ fun AdminMain(
     loadError: String?
 ) {
     Scaffold(
-        topBar = { AdminTopRow(navController = navController, title = "Admin Main") },
-        bottomBar = { AdminBottomRow(navController = navController) }
+        topBar = { UiTopRow(navController = navController, title = "Admin Main", homeRoute = "admin_main") },
+        bottomBar = { UiBottomRow(navController = navController, tabs = adminTabs) }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
+                .fillMaxSize()
                 .fillMaxSize()
                 .padding(16.dp)
                 .padding(innerPadding),
@@ -144,7 +146,7 @@ fun AdminMain(
                     ) {
 
                         CampsiteImagePreview(
-                            imageUrl = campsite.images?.firstOrNull() ?: ""
+                            imageId = campsite.images.firstOrNull() ?: ""
                         )
 
                         Text(
@@ -231,6 +233,9 @@ fun AdminTopRow(navController: NavController, title: String = "Admin Main") {
 
 @Composable
 fun AdminViewChanger(navController: NavController) {
+    val session by SessionManager.state.collectAsState()
+    val currentView = session?.adminView
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -246,9 +251,9 @@ fun AdminViewChanger(navController: NavController) {
             fontSize = 15.sp,
             color = Color.White
         )
-        AdminChangeViewButton(text = "Admin", onClick = { navController.navigate("admin_main") }, selected = true)
-        AdminChangeViewButton(text = "Owner", onClick = { navController.navigate("owner_main") })
-        AdminChangeViewButton(text = "Entree", onClick = { /* ... */ })
+        AdminChangeViewButton(text = "Admin", onClick = { session?.adminView="admin"; navController.navigate("admin_main") }, selected = currentView=="admin")
+        AdminChangeViewButton(text = "Owner", onClick = { session?.adminView="owner"; navController.navigate("owner_main") }, selected = currentView=="owner")
+        AdminChangeViewButton(text = "Entree", onClick = { session?.adminView="entrant"; navController.navigate("entree_main") }, selected = currentView=="entrant")
     }
 }
 
@@ -263,7 +268,9 @@ fun TopRowHomeButton(onClick: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Default.Home,
-                contentDescription = "Home"
+                contentDescription = "Home",
+                modifier = Modifier.size(30.dp),
+                tint = Color.White
             )
         }
     }
@@ -276,7 +283,9 @@ fun AdminTopRowToggleChangeView(onClick: () -> Unit) {
     ) {
 
         IconButton(
-            onClick = { onClick() }
+            onClick = {
+                onClick()
+            }
         ) {
             Icon(
                 imageVector = Icons.Default.Menu,

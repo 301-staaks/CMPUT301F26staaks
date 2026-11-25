@@ -40,7 +40,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.ReviewRepository
 import com.example.staaks_campsite_app.data.UserRepository
@@ -127,8 +126,8 @@ fun AdminCampsite(navController: NavController, campsiteId: String) {
     }
 
     Scaffold(
-        topBar = { AdminTopRow(navController = navController, title = "Campsite") },
-        bottomBar = { AdminBottomRow(navController = navController) }
+        topBar = { UiTopRow(navController = navController, title = "Campsite", homeRoute = "admin_main") },
+        bottomBar = { UiBottomRow(navController = navController, tabs = adminTabs) }
     ) { innerPadding ->
 
         if (!reviewScreen) {

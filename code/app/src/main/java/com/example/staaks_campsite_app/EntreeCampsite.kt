@@ -9,27 +9,68 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
+import com.example.staaks_campsite_app.ConversationViewModel
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.Campsite
+import com.example.staaks_campsite_app.StoredImage
+import com.example.staaks_campsite_app.data.ConversationRepository
+import com.example.staaks_campsite_app.data.UserRepository
+import com.example.staaks_campsite_app.data.model.Conversation
+import com.example.staaks_campsite_app.data.model.Message
+import com.example.staaks_campsite_app.data.model.User
+import com.example.staaks_campsite_app.data.model.UserType
+import com.example.staaks_campsite_app.session.SessionManager
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
+
+
+class CampsiteViewModel(
+    savedStateHandle: SavedStateHandle,
+) : ViewModel() {
+
+    private val repo: CampsiteRepository = CampsiteRepository()
+
+    private val campsiteId: String = checkNotNull(savedStateHandle["campsiteId"])
+    val campsite: Campsite?
+        get() = repo.campsites.find { it.id == campsiteId }
+
+    fun addOrUpdateCampsite(campsite: Campsite) {
+        repo.addOrUpdateCampsite(campsite)
+    }
+}
 
 /**
  * Looks up the campsite matching [campsiteID] in the [CampsiteRepository] and displays its name,
@@ -45,11 +86,14 @@ import com.example.staaks_campsite_app.data.model.Campsite
 @Composable
 fun EntreeCampsite(navController: NavController, campsiteID: String) {
 
-    val campRepo = CampsiteRepository()
-    val campsitesList = campRepo.campsites
-    val campsite = campsitesList.find { it.id == campsiteID } ?: Campsite(
+    val session by SessionManager.state.collectAsState()
+    val userType = session?.type ?: UserType.ENTRANT
+
+    val viewModel: CampsiteViewModel = viewModel()
+
+    val campsite = viewModel.campsite ?: Campsite(
         id = campsiteID,
-        ownerId = campsitesList.firstOrNull()?.ownerId ?: "",
+        ownerId = "",
         name = "Loading Campsite...",
         location = "",
         capacity = 0,
@@ -72,6 +116,22 @@ fun EntreeCampsite(navController: NavController, campsiteID: String) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            IconButton(
+                onClick = {
+                    navController.navigate("entree_main")
+                },
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = Color(0xFF009E60),
+                    contentColor = Color.White
+                )
+            ){
+                Icon(
+                    imageVector = Icons.Default.ArrowBackIosNew,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
             Text(
                 text = campsite.name,
                 fontSize = 24.sp,
@@ -101,9 +161,13 @@ fun EntreeCampsite(navController: NavController, campsiteID: String) {
             ) { i ->
                 if (i in campsite.images.indices) {
                     val image = campsite.images[i]
-                    AsyncImage(
-                        model = image,
-                        contentDescription = null
+                    StoredImage(
+                        imageId = image,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .maskClip(RoundedCornerShape(8.dp))
                     )
                 }
             }
@@ -163,7 +227,7 @@ fun EntreeCampsite(navController: NavController, campsiteID: String) {
                                 campsite.rating = (campsite.rating * campsite.ratingCount + score) / (campsite.ratingCount + 1)
                             }
                             campsite.ratingCount++
-                            campRepo.addOrUpdateCampsite(campsite)
+                            viewModel.addOrUpdateCampsite(campsite)
                         }
                     },
                     colors = ButtonDefaults.buttonColors(

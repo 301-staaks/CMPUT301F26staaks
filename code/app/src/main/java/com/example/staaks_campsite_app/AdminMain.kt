@@ -43,6 +43,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Textsms
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -68,7 +69,7 @@ import com.example.staaks_campsite_app.data.model.Campsite
 private data class AdminTab(val route: String, val label: String, val icon: ImageVector)
 
 private val adminTabs = listOf(
-    AdminTab("admin_main", "Main", Icons.Default.Home),
+    AdminTab("admin_reviews", "Reviews", Icons.Default.Star),
     AdminTab("admin_users", "Users", Icons.Default.Person),
     AdminTab("all_notifications", "Notifications", Icons.Default.Notifications),
     AdminTab("all_messages", "Messages", Icons.Default.Textsms),

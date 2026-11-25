@@ -65,6 +65,8 @@ fun CampsiteApp() {
         composable("images_screen") { ImagesScreen(navController) }
         composable("admin_conversation") { AdminConversation(navController) }
 
+        composable("admin_reviews") { AdminReviews(navController) }
+
         composable<admin_campsite> { backStackEntry ->
             val campsite = backStackEntry.toRoute<admin_campsite>()
             AdminCampsite(navController, campsiteId = campsite.campsiteID)

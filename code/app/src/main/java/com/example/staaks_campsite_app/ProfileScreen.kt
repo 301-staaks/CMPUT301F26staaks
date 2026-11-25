@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,9 +30,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.staaks_campsite_app.data.CampsiteRepository
+import com.example.staaks_campsite_app.data.UserRepository
+import com.example.staaks_campsite_app.data.getDeviceId
+import com.example.staaks_campsite_app.data.model.UserType
 
 
 /**
@@ -42,83 +49,44 @@ import androidx.navigation.NavController
  */
 @Composable
 fun ProfileScreen(navController: NavController) {
-    var username by remember { mutableStateOf("johndoe999") }
-    var name by remember { mutableStateOf("John Doe") }
-    var email by remember { mutableStateOf("johndoe@gmail.com") }
-    var phone by remember { mutableStateOf("123 456 7890") }
+
+    val context = LocalContext.current
+    val currentUserId = remember(context) { getDeviceId(context) }
+    val userRepo = remember { UserRepository() }
+    val users = userRepo.users
+    val currentUser = users.find { it.id == currentUserId }
+
+
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+
+    LaunchedEffect(currentUser) {
+        currentUser?.let {
+            name = it.name
+            email = it.email
+            phone = it.phone
+        }
+    }
+    var home by remember { mutableStateOf("start") }
+    var bottomTabs by remember { mutableStateOf(adminTabs) }
+
+    if (currentUser?.type == UserType.ADMIN) {home = "admin_main"
+    bottomTabs = adminTabs}
+    else if (currentUser?.type == UserType.OWNER) {home = "owner_main"
+    bottomTabs = ownerTabs}
+    else if (currentUser?.type == UserType.ENTRANT) {home = "entree_main"
+    bottomTabs = entrantTabs}
+
+
     var notiToggle by remember { mutableStateOf(true) }
     var editToggle by remember { mutableStateOf(false) }
 
-    Column(
 
-    ) {
-        /*
-        Pinned Top Row
-         */
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()            // Makes the row span the full width
-                .background(color = Color(0xFF1B5E20))
-                .padding(16.dp)
-
-        ){
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Button(
-                    onClick = {
-                        navController.navigate("entree_main")
-
-                    },
-
-                    ) {
-                    Text("Back")
-                }
-            }
-
-
-            Text(
-                text = "Profile",
-                fontSize = 25.sp,
-                color = Color.White,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-
-                // Create Top Right Button Here
-
-            }
-        }
-
-        // This is for when the admin is spoofing a different user. Logic must be implemented here to allow this to pop up
-        if (false){
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()            // Makes the row span the full width
-                    .background(color = Color(0xFF63B267))
-                    .heightIn(max = 45.dp)
-                    .padding(5.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-
-            ) {
-                Text(
-                    text = "View:",
-                    fontSize = 15.sp,
-                    color = Color.White
-                )
-                Button(onClick = { /* ... */ }) { Text("Admin") }
-                Button(onClick = { /* ... */ }) { Text("Owner") }
-                Button(onClick = { /* ... */ }) { Text("Entree") }
-
-
-            }
-        }
+    Scaffold(
+        topBar = { UiTopRow(navController = navController, title = "Profile", homeRoute = home) },
+        bottomBar = { UiBottomRow(navController = navController, tabs = bottomTabs) }
+    ) { innerPadding ->
 
 
 
@@ -128,7 +96,10 @@ fun ProfileScreen(navController: NavController) {
 
         Box(
             modifier = Modifier
-                .weight(1f)
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(Color.White),
+            contentAlignment = Alignment.TopCenter
 
         ) {
             /*
@@ -141,39 +112,65 @@ fun ProfileScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                Text(
-                    text = "Username: $username",
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                Text(
-                    text = "Name: $name",
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                Text(
-                    text = "Email: $email",
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp, top = 8.dp)
-                ) {
+                if (!editToggle) {
                     Text(
-                        text = "Phone: $phone",
+                        text = "Name: $name",
                         fontSize = 16.sp,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
 
-                    Button(
-                        onClick = { editToggle = !editToggle }
+                    Text(
+                        text = "Email: $email",
+                        fontSize = 16.sp,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp, top = 8.dp)
                     ) {
-                        Text(if (editToggle) "Editing" else "Edit")
+                        Text(
+                            text = "Phone: $phone",
+                            fontSize = 16.sp,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Button(
+                            onClick = { editToggle = !editToggle }
+                        ) {
+                            Text("Edit")
+                        }
+                    }
+                } else if (editToggle) {
+                    OutlinedTextField(
+                        value = name, onValueChange = { name = it },
+                        label = { Text(text = "Name") }, singleLine = true
+                    )
+
+                    OutlinedTextField(
+                        value = email, onValueChange = { email = it },
+                        label = { Text(text = "Email") }, singleLine = true
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp, top = 8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = phone, onValueChange = { phone = it },
+                            label = { Text(text = "Phone") }, singleLine = true
+                        )
+                        Button(
+                            onClick = {
+                                currentUser?.name = name
+                                currentUser?.email = email
+                                currentUser?.phone = phone
+                                userRepo.addUser(currentUser!!)
+                                editToggle = !editToggle }
+                        ) {
+                            Text("Save")
+                        }
                     }
                 }
 
@@ -208,47 +205,25 @@ fun ProfileScreen(navController: NavController) {
                         .fillMaxWidth()
                         .clickable { navController.navigate("policy_guidelines_screen") }
                 )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Button(
+                        onClick = {
+                            /* To do: implement delete profile, right now it will
+                            just go back the start screen */
+                            userRepo.deleteUser(currentUser!!)
+                            navController.navigate("start") }
+                    ) {
+                        Text("Delete Profile")
+                    }
+                }
             }
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Button(
-                onClick = {
-                    /* To do: implement delete profile, right now it will
-                    just go back the start screen */
-                    navController.navigate("start") }
-            ) {
-                Text("Delete Profile")
-            }
-        }
 
-        // Pinned Bottom Row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .padding(5.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(onClick = { navController.navigate("entree_res_screen") }) { Text("1") }
-            Button(onClick = { navController.navigate("entree_inbox_screen")}) { Text("2") }
-            Button(onClick = { navController.navigate("messages_screen") }) { Text("3") }
-            Button(onClick = { navController.navigate("qr_scanner_screen") }) { Text("4") }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color.LightGray)
-                .heightIn(max = 16.dp)
-                .heightIn(min = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-
-        }
     }
 }

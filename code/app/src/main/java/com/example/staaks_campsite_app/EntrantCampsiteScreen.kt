@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.staaks_campsite_app.Entree.EntreeCampsite
+import com.example.staaks_campsite_app.data.LotteryRepository
 
 
 // this file just adapts older code to work with the new ui
@@ -16,7 +17,9 @@ import com.example.staaks_campsite_app.Entree.EntreeCampsite
 @Composable
 fun EntrantCampsiteScreen(
     navController: NavController,
-    campsiteId: String
+    campsiteId: String,
+    lotteryRepository: LotteryRepository,
+    entrantId: String
 ) {
     Scaffold(
         topBar = {
@@ -34,7 +37,12 @@ fun EntrantCampsiteScreen(
         }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
-            EntreeCampsite(navController, campsiteId)
+            EntreeCampsite(
+                navController = navController,
+                campsiteID = campsiteId,
+                lotteryRepository = lotteryRepository,
+                entrantId = entrantId
+            )
         }
     }
 }

@@ -5,81 +5,62 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.ImageNotSupported
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Textsms
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.navigation.NavController
-import com.example.staaks_campsite_app.data.getDeviceId
-import androidx.compose.ui.platform.LocalContext
-import com.example.staaks_campsite_app.data.CampsiteRepository
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.ImageNotSupported
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.ImageNotSupported
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.QrCode
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Textsms
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.staaks_campsite_app.Entree.EntreeCampsite
-import com.example.staaks_campsite_app.Entree.EntreeCampsite
+import com.example.staaks_campsite_app.data.CampsiteRepository
+import com.example.staaks_campsite_app.data.LotteryRepository
+import com.example.staaks_campsite_app.data.getDeviceId
 import com.example.staaks_campsite_app.data.model.Campsite
-
-
 
 
 val entrantTabs = listOf(
@@ -100,13 +81,21 @@ val entrantTabs = listOf(
 @Composable
 fun EntrantMain(
     navController: NavController,
-    selectedTab: String,
+    lotteryRepository: LotteryRepository,
+    currentUserId: String,
+    selectedTab: String = "Home",
 ) {
+
     // Selected inner screen (home, profile, reservations, inbox, messages, scan )
     var selectedTab by remember { mutableStateOf(selectedTab) }
 
     // Sample list of campsites
     val campsites = remember { CampsiteRepository() }
+    DisposableEffect(campsites) {
+        onDispose {
+            campsites.close()
+        }
+    }
     var selectedCampsite by remember { mutableStateOf<Campsite?>(null) }
 
 
@@ -117,7 +106,10 @@ fun EntrantMain(
             NavigationBar(containerColor = Color(0xFF1B5E20)) {
                 NavigationBarItem(
                     selected = selectedTab == "Reservations",
-                    onClick = { selectedTab = "Reservations" },
+                    onClick = {
+                        // opens the reservations screen, where entrants can view cancelled bookings in history
+                        navController.navigate("entree_res_screen")
+                    },
                     icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Reservations") },
                     label = { Text("Reservations")},
                     colors = NavigationBarItemDefaults.colors(
@@ -126,7 +118,7 @@ fun EntrantMain(
                         selectedTextColor = Color.White,
                         unselectedIconColor = Color.White.copy(alpha = 0.8f),
                         unselectedTextColor = Color.White.copy(alpha = 0.8f),
-                        )
+                    )
                 )
                 NavigationBarItem(
                     selected = selectedTab == "Inbox",
@@ -157,7 +149,13 @@ fun EntrantMain(
                 )
                 NavigationBarItem(
                     selected = selectedTab == "Scan",
-                    onClick = { selectedTab = "Scan" },
+
+                    // opens the actual qr scanner
+                    onClick = {
+                        navController.navigate("qr_scanner_screen") {
+                            launchSingleTop = true
+                        }
+                    },
                     icon = { Icon(Icons.Default.QrCode, contentDescription = "Scan") },
                     label = { Text("Scan") },
                     colors = NavigationBarItemDefaults.colors(
@@ -181,12 +179,38 @@ fun EntrantMain(
                 .fillMaxSize()
                 .padding(innerPadding) // Fits exactly between Top & Bottom menus
         ) {
-             Home(
-                    navController,
-                    campsites,
-                    onCampsiteChange = { selectedCampsite = it},
-                    onSelectedTabChange = { selectedTab = it}
-             )
+            when (selectedTab) {
+                "Home" -> Home(
+                    navController = navController,
+                    campsites = campsites,
+                    onCampsiteChange = { selectedCampsite = it },
+                    onSelectedTabChange = { selectedTab = it }
+                )
+
+                "Profile" -> Profile(navController)
+                "Reservations" -> ReservationScreenContent()
+                "Inbox" -> InboxContent()
+                "Messages" -> MessageScreenContent()
+                "Scan" -> QRCodeScreenContent()
+
+                "Campsite Details" -> {
+                    val currentCampsite = selectedCampsite
+
+                    if (currentCampsite != null) {
+                        CampsiteDetailsScreenContent(
+                            navController,
+                            campsiteId = currentCampsite.id,
+                            lotteryRepository = lotteryRepository,
+                            entrantId = currentUserId,
+                            onSelectedTabChange = { selectedTab = it }
+                        )
+                    } else {
+                        LaunchedEffect(Unit) {
+                            selectedTab = "Home"
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -209,8 +233,21 @@ fun Home(
     onCampsiteChange: (Campsite) -> Unit = {},
     onSelectedTabChange: (String) -> Unit = {}
 ){
-    var filteredCampsites by remember { mutableStateOf<List<Campsite>?>(null) }
-    val displayCampsites = filteredCampsites ?: campsites.campsites
+    var filteredCampsites by remember {
+        mutableStateOf<List<Campsite>?>(null)
+    }
+
+    val savedResults = filteredCampsites
+
+    val displayCampsites = if (savedResults == null) {
+        campsites.campsites
+    } else {
+        campsites.campsites.filter { currentCampsite ->
+            savedResults.any { result ->
+                result.id == currentCampsite.id
+            }
+        }
+    }
     Column(modifier = Modifier.fillMaxSize()) {
         CampsiteSearchBar(
             campsites = campsites,
@@ -541,11 +578,17 @@ fun QRCodeScreenContent() {
     NotFoundScreen()
 }
 @Composable
-fun CampsiteDetailsScreenContent(navController: NavController, campsiteId: String, onSelectedTabChange: (String) -> Unit = {}){
+fun CampsiteDetailsScreenContent(
+    navController: NavController,
+    campsiteId: String,
+    entrantId: String,
+    lotteryRepository: LotteryRepository,
+    onSelectedTabChange: (String) -> Unit = {}
+){
     BackHandler(enabled = true) {
         onSelectedTabChange("Home")
     }
-    EntreeCampsite(navController, campsiteId)
+    EntreeCampsite(navController, campsiteId, lotteryRepository, entrantId)
 }
 
 @Composable

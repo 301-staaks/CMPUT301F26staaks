@@ -1,6 +1,5 @@
 package com.example.staaks_campsite_app
 
-import android.R
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -94,7 +92,7 @@ import com.google.firebase.firestore.firestore
 
 val ownerTabs = listOf(
     Tab("owner_main", "Main", Icons.Default.Home),
-    Tab("owner_reservations", "Reservations", Icons.Default.CalendarMonth),
+    Tab("owner_reservations_active", "Reservations", Icons.Default.CalendarMonth),
     Tab("owner_notifications", "Notifications", Icons.Default.Notifications),
     Tab("owner_messages", "Messages", Icons.Default.Textsms),
     Tab("owner_lotteries", "Lotteries", Icons.Default.ConfirmationNumber)
@@ -297,11 +295,10 @@ fun OwnerCampsiteCard(
                     .clip(RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                /* TODO: Image*/
-                Icon(
-                    imageVector = Icons.Default.ImageNotSupported,
-                    contentDescription = "Image not supported",
-                    modifier = Modifier.size(48.dp)
+                StoredImage(
+                    imageId = campsite.images.firstOrNull() ?: "",
+                    contentDescription = campsite.name,
+                    modifier = Modifier.fillMaxSize()
                 )
 
             }
@@ -398,6 +395,8 @@ fun OwnerCampsiteCard(
                 onAddToLottery = onAddToLottery
             )
         }
+        // shows the qr controls for this campsite
+        CampsiteQrSection(campsiteId = campsite.id)
     }
 }
 

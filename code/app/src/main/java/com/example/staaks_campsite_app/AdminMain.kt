@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Textsms
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -69,7 +70,7 @@ import com.example.staaks_campsite_app.session.SessionManager
 // shamrock 0xFF009E60
 
 public val adminTabs = listOf(
-    Tab("admin_main", "Main", Icons.Default.Home),
+    Tab("admin_reviews", "Reviews", Icons.Default.Star),
     Tab("admin_users", "Users", Icons.Default.Person),
     Tab("all_notifications", "Notifications", Icons.Default.Notifications),
     Tab("all_messages", "Messages", Icons.Default.Textsms),

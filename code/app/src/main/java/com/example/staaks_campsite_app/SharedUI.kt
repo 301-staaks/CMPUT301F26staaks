@@ -2,6 +2,7 @@ package com.example.staaks_campsite_app
 
 import android.graphics.drawable.GradientDrawable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -149,8 +150,13 @@ fun UiTopRow(
                     }
                 }
                 Box(
-                    modifier = Modifier.weight(1f).padding(8.dp),
+                    modifier = Modifier
+                        .weight(1f).padding(8.dp)
+                        .clickable {
+                            navController.navigate("profile_screen")
+                        },
                     contentAlignment = Alignment.CenterEnd
+
                 ) {
                     UserProfileImagePreview(size = 40.dp, imageId="")
                 }

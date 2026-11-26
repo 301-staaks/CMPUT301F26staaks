@@ -234,8 +234,15 @@ fun EntrantMain(navController: NavController) {
             Button(onClick = { navController.navigate("entree_res_screen") }) { Text("1") }
             Button(onClick = { navController.navigate("entree_inbox_screen") }) { Text("2") }
             Button(onClick = { navController.navigate("messages_screen") }) { Text("3") }
-            Button(onClick = { navController.navigate("qr_scanner_screen") }) { Text("4") }
-        }
+            Button(
+                onClick = {
+                    navController.navigate("qr_scanner_screen") {
+                        launchSingleTop = true
+                    }
+                }
+            ) {
+                Text("QR Scan")
+            }        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()

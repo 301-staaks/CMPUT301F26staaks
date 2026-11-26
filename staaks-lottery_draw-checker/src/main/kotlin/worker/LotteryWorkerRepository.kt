@@ -33,8 +33,7 @@ class LotteryWorkerRepository(private val db: Firestore) {
 
         val entries = db.collection("waitlist")
             .whereEqualTo("lotteryId", lotteryId)
-            .get()
-            .get()
+            .get().get()
 
         println("waitlist records: ${entries.size()}")
         println("Check complete - no documents were changed")
@@ -220,8 +219,7 @@ class LotteryWorkerRepository(private val db: Firestore) {
     fun processAll() {
         val lotteries = db.collection("lotteries")
             .whereIn("status", listOf("Open", "Drawn", "Ongoing"))
-            .get()
-            .get()
+            .get().get()
             .documents
 
         for (lottery in lotteries) {

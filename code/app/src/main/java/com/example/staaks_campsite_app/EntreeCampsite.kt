@@ -94,7 +94,8 @@ fun EntreeCampsite(
     navController: NavController,
     campsiteID: String,
     lotteryRepository: LotteryRepository,
-    entrantId: String
+    entrantId: String,
+    previewMode: Boolean = false
 ) {
 
     // this whole new block is for when an entrant is seeing the campsite and the admin deletes it
@@ -285,7 +286,8 @@ fun EntreeCampsite(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF4CAF50),
                         contentColor = Color.White
-                    )
+                    ),
+                    enabled = !previewMode
                 ) { Text(score.toString()) }
                 if (score < 5) {
                     Spacer(modifier = Modifier.width(4.dp))
@@ -293,10 +295,14 @@ fun EntreeCampsite(
             }
         }
 
-        EntrantLotteryJoin(
-            campsiteId = campsite.id,
-            lotteryRepository = lotteryRepository,
-            entrantId = entrantId
-        )
+        if (!previewMode) {
+            EntrantLotteryJoin(
+                campsiteId = campsite.id,
+                lotteryRepository = lotteryRepository,
+                entrantId = entrantId
+            )
+        } else {
+            Text("Lottery joining is not available in preview mode.")
+        }
     }
 }

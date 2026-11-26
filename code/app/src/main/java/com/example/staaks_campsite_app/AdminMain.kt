@@ -95,7 +95,7 @@ fun AdminMain(
     loadError: String?
 ) {
     Scaffold(
-        topBar = { UiTopRow(navController = navController, title = "Admin Main", homeRoute = "admin_main") },
+        topBar = { UiTopRow(navController = navController, title = "Home", homeRoute = "admin_main") },
         bottomBar = { UiBottomRow(navController = navController, tabs = adminTabs) }
     ) { innerPadding ->
         LazyColumn(

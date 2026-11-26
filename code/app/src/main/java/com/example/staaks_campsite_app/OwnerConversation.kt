@@ -168,7 +168,7 @@ fun OwnerConversation(
             ) {
                 IconButton(
                     onClick = {
-                        navController.navigate("owner_messages")
+                        navController.popBackStack()
                     },
                     colors = IconButtonDefaults.iconButtonColors(
                         containerColor = Color(0xFF009E60),

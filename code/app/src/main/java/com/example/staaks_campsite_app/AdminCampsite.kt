@@ -40,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil3.compose.AsyncImage
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.ReviewRepository
 import com.example.staaks_campsite_app.data.UserRepository

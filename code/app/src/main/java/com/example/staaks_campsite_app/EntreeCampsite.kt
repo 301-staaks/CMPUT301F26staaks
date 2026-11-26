@@ -44,6 +44,10 @@ import androidx.navigation.NavController
 import com.example.staaks_campsite_app.ConversationViewModel
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.Campsite
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.DisposableEffect
+import com.example.staaks_campsite_app.data.LotteryRepository
+import com.example.staaks_campsite_app.EntrantLotteryJoin
 import com.example.staaks_campsite_app.StoredImage
 import com.example.staaks_campsite_app.data.ConversationRepository
 import com.example.staaks_campsite_app.data.UserRepository
@@ -81,28 +85,76 @@ class CampsiteViewModel(
  *
  * @param navController controls navigation to other screens
  * @param campsiteID the id of the campsite to display.
+ * @param lotteryRepository repository for lottery data
+ * @param entrantId the id of the current user
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EntreeCampsite(navController: NavController, campsiteID: String) {
+fun EntreeCampsite(
+    navController: NavController,
+    campsiteID: String,
+    lotteryRepository: LotteryRepository,
+    entrantId: String
+) {
 
-    val session by SessionManager.state.collectAsState()
-    val userType = session?.type ?: UserType.ENTRANT
+    // this whole new block is for when an entrant is seeing the campsite and the admin deletes it
+    // it changes to This campsite is no longer available
+    // keeps one repository while this campsite screen is open
+    val campRepo = remember(campsiteID) {
+        CampsiteRepository()
+    }
 
-    val viewModel: CampsiteViewModel = viewModel()
+    // stops listening when the screen leaves
+    DisposableEffect(campRepo) {
+        onDispose {
+            campRepo.close()
+        }
+    }
 
-    val campsite = viewModel.campsite ?: Campsite(
-        id = campsiteID,
-        ownerId = "",
-        name = "Loading Campsite...",
-        location = "",
-        capacity = 0,
-        date = mutableListOf(),
-        price = 0.0,
-        images = mutableListOf(),
-        description = "Please wait while campsite details load."
-    )
+    // waits for the campsite data before checking whether it exists
+    if (campRepo.isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Loading campsite...")
+        }
 
+        return
+    }
+
+    val loadError = campRepo.loadError
+
+    // shows a connection error instead of saying the campsite was deleted
+    if (loadError != null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(loadError)
+        }
+
+        return
+    }
+
+    // finds the campsite in the current list
+    val campsite = campRepo.campsites.find {
+        it.id == campsiteID
+    }
+
+
+    // hides the details and buttons if the campsite no longer exists
+    if (campsite == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("This campsite is no longer available.")
+        }
+
+        return
+    }
+// until here
     val imageNum = campsite.images.size
 
     Column(
@@ -227,7 +279,7 @@ fun EntreeCampsite(navController: NavController, campsiteID: String) {
                                 campsite.rating = (campsite.rating * campsite.ratingCount + score) / (campsite.ratingCount + 1)
                             }
                             campsite.ratingCount++
-                            viewModel.addOrUpdateCampsite(campsite)
+                            campRepo.addOrUpdateCampsite(campsite)
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -241,20 +293,10 @@ fun EntreeCampsite(navController: NavController, campsiteID: String) {
             }
         }
 
-        // TODO Implement lottery joining
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Button(
-                onClick = {/* ### */},
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1B5E20),
-                    contentColor = Color.White
-                )
-            ) { Text("View Lotteries") }
-        }
+        EntrantLotteryJoin(
+            campsiteId = campsite.id,
+            lotteryRepository = lotteryRepository,
+            entrantId = entrantId
+        )
     }
 }

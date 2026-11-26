@@ -15,6 +15,7 @@ import com.google.firebase.firestore.IgnoreExtraProperties
  * @property rating Average user rating score.
  * @property images Optional promotional images associated with the campsite.
  * @property ratingCount Total number of ratings received.
+ * @property booked List of booked dates in YYYY-MM-DD format.
  */
 @IgnoreExtraProperties
 data class Campsite(
@@ -28,7 +29,8 @@ data class Campsite(
     var images: MutableList<String> = mutableListOf(),
     var description: String = "",
     var rating: Double = 0.0,
-    var ratingCount: Int = 0
+    var ratingCount: Int = 0,
+    var booked: MutableList<String> = mutableListOf()
 ) {
     fun addImage(image: String) {
         this.images.plusAssign(image)

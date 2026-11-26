@@ -14,7 +14,6 @@ sealed class User {
     var email: String = ""
     var phone: String = ""
     var profileImageId: String = ""
-    var profileImageUrl: String = ""
     @ServerTimestamp var createdAt: Timestamp? = null
     abstract val type: UserType
 }

@@ -28,26 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.staaks_campsite_app.data.model.Lottery
 import com.example.staaks_campsite_app.session.SessionManager
+import com.example.staaks_campsite_app.data.model.Lottery
 
-// same tabs as the main page so the bottom bar matches
-private val lotteryTabs = listOf(
-    Tab("owner_main", "Main", Icons.Default.Home),
-    Tab("owner_reservations_active", "Reservations", Icons.Default.CalendarMonth),
-    Tab("owner_notifications", "Notifications", Icons.Default.Notifications),
-    Tab("owner_messages", "Messages", Icons.Default.Textsms),
-    Tab("owner_lotteries", "Lotteries", Icons.Default.ConfirmationNumber)
-)
-
-/**
- * What one card on the Lotteries page shows. Plain UI model: whoever connects the
- * back end maps their lottery data into this.
- *
- * @property campsiteNames names of every campsite in the lottery
- * @property waitlistCapacity null means no limit
- * @property statusText e.g. "Registration open" or "Opens on 2026-12-01"
- */
+// data displayed on one lottery card
 data class LotteryCardUi(
     val id: String,
     val campsiteNames: List<String>,
@@ -61,13 +45,7 @@ data class LotteryCardUi(
     val statusText: String
 )
 
-/**
- * turns a lottery into what its Active Lotteries card shows
- *
- * @param campsiteNames the names of the campsites in this lottery
- * @param waitlistCount how many entrants are on its waitlist
- * @param today today's date as YYYY-MM-DD
- */
+// converts a lottery into the data displayed on its card
 fun Lottery.toCardUi(
     campsiteNames: List<String>,
     waitlistCount: Int,
@@ -94,6 +72,13 @@ fun Lottery.toCardUi(
     )
 }
 
+private val lotteryTabs = listOf(
+    Tab("owner_main", "Main", Icons.Default.Home),
+    Tab("owner_reservations_active", "Reservations", Icons.Default.CalendarMonth),
+    Tab("owner_notifications", "Notifications", Icons.Default.Notifications),
+    Tab("owner_messages", "Messages", Icons.Default.Textsms),
+    Tab("owner_lotteries", "Lotteries", Icons.Default.ConfirmationNumber)
+)
 /**
  * displays the owner's Lotteries screen and the Active Lotteries list
  *

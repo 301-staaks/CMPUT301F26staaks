@@ -98,10 +98,10 @@ fun AdminUsersScreen(
     val userListFilter = remember { mutableStateListOf(UserType.ADMIN, UserType.OWNER, UserType.ENTRANT) }
 
     Scaffold(
-        topBar = { AdminTopRow(navController = navController, title = "Users") },
-        bottomBar = { AdminBottomRow(navController = navController)}
+        topBar = { UiTopRow(navController = navController, title = "Users", homeRoute = "admin_main") },
+        bottomBar = { UiBottomRow(navController = navController, tabs = adminTabs)}
     ) {
-        innerPadding ->
+            innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
@@ -204,7 +204,7 @@ fun UserRow(
             .padding(horizontal = 20.dp, vertical = 16.dp)
 
     ) {
-        UserProfileImagePreview(60.dp, user.profileImageUrl)
+        UserProfileImagePreview(60.dp, user.profileImageId)
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -245,22 +245,9 @@ fun UserRow(
 @Composable
 fun CircularProfilePicture(
     size: Dp = 60.dp,
-    imageUrl: String = "",
+    imageId: String = "",
 ) {
-    Card(
-        modifier = Modifier.size(size),
-        shape = CircleShape,
-        colors = CardDefaults.cardColors(Color.LightGray),
-    ) {
-        Image(
-            painter = ColorPainter(Color.Gray),
-            contentDescription = "Profile Picture",
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(CircleShape),
-            contentScale = ContentScale.Fit,
-        )
-    }
+    UserProfileImagePreview(size = size, imageId = imageId)
 }
 
 @Composable

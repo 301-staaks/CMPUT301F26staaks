@@ -1,13 +1,17 @@
 package com.example.staaks_campsite_app
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -38,6 +42,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.example.staaks_campsite_app.data.CampsiteRepository
+import com.example.staaks_campsite_app.data.ReviewRepository
+import com.example.staaks_campsite_app.data.UserRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +56,12 @@ fun AdminCampsite(navController: NavController, campsiteId: String) {
     var isDeleting by remember { mutableStateOf(false) }
     var deleteError by remember { mutableStateOf<String?>(null) }
     var screenActive by remember { mutableStateOf(true) }
+
+    var reviewRepository = remember { ReviewRepository() }
+    var reviews = reviewRepository.getReviewsForCampsite(campsiteId)
+    var reviewScreen by remember { mutableStateOf(false) }
+    var userRepository = remember { UserRepository() }
+    val users = userRepository.users
 
     DisposableEffect(campsiteRepository) {
         screenActive = true
@@ -115,124 +127,246 @@ fun AdminCampsite(navController: NavController, campsiteId: String) {
     }
 
     Scaffold(
-        topBar = { AdminTopRow(navController = navController, title = "Campsite") },
-        bottomBar = { AdminBottomRow(navController = navController) }
+        topBar = { UiTopRow(navController = navController, title = "Campsite", homeRoute = "admin_main") },
+        bottomBar = { UiBottomRow(navController = navController, tabs = adminTabs) }
     ) { innerPadding ->
-    
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Button(
-                onClick = { navController.popBackStack() },
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF009E60),
-                    contentColor = Color.White
-                )
-            ) { Text("Back") }
 
-            if (campsiteRepository.isLoading) {
-                Text("Loading campsite...")
-            }
+        if (!reviewScreen) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
 
-            campsiteRepository.loadError?.let { message ->
-                Text(text = message, color = Color.Red)
-            }
+                Row() {
 
-            deleteError?.let { message ->
-                Text(text = message, color = Color.Red)
-            }
 
-            if (campsite != null) {
+                    Button(
+                        onClick = { navController.popBackStack() },
+                        shape = RectangleShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF009E60),
+                            contentColor = Color.White
+                        )
+                    ) { Text("Back") }
 
-                // Name + rating
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = campsite.name,
-                        fontSize = 24.sp,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text("⭐ ${String.format("%.1f", campsite.rating)} (${campsite.ratingCount})")
+                    Spacer(modifier = Modifier.weight(1f))
+
+
+                    Button(
+                        onClick = { reviewScreen = true },
+                        shape = RectangleShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF009E60),
+                            contentColor = Color.White
+                        )
+                    ) { Text("Reviews") }
+
+
                 }
 
-                // Image carousel
-                if (images.isNotEmpty()) {
-                    HorizontalMultiBrowseCarousel(
-                        state = rememberCarouselState { images.size },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        preferredItemWidth = 186.dp,
-                        itemSpacing = 8.dp
-                    ) { i ->
-                        AsyncImage(
-                            model = images[i],
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .maskClip(MaterialTheme.shapes.medium)
+                if (campsiteRepository.isLoading) {
+                    Text("Loading campsite...")
+                }
+
+                campsiteRepository.loadError?.let { message ->
+                    Text(text = message, color = Color.Red)
+                }
+
+                deleteError?.let { message ->
+                    Text(text = message, color = Color.Red)
+                }
+
+                if (campsite != null) {
+
+                    // Name + rating
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = campsite.name,
+                            fontSize = 24.sp,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            "⭐ ${
+                                String.format(
+                                    "%.1f",
+                                    campsite.rating
+                                )
+                            } (${campsite.ratingCount})"
                         )
                     }
-                }
 
-                // Description
+                    // Image carousel
+                    if (images.isNotEmpty()) {
+                        HorizontalMultiBrowseCarousel(
+                            state = rememberCarouselState { images.size },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            preferredItemWidth = 186.dp,
+                            itemSpacing = 8.dp
+                        ) { i ->
+                            AsyncImage(
+                                model = images[i],
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .maskClip(MaterialTheme.shapes.medium)
+                            )
+                        }
+                    }
+
+                    // Description
 
 
-                // Details
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(color = Color(0xFFF1F8E9), shape = RoundedCornerShape(8.dp))
-                        .padding(12.dp)
+                    // Details
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(color = Color(0xFFF1F8E9), shape = RoundedCornerShape(8.dp))
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            text = "Details",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1B5E20)
+                        )
+                        Text(text = "📍 Location: ${campsite.location}", fontSize = 14.sp)
+                        Text(text = "👥 Capacity: ${campsite.capacity} guests", fontSize = 14.sp)
+                        Text(
+                            text = "💰 Price per Night: \$${String.format("%.2f", campsite.price)}",
+                            fontSize = 14.sp
+                        )
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(8.dp))
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            text = "Description",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1B5E20)
+                        )
+                        Text(
+                            text = campsite.description.ifBlank { "No description available." },
+                            fontSize = 14.sp
+                        )
+                    }
+
+                    // Delete
+                    Button(
+                        enabled = !isDeleting,
+                        onClick = {
+                            deleteError = null
+                            showDeleteDialog = true
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Red,
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text(if (isDeleting) "Deleting..." else "Delete Campsite")
+                    }
+
+
+                } else if (
+                    !campsiteRepository.isLoading &&
+                    campsiteRepository.loadError == null &&
+                    !isDeleting
                 ) {
-                    Text(text = "Details", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
-                    Text(text = "📍 Location: ${campsite.location}", fontSize = 14.sp)
-                    Text(text = "👥 Capacity: ${campsite.capacity} guests", fontSize = 14.sp)
-                    Text(text = "💰 Price per Night: \$${String.format("%.2f", campsite.price)}", fontSize = 14.sp)
+                    Text("This campsite is no longer available.")
                 }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(8.dp))
-                        .padding(12.dp)
-                ) {
-                    Text(text = "Description", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
-                    Text(text = campsite.description.ifBlank { "No description available." }, fontSize = 14.sp)
-                }
-
-                // Delete
-                Button(
-                    enabled = !isDeleting,
-                    onClick = {
-                        deleteError = null
-                        showDeleteDialog = true
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Red,
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) {
-                    Text(if (isDeleting) "Deleting..." else "Delete Campsite")
-                }
-
-            } else if (
-                !campsiteRepository.isLoading &&
-                campsiteRepository.loadError == null &&
-                !isDeleting
-            ) {
-                Text("This campsite is no longer available.")
             }
+        }
+
+
+        if (reviewScreen) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = { reviewScreen = false },
+                    shape = RectangleShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF009E60),
+                        contentColor = Color.White
+                    )
+                ) { Text("Back") }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = reviews,
+                        key = { review -> review.id }
+                    ) { review ->
+
+
+                        val username = users.find{it.id == review.userId}?.name ?: ""
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(color= Color(0xFFD8FAD0))
+                                .border(width = 2.dp, color = Color.Gray)
+                        ) {
+                            Row() {
+
+
+                                Text(
+                                    modifier = Modifier
+                                        .padding(16.dp),
+                                    text = campsite?.name ?: "",
+                                    fontSize = 30.sp
+                                )
+
+                                repeat(maxOf(0, review.rating.toInt())) {
+                                    Text(
+                                        modifier = Modifier.padding(top = 16.dp),
+                                        text = "⭐",
+                                        fontSize = 20.sp
+                                    )
+                                }
+                            }
+
+                            Text(
+                                modifier = Modifier
+                                    .padding(16.dp),
+                                text = username,
+                                fontSize = 20.sp
+                            )
+
+                            Text(
+                                modifier = Modifier
+                                    .padding(16.dp),
+                                text = review.comment,
+                                fontSize = 15.sp
+                            )
+
+                        }
+                    }
+                }
+            }
+
         }
     }
 }

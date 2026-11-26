@@ -1,7 +1,6 @@
 package com.example.staaks_campsite_app
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -38,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,13 +51,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.staaks_campsite_app.data.model.Campsite
 import com.example.staaks_campsite_app.data.model.Lottery
+import com.example.staaks_campsite_app.data.model.LotteryTime
 import com.example.staaks_campsite_app.session.SessionManager
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import com.example.staaks_campsite_app.data.model.LotteryTime
-import androidx.compose.runtime.DisposableEffect
 
 // same tabs as the main page so the bottom bar matches
 private val lotteryEditTabs = listOf(

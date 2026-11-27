@@ -213,8 +213,6 @@ fun ProfileScreen(navController: NavController) {
                 ) {
                     Button(
                         onClick = {
-                            /* To do: implement delete profile, right now it will
-                            just go back the start screen */
                             userRepo.deleteUser(currentUser!!)
                             navController.navigate("start") }
                     ) {

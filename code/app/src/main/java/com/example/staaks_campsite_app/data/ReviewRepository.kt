@@ -86,9 +86,11 @@ class ReviewRepository (
             val averageRating = totalRating / count
             val campsiteRef = db?.collection("campsites")?.document(campsiteId)
             campsiteRef?.update("rating", averageRating)
+            campsiteRef?.update("ratingCount", count)
         } else {
             val campsiteRef = db?.collection("campsites")?.document(campsiteId)
             campsiteRef?.update("rating", 0.0)
+            campsiteRef?.update("ratingCount", 0)
         }
     }
 

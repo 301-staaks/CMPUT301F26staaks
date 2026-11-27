@@ -147,7 +147,9 @@ fun CampsiteApp() {
             OwnerMain(
                 navController = navController,
                 campsites = campsiteRepository.getCampsitesByOwner(currentUserId),
-                onEditCampsite = { navController.navigate("owner_campsite_edit/${it.id}") }
+                onEditCampsite = {
+                    navController.navigate("owner_campsite_edit/${it.id}")
+                }
             )
         }
         composable("owner_campsite_new") {

@@ -44,6 +44,7 @@ import coil3.compose.AsyncImage
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.ReviewRepository
 import com.example.staaks_campsite_app.data.UserRepository
+import androidx.compose.foundation.shape.CircleShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -146,7 +147,7 @@ fun AdminCampsite(navController: NavController, campsiteId: String) {
 
                     Button(
                         onClick = { navController.popBackStack() },
-                        shape = RectangleShape,
+                        shape = CircleShape,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF009E60),
                             contentColor = Color.White
@@ -158,7 +159,7 @@ fun AdminCampsite(navController: NavController, campsiteId: String) {
 
                     Button(
                         onClick = { reviewScreen = true },
-                        shape = RectangleShape,
+                        shape = CircleShape,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF009E60),
                             contentColor = Color.White

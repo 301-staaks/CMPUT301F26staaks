@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.example.staaks_campsite_app.data.getDeviceId
+import com.example.staaks_campsite_app.data.inboxRoute
 
 
 /**
@@ -48,7 +49,12 @@ fun EntreeInboxScreen(navController: NavController) {
         bottomBar = {UiBottomRow(navController = navController, tabs = entrantTabs)}
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
-            NotificationInbox(entrantId = entrantId)
+            NotificationInbox(
+                entrantId = entrantId,
+                onOpenNotification = { notification ->
+                    inboxRoute(notification)?.let { navController.navigate(it) }
+                }
+            )
         }
     }
 }

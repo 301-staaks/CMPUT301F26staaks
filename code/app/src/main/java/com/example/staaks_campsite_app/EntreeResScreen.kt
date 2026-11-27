@@ -35,6 +35,12 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.platform.LocalContext
 import com.example.staaks_campsite_app.data.getDeviceId
 import com.example.staaks_campsite_app.data.model.Reservation
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import com.example.staaks_campsite_app.data.CampsiteRepository
+import com.example.staaks_campsite_app.data.LotteryRepository
+import com.example.staaks_campsite_app.data.Repositories
+import com.example.staaks_campsite_app.data.entrantLotteryStatus
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 
@@ -42,11 +48,19 @@ import com.google.firebase.firestore.firestore
  * displays the entrant's reservation, lottery and history tabs
  *
  * the history tab shows the current entrant's cancelled reservations
+ * the reservations tab lists their active reservations with a Cancel button (US 01.07.01)
+ * the lotteries tab shows Pending / Won / Lost / Confirmed (US 01.03.01, US 01.03.02)
  *
  * @param navController controls navigation between screens
+ * @param lotteryRepository the loaded lotteries and waitlist entries, for the lotteries tab
+ * @param campsiteRepository the loaded campsites, for campsite names on the lotteries tab
  */
 @Composable
-fun EntreeResScreen(navController: NavController) {
+fun EntreeResScreen(
+    navController: NavController,
+    lotteryRepository: LotteryRepository? = null,
+    campsiteRepository: CampsiteRepository? = null
+) {
     val context = LocalContext.current
     val entrantId = getDeviceId(context)
 
@@ -55,6 +69,14 @@ fun EntreeResScreen(navController: NavController) {
     val cancelledReservations = remember {
         mutableStateListOf<Reservation>()
     }
+
+    val activeReservations = remember {
+        mutableStateListOf<Reservation>()
+    }
+
+    // the reservation waiting for the entrant to confirm cancelling it
+    var toCancel by remember { mutableStateOf<Reservation?>(null) }
+    var cancelError by remember { mutableStateOf("") }
 
     var isLoadingHistory by remember {
         mutableStateOf(true)
@@ -82,6 +104,7 @@ fun EntreeResScreen(navController: NavController) {
                 }
 
                 val loadedReservations = mutableListOf<Reservation>()
+                val loadedActive = mutableListOf<Reservation>()
 
                 // finds canceled reservations belonging to this entrant.
                 for (document in snapshot.documents) {
@@ -99,11 +122,20 @@ fun EntreeResScreen(navController: NavController) {
                         ) {
                             loadedReservations.add(reservation)
                         }
+
+                        if (
+                            reservation.entrantId == entrantId &&
+                            reservation.status == "Active"
+                        ) {
+                            loadedActive.add(reservation)
+                        }
                     }
                 }
 
                 cancelledReservations.clear()
                 cancelledReservations.addAll(loadedReservations)
+                activeReservations.clear()
+                activeReservations.addAll(loadedActive.sortedBy { it.startDate })
 
                 historyError = ""
             }
@@ -143,34 +175,68 @@ fun EntreeResScreen(navController: NavController) {
                 }
             }
             if (selectedTab == "Reservations") {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // the entrant's active reservations, each with Cancel (US 01.07.01)
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-
-                    Button(
-                        onClick = { },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text("Sample Reservation View")
+                    item {
+                        if (cancelError.isNotBlank()) {
+                            Text(cancelError, color = Color.Red)
+                        }
+                        if (!isLoadingHistory && activeReservations.isEmpty()) {
+                            Text("No active reservations.")
+                        }
+                    }
+                    items(activeReservations, key = { it.reservationId }) { reservation ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.LightGray)
+                                .padding(12.dp)
+                        ) {
+                            Text(reservation.campsiteName.ifBlank { "Campsite" }, fontSize = 20.sp)
+                            Text("${reservation.startDate} to ${reservation.endDate}")
+                            Button(onClick = { cancelError = ""; toCancel = reservation }) {
+                                Text("Cancel Reservation")
+                            }
+                        }
                     }
                 }
 
             } else if (selectedTab == "Lotteries") {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                // the lotteries the entrant joined and how they went (US 01.03.01, US 01.03.02)
+                val entries = lotteryRepository?.waitlistEntries
+                    ?.filter { it.entrantId == entrantId }
+                    ?: emptyList()
 
-                    Button(
-                        onClick = { },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text("Sample Lotteries View")
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (entries.isEmpty()) {
+                        item { Text("You have not joined any lotteries.") }
+                    }
+                    items(entries, key = { it.entryId }) { entry ->
+                        val lottery = lotteryRepository?.getLottery(entry.lotteryId)
+                        val names = lottery?.let { l ->
+                            (listOf(l.campsiteId) + l.campsiteIds).filter { it.isNotBlank() }.distinct()
+                                .mapNotNull { id -> campsiteRepository?.campsites?.find { it.id == id }?.name }
+                                .joinToString(", ")
+                        }.orEmpty().ifBlank { "Campsite" }
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.LightGray)
+                                .padding(12.dp)
+                        ) {
+                            Text(names, fontSize = 20.sp)
+                            if (lottery != null) {
+                                Text("${lottery.bookingStartDate} to ${lottery.bookingEndDate}")
+                            }
+                            Text("Status: ${entrantLotteryStatus(entry.status, lottery?.drawCompleted == true)}")
+                        }
                     }
                 }
             } else {
@@ -238,5 +304,23 @@ fun EntreeResScreen(navController: NavController) {
                 }
             }
         }
+    }
+
+    toCancel?.let { reservation ->
+        AlertDialog(
+            onDismissRequest = { toCancel = null },
+            title = { Text("Cancel reservation?") },
+            text = { Text("${reservation.campsiteName.ifBlank { "Campsite" }}, ${reservation.startDate} to ${reservation.endDate}") },
+            confirmButton = {
+                TextButton(onClick = {
+                    toCancel = null
+                    Repositories.reservations.cancelReservation(reservation.reservationId, entrantId)
+                        .addOnFailureListener { cancelError = it.message ?: "Could not cancel the reservation." }
+                }) { Text("Cancel Reservation") }
+            },
+            dismissButton = {
+                TextButton(onClick = { toCancel = null }) { Text("Keep") }
+            }
+        )
     }
 }

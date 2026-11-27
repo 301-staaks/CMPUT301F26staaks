@@ -7,7 +7,9 @@ import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.Transaction
 import com.google.firebase.firestore.WriteBatch
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.channels.awaitClose
@@ -64,17 +66,67 @@ class NotificationRepository {
         lotteryId: String = "",
         reservationId: String = ""
     ): Int {
+        val notifications = newNotifications(
+            senderId, recipientIds, campsiteId, campsiteName,
+            type, title, message, lotteryId, reservationId
+        )
+        for ((reference, notification) in notifications) {
+            batch.set(reference, notification)
+        }
+        return notifications.size
+    }
+
+    /**
+     * same as [addToBatch], for code that saves its changes in a firestore transaction,
+     * like confirming or cancelling a reservation
+     *
+     * @return the number of notifications added
+     */
+    fun addToTransaction(
+        transaction: Transaction,
+        senderId: String,
+        recipientIds: List<String>,
+        campsiteId: String,
+        campsiteName: String,
+        type: String,
+        title: String,
+        message: String,
+        lotteryId: String = "",
+        reservationId: String = ""
+    ): Int {
+        val notifications = newNotifications(
+            senderId, recipientIds, campsiteId, campsiteName,
+            type, title, message, lotteryId, reservationId
+        )
+        for ((reference, notification) in notifications) {
+            transaction.set(reference, notification)
+        }
+        return notifications.size
+    }
+
+    // makes one notification per recipient, all sharing one batchId
+    private fun newNotifications(
+        senderId: String,
+        recipientIds: List<String>,
+        campsiteId: String,
+        campsiteName: String,
+        type: String,
+        title: String,
+        message: String,
+        lotteryId: String,
+        reservationId: String
+    ): List<Pair<DocumentReference, Notification>> {
         val recipients = recipientIds.filter { it.isNotBlank() }.distinct()
         if (recipients.isEmpty()) {
-            return 0
+            return emptyList()
         }
 
         val batchId = notificationsRef.document().id
         val now = Timestamp.now()
 
-        for (recipientId in recipients) {
+        return recipients.map { recipientId ->
             val reference = notificationsRef.document()
-            val notification = Notification(
+            reference to Notification(
                 notificationId = reference.id,
                 senderId = senderId,
                 recipientId = recipientId,
@@ -88,10 +140,7 @@ class NotificationRepository {
                 batchId = batchId,
                 sentAt = now
             )
-            batch.set(reference, notification)
         }
-
-        return recipients.size
     }
 
     /**
@@ -203,6 +252,113 @@ class NotificationRepository {
         title = CONFIRMATION_TITLE,
         message = confirmationMessage(campsiteName, startDate, endDate),
         lotteryId = lotteryId,
+        reservationId = reservationId
+    )
+
+    /**
+     * adds a confirmation notification to a batch without committing it (US 01.05.01)
+     *
+     * for whoever builds the confirm flow: add the reservation to the same batch,
+     * then commit once, so the confirmation is only sent if the reservation saves.
+     *
+     *     val batch = Firebase.firestore.batch()
+     *     batch.set(reservationRef, reservation)
+     *     Repositories.notifications.addReservationConfirmed(batch, ...)
+     *     batch.commit()
+     *
+     * the parameters are the same as [sendReservationConfirmed]
+     *
+     * @return the number of notifications added, 0 if entrantId is blank
+     */
+    fun addReservationConfirmed(
+        batch: WriteBatch,
+        entrantId: String,
+        campsiteId: String,
+        campsiteName: String,
+        startDate: String,
+        endDate: String,
+        lotteryId: String = "",
+        reservationId: String = ""
+    ): Int = addToBatch(
+        batch = batch,
+        senderId = SYSTEM_SENDER,
+        recipientIds = listOf(entrantId),
+        campsiteId = campsiteId,
+        campsiteName = campsiteName,
+        type = NotificationType.CONFIRMATION,
+        title = CONFIRMATION_TITLE,
+        message = confirmationMessage(campsiteName, startDate, endDate),
+        lotteryId = lotteryId,
+        reservationId = reservationId
+    )
+
+    /**
+     * adds a cancellation notification to a batch without committing it (US 01.07.02)
+     *
+     * for whoever builds the cancel flow (US 01.07.01): put the status change in the
+     * same batch and commit once, so no notification is sent if the cancellation
+     * does not save.
+     *
+     *     val batch = Firebase.firestore.batch()
+     *     batch.update(reservationRef, "status", "Cancelled")
+     *     Repositories.notifications.addReservationCancelled(batch, ...)
+     *     batch.commit()
+     *
+     * @param batch the batch to add the notification to
+     * @param entrantId the entrant whose reservation was cancelled
+     * @param campsiteId the campsite that was reserved
+     * @param campsiteName the campsite's name
+     * @param startDate the original arrival date, YYYY-MM-DD
+     * @param endDate the original departure date, YYYY-MM-DD
+     * @param cancelledDate the day it was cancelled, YYYY-MM-DD
+     * @param reservationId the reservation that was cancelled
+     * @return the number of notifications added, 0 if entrantId is blank
+     */
+    fun addReservationCancelled(
+        batch: WriteBatch,
+        entrantId: String,
+        campsiteId: String,
+        campsiteName: String,
+        startDate: String,
+        endDate: String,
+        cancelledDate: String,
+        reservationId: String = ""
+    ): Int = addToBatch(
+        batch = batch,
+        senderId = SYSTEM_SENDER,
+        recipientIds = listOf(entrantId),
+        campsiteId = campsiteId,
+        campsiteName = campsiteName,
+        type = NotificationType.CANCELLATION,
+        title = CANCELLATION_TITLE,
+        message = cancellationMessage(campsiteName, startDate, endDate, cancelledDate),
+        reservationId = reservationId
+    )
+
+    /**
+     * tells an entrant their reservation was cancelled (US 01.07.02)
+     *
+     * call this only after the cancellation was saved. prefer [addReservationCancelled]
+     * so both save together
+     *
+     * the parameters are the same as [addReservationCancelled]
+     */
+    fun sendReservationCancelled(
+        entrantId: String,
+        campsiteId: String,
+        campsiteName: String,
+        startDate: String,
+        endDate: String,
+        cancelledDate: String,
+        reservationId: String = ""
+    ): Task<Void> = send(
+        senderId = SYSTEM_SENDER,
+        recipientIds = listOf(entrantId),
+        campsiteId = campsiteId,
+        campsiteName = campsiteName,
+        type = NotificationType.CANCELLATION,
+        title = CANCELLATION_TITLE,
+        message = cancellationMessage(campsiteName, startDate, endDate, cancelledDate),
         reservationId = reservationId
     )
 

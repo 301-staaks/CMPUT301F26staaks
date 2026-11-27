@@ -31,13 +31,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.staaks_campsite_app.session.SessionManager
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import com.example.staaks_campsite_app.data.Repositories
+import com.example.staaks_campsite_app.data.formatSentAt
+import com.example.staaks_campsite_app.data.getDeviceId
+import com.example.staaks_campsite_app.data.groupIntoSends
+import com.example.staaks_campsite_app.data.logName
+import com.example.staaks_campsite_app.data.recipientSummary
 
 
 /**
  * The owner's notifications screen.
  *
- * The notifications shown are placeholder data, and the campsite and time on
- * each card are not filled in. Nothing is loaded from the database yet.
+ * Has the Send Notification button (US 02.10.01) and the list of notifications this
+ * owner sent, newest first (US 02.10.02). Tapping one shows the full message and
+ * every recipient.
  *
  * @param navController controls navigation to other screens.
  */
@@ -60,12 +72,13 @@ fun OwnerNotifications(navController: NavController) {
             -------------------------------------------------------------------------------------------------------------------------------------
              */
 
-            val notifications = listOf( // placeholder
-                "New reservation",
-                "Reservation cancelled",
-                "Lottery draw completed",
-                "New message"
-            )
+            val context = LocalContext.current
+            val ownerId = remember(context) { getDeviceId(context) }
+            val sentFlow = remember(ownerId) { Repositories.notifications.observeSent(ownerId) }
+            val sentResult by sentFlow.collectAsState(initial = null)
+            val sends = groupIntoSends(sentResult?.getOrNull() ?: emptyList())
+            val namesById = Repositories.users.users.associate { it.id to it.name }
+            var expanded by remember { mutableStateOf("") }
 
             LazyColumn(
                 modifier = Modifier
@@ -73,11 +86,39 @@ fun OwnerNotifications(navController: NavController) {
                     .padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(notifications) { title ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                // opens the owner's Send Notification form (US 02.10.01)
+                item {
+                    Button(
+                        onClick = { navController.navigate("owner_lottery_notification") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 64.dp)
+                    ) {
+                        Text("Send Notification", fontSize = 20.sp)
+                    }
+                }
+
+                item {
+                    when {
+                        sentResult == null -> Text("Loading sent notifications...")
+                        sentResult?.isFailure == true -> Text("Could not load sent notifications.", color = Color.Red)
+                        sends.isEmpty() -> Text("No notifications sent")
+                    }
+                }
+
+                items(sends, key = { it.batchId }) { send ->
+                    val names = send.recipientIds.map { logName(it, namesById) }
+                    val open = expanded == send.batchId
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { expanded = if (open) "" else send.batchId }
+                    ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(title, fontSize = 18.sp)
-                            Text("Campsite: —  |  Time: —", color = Color.Gray)
+                            Text(send.campsiteName.ifBlank { "Campsite" }, fontSize = 18.sp)
+                            Text("To: " + if (open) names.joinToString(", ") else recipientSummary(names))
+                            Text(if (open) send.message else send.message.take(60) + if (send.message.length > 60) "..." else "")
+                            Text(formatSentAt(send.sentAt), color = Color.Gray)
                         }
                     }
                 }

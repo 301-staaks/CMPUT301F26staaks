@@ -117,6 +117,19 @@ fun NotificationTestPanel(currentUserId: String) {
                 }
             }
 
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                TestButton("Cancellation") {
+                    report(
+                        repository.sendReservationCancelled(
+                            recipients.first(), PLACEHOLDER_CAMPSITE_ID, PLACEHOLDER_CAMPSITE_NAME,
+                            PLACEHOLDER_START_DATE, PLACEHOLDER_END_DATE,
+                            todayString(), PLACEHOLDER_RESERVATION_ID
+                        ),
+                        "cancellation"
+                    )
+                }
+            }
+
             if (status.isNotBlank()) {
                 Text(status, fontSize = 12.sp)
             }

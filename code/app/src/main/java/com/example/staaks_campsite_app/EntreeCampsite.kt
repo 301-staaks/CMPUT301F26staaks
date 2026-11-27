@@ -1,6 +1,8 @@
 package com.example.staaks_campsite_app.Entree
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -158,7 +160,8 @@ fun EntreeCampsite(
     val imageNum = campsite.images.size
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        // scrolls so the Reservation Draw box under the ratings can be reached
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
@@ -253,7 +256,7 @@ fun EntreeCampsite(
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Row(
             modifier = Modifier

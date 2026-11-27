@@ -8,4 +8,10 @@ package com.example.staaks_campsite_app.data
  */
 object Repositories {
     val notifications by lazy { NotificationRepository() }
+
+    /** user names for the owner Send Notification form (US 02.10.01) */
+    val users by lazy { UserRepository() }
+
+    /** confirm and cancel reservations from the inbox and Reservations tab */
+    val reservations by lazy { ReservationRepository() }
 }

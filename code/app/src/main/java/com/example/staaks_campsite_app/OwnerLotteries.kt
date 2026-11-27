@@ -174,8 +174,8 @@ fun OwnerLotteries(
                                 navController.navigate("owner_lottery_edit/${lottery.id}")
                             }) { Text("Edit") }
                             Button(onClick = {
-                                // TODO: open the notification screen for this lottery
-                                navController.navigate("owner_lottery_notification")
+                                // opens the notification form with this lottery picked (US 02.10.01)
+                                navController.navigate("owner_lottery_notification?lotteryId=${lottery.id}")
                             }) { Text("New Notification") }
                         }
                     }

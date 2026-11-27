@@ -17,6 +17,8 @@ import com.example.staaks_campsite_app.Entree.EntreeCampsite
 import com.example.staaks_campsite_app.Entree.OwnerCampsitePreview
 import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.LotteryRepository
+import com.example.staaks_campsite_app.data.Repositories
+import com.example.staaks_campsite_app.data.notifiableEntrants
 import com.example.staaks_campsite_app.data.getDeviceId
 import com.example.staaks_campsite_app.data.model.admin_campsite
 import com.example.staaks_campsite_app.data.model.owner_campsite
@@ -91,7 +93,7 @@ fun CampsiteApp() {
         }
         composable("profile_screen") { ProfileScreen(navController) }
         composable("policy_guidelines_screen") { PolicyGuidelinesPage(navController) }
-        composable("entree_res_screen") { EntreeResScreen(navController) }
+        composable("entree_res_screen") { EntreeResScreen(navController, lotteryRepository, campsiteRepository) }
         composable("entree_inbox_screen") { EntreeInboxScreen(navController) }
         composable("entrant_messages_screen") { OwnerMessages(navController) }
         composable("qr_scanner_screen") { QRScannerScreen(navController) }
@@ -268,7 +270,50 @@ fun CampsiteApp() {
             }
         }
         composable("owner_lotteries_past") { OwnerPastLotteries(navController) }
-        composable("owner_lottery_notification") { OwnerLotteryNotification(navController) }
+        // owner Send Notification form (US 02.10.01). lotteryId is optional, so
+        // navigate("owner_lottery_notification") still opens it with no lottery picked
+        composable(
+            "owner_lottery_notification?lotteryId={lotteryId}",
+            arguments = listOf(navArgument("lotteryId") {
+                type = NavType.StringType
+                defaultValue = ""
+            })
+        ) { entry ->
+            val today = todayString()
+            val users = Repositories.users.users
+            val activeUserIds = users.map { it.id }.toSet()
+
+            val options = lotteryRepository.lotteries
+                .filter { it.ownerId == currentUserId && it.isActive(today) }
+                .map { lottery ->
+                    val ids = (listOf(lottery.campsiteId) + lottery.campsiteIds)
+                        .filter { it.isNotBlank() }
+                        .distinct()
+                    val names = ids
+                        .mapNotNull { id -> campsiteRepository.campsites.find { it.id == id }?.name }
+                        .joinToString(", ")
+                        .ifBlank { "Campsite" }
+
+                    NotifyLotteryOption(
+                        lotteryId = lottery.lotteryId,
+                        campsiteId = ids.firstOrNull() ?: "",
+                        campsiteName = names,
+                        label = "$names (${lottery.bookingStartDate} to ${lottery.bookingEndDate})",
+                        entrantIds = notifiableEntrants(
+                            lotteryRepository.getWaitlistEntries(lottery.lotteryId),
+                            activeUserIds
+                        )
+                    )
+                }
+
+            OwnerLotteryNotification(
+                navController = navController,
+                ownerId = currentUserId,
+                lotteries = options,
+                entrantNames = users.associate { it.id to it.name },
+                initialLotteryId = entry.arguments?.getString("lotteryId") ?: ""
+            )
+        }
         composable("owner_messages") { OwnerMessages(navController) }
         composable("owner_conversation") { OwnerConversation(navController) }
         composable("owner_notifications") { OwnerNotifications(navController) }

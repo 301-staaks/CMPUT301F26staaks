@@ -431,7 +431,7 @@ private fun FieldError(message: String?) {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DateField(
+internal fun DateField(
     label: String,
     value: String,
     error: String?,

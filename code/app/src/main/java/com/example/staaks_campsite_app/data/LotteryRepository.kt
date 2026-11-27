@@ -391,7 +391,9 @@ class LotteryRepository {
      */
     fun removeEntrantFromWaitlist(
         lotteryId: String,
-        entrantId: String
+        entrantId: String,
+        onSuccess: () -> Unit = {},
+        onFailure: (String) -> Unit = {}
     ) = db.runTransaction { transaction ->
         val lotteryReference = lotteriesRef.document(lotteryId)
 
@@ -447,6 +449,16 @@ class LotteryRepository {
         )
 
         null
+    }.addOnCompleteListener { task ->
+        if (task.isSuccessful) {
+            onSuccess()
+        } else {
+            onFailure(
+                task.exception?.cause?.localizedMessage
+                    ?: task.exception?.localizedMessage
+                    ?: "Could not join the lottery"
+            )
+        }
     }
 
     /**

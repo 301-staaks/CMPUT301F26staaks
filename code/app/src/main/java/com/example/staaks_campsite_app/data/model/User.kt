@@ -14,6 +14,9 @@ sealed class User {
     var email: String = ""
     var phone: String = ""
     var profileImageId: String = ""
+    // US 01.10.01: false means no pop-up notifications. the inbox still gets them.
+    // old user documents without this field load as true
+    var notificationsEnabled: Boolean = true
     @ServerTimestamp var createdAt: Timestamp? = null
     abstract val type: UserType
 }

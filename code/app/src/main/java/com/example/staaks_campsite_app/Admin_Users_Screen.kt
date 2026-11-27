@@ -115,7 +115,7 @@ fun AdminUsersScreen(
             ) {
                 Button(
                     onClick = { if (userListFilter.contains(UserType.ENTRANT)) { userListFilter.remove(UserType.ENTRANT) } else { userListFilter.add(UserType.ENTRANT) } },
-                    shape = RectangleShape,
+                    shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (userListFilter.contains(UserType.ENTRANT)) { Color(0xFF009E60) } else { Color.Gray },
                         contentColor = Color.White,
@@ -124,7 +124,7 @@ fun AdminUsersScreen(
 
                 Button(
                     onClick = { if (userListFilter.contains(UserType.OWNER)) { userListFilter.remove(UserType.OWNER) } else { userListFilter.add(UserType.OWNER) } },
-                    shape = RectangleShape,
+                    shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (userListFilter.contains(UserType.OWNER)) { Color(0xFF009E60) } else { Color.Gray },
                         contentColor = Color.White
@@ -133,7 +133,7 @@ fun AdminUsersScreen(
 
                 Button(
                     onClick = { if (userListFilter.contains(UserType.ADMIN)) { userListFilter.remove(UserType.ADMIN) } else { userListFilter.add(UserType.ADMIN) } },
-                    shape = RectangleShape,
+                    shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (userListFilter.contains(UserType.ADMIN)) { Color(0xFF009E60) } else { Color.Gray },
                         contentColor = Color.White

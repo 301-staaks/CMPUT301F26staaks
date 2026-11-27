@@ -89,6 +89,13 @@ fun CampsiteApp() {
                 entrantId = currentUserId
             )
         }
+        composable("entree_review_new") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("campsiteId")
+            EntreeReviewNew(
+                navController = navController,
+                campsiteId = id ?: "",
+            )
+        }
         composable("profile_screen") { ProfileScreen(navController) }
         composable("policy_guidelines_screen") { PolicyGuidelinesPage(navController) }
         composable("entree_res_screen") { EntreeResScreen(navController) }

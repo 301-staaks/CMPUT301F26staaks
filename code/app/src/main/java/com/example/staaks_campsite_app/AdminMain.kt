@@ -64,6 +64,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import com.example.staaks_campsite_app.data.model.Campsite
 import com.example.staaks_campsite_app.session.SessionManager
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 
 // light green 0xFF63B267
 // dark green 0xFF1B5E20
@@ -133,62 +139,78 @@ fun AdminMain(
                 items = campsites,
                 key = { campsite -> campsite.id }
             ) { campsite ->
+                AdminCampsiteCard(
+                    campsite = campsite,
+                    onViewCampsite = {
+                        navController.navigate("admin_campsite/${campsite.id}")
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AdminCampsiteCard(
+    campsite: Campsite,
+    onViewCampsite: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = campsite.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StoredImage(
+                    imageId = campsite.images.firstOrNull() ?: "",
+                    contentDescription = campsite.name,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(8.dp))
+                )
 
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(color= Color(0xFFD8FAD0))
-                        .border(width = 2.dp, color = Color.Gray)
+                        .weight(1f)
+                        .padding(top = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-
-                    Column(
-                        modifier = Modifier.padding(12.dp)
-                    ) {
-
-                        CampsiteImagePreview(
-                            imageId = campsite.images.firstOrNull() ?: ""
-                        )
-
-                        Text(
-                            modifier = Modifier
-                                .padding(16.dp),
-                            text = campsite.name,
-                            fontSize = 20.sp
-                        )
-
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            Box(
-                                modifier = Modifier.weight(1f),
-                            ){
-                                GenericButton(
-                                    onClick = {
-                                        // opens the details screen for the selected campsite
-                                        navController.navigate(
-                                            "admin_campsite/${campsite.id}"
-                                        )
-                                    },
-                                    text = "View Campsite"
-                                )
-                            }
-                            Box(
-                                modifier = Modifier.weight(1f),
-                            ){
-                                Text(
-                                    fontSize = 10.sp,
-                                    lineHeight = 16.sp,
-                                    text = "📍: ${campsite.location}\n👥: ${campsite.capacity}\n💰: \$${String.format("%.2f", campsite.price)}"
-                                )
-                            }
-                        }
-
-
-                    }
+                    Text(
+                        text = "📍 ${campsite.location}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "👥 ${campsite.capacity}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "💰 \$${String.format("%.2f", campsite.price)}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
+
+            GenericButton(
+                text = "View Campsite",
+                onClick = onViewCampsite
+            )
         }
     }
 }

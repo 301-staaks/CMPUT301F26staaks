@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -34,8 +35,10 @@ fun EntrantLotteryJoin (
     val today = todayString()
     val lottery = findLotteryToShow(lotteryRepository.getLotteriesForCampsite(campsiteId), today)
     var joining by remember(campsiteId) { mutableStateOf(false) }
+    var leaving by remember(campsiteId) { mutableStateOf(false) }
     var message by remember(campsiteId) { mutableStateOf<String?>(null) }
     var isErrorMessage by remember(campsiteId) { mutableStateOf(false) }
+    var confirmLeave by remember(campsiteId) { mutableStateOf(false) }
 
     if (lottery == null) return
 
@@ -69,34 +72,40 @@ fun EntrantLotteryJoin (
 
                 Button(
                     onClick = {
-                        joining = true
-                        message = null
-                        lotteryRepository.addEntrantToWaitlist(
-                            lotteryId = lottery.lotteryId,
-                            entrantId = entrantId,
-                            joinedDate = today,
-                            onSuccess = {
-                                joining = false
-                                isErrorMessage = false
-                                message = "You have been added to the waitlist."
-                            },
-                            onFailure = { reason ->
-                                joining = false
-                                isErrorMessage = true
-                                message = reason
-                            }
-                        )
+                        if (alreadyEntered) { // leave lottery
+                            confirmLeave = true
+                        }
+                        else { // enter lottery
+                            joining = true
+                            message = null
+                            lotteryRepository.addEntrantToWaitlist(
+                                lotteryId = lottery.lotteryId,
+                                entrantId = entrantId,
+                                joinedDate = today,
+                                onSuccess = {
+                                    joining = false
+                                    isErrorMessage = false
+                                    message = "You have been added to the waitlist."
+                                },
+                                onFailure = { reason ->
+                                    joining = false
+                                    isErrorMessage = true
+                                    message = reason
+                                }
+                            )
+                        }
                     },
-                    enabled = !alreadyEntered && !joining,
+                    enabled = !joining && !leaving,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1B5E20),
+                        containerColor = if (alreadyEntered) Color(0xFFB71C1C) else Color(0xFF1B5E20),
                         contentColor = Color.White
                     )
                 ) {
                     Text(
                         when {
-                            alreadyEntered -> "Entered"
+                            leaving -> "Leaving..."
                             joining -> "Entering..."
+                            alreadyEntered -> "Leave lottery"
                             else -> "Enter reservation draw"
                         }
                     )
@@ -113,8 +122,53 @@ fun EntrantLotteryJoin (
             }
         }
     }
+
+    if (confirmLeave) {
+        LeaveLotteryDialog(
+            onConfirm = {
+                confirmLeave = false
+                leaving = true
+                message = null
+                lotteryRepository.removeEntrantFromWaitlist(
+                    lotteryId = lottery.lotteryId,
+                    entrantId = entrantId,
+                    onSuccess = {
+                        leaving = false
+                        isErrorMessage = false
+                        message = "You have been removed from the waitlist."
+                    },
+                    onFailure = { reason ->
+                        leaving = false
+                        isErrorMessage = true
+                        message = reason
+                    }
+                )
+            },
+            onDismiss = { confirmLeave = false }
+        )
+    }
 }
 
+
+@Composable
+fun LeaveLotteryDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Leave lottery waitlist?") },
+        text = {
+            Text("Are you sure you want to leave the lottery waitlist?")
+        },
+        confirmButton = {
+            Button(onClick = onConfirm) { Text("Leave") }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
 
 
 private fun findLotteryToShow(lotteries: List<Lottery>, today: String): Lottery? {

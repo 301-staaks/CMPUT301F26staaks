@@ -30,6 +30,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.staaks_campsite_app.session.SessionManager
 import com.example.staaks_campsite_app.data.model.Lottery
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 
 // data displayed on one lottery card
 data class LotteryCardUi(
@@ -123,13 +130,29 @@ fun OwnerLotteries(
         ) {
             item {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Button(onClick = { navController.navigate("owner_lottery_new") }) {
+                    val buttonColors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF009E60),
+                        contentColor = Color.White
+                    )
+
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = { navController.navigate("owner_lottery_new") },
+                        colors = buttonColors
+                    ) {
                         Text("+ Create Lottery")
                     }
-                    Button(onClick = { navController.navigate("owner_lotteries_past") }) {
+
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = { navController.navigate("owner_lotteries_past") },
+                        colors = buttonColors
+                    ) {
                         Text("Past Lotteries")
                     }
                 }
@@ -150,33 +173,101 @@ fun OwnerLotteries(
                 }
             }
 
-            items(items = lotteries, key = { lottery -> lottery.id }) { lottery ->
-                // "Waitlist: 15/30", or just "Waitlist: 15" when there is no capacity
+            items(items = lotteries, key = { it.id }) { lottery ->
                 val waitlistText = lottery.waitlistCapacity
-                    ?.let { "Waitlist: ${lottery.waitlistCount}/$it" }
-                    ?: "Waitlist: ${lottery.waitlistCount}"
+                    ?.let { "${lottery.waitlistCount}/$it" }
+                    ?: lottery.waitlistCount.toString()
 
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        // every campsite in the lottery
-                        Text(
-                            text = lottery.campsiteNames.joinToString(", "),
-                            fontSize = 20.sp
-                        )
-                        Text(lottery.statusText)
-                        Text("Registration: ${lottery.registrationStart} to ${lottery.registrationEnd}")
-                        Text("Booking: ${lottery.bookingStart} to ${lottery.bookingEnd}")
-                        Text("Winners: ${lottery.numberOfWinners}")
-                        Text(waitlistText)
-                        Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White,
+                        contentColor = Color(0xFF202124)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(
+                                text = lottery.campsiteNames.joinToString(", "),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.SemiBold
+                            )
+
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = Color(0xFFE6F4EC),
+                                contentColor = Color(0xFF1B5E20)
+                            ) {
+                                Text(
+                                    text = lottery.statusText,
+                                    modifier = Modifier.padding(
+                                        horizontal = 10.dp,
+                                        vertical = 4.dp
+                                    ),
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            }
+                        }
+
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = "Registration\n${lottery.registrationStart} to ${lottery.registrationEnd}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "Booking\n${lottery.bookingStart} to ${lottery.bookingEnd}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+
+                        HorizontalDivider(color = Color(0xFFE6E6E6))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = "Winners: ${lottery.numberOfWinners}",
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                            Text(
+                                text = "Waitlist: $waitlistText",
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = {
-                                navController.navigate("owner_lottery_edit/${lottery.id}")
-                            }) { Text("Edit") }
-                            Button(onClick = {
-                                // TODO: open the notification screen for this lottery
-                                navController.navigate("owner_lottery_notification")
-                            }) { Text("New Notification") }
+                            val actionColors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF009E60),
+                                contentColor = Color.White
+                            )
+
+                            Button(
+                                onClick = {
+                                    navController.navigate("owner_lottery_edit/${lottery.id}")
+                                },
+                                colors = actionColors
+                            ) {
+                                Text("Edit")
+                            }
+
+                            Button(
+                                onClick = {
+                                    navController.navigate("owner_lottery_notification")
+                                },
+                                colors = actionColors
+                            ) {
+                                Text("New Notification")
+                            }
                         }
                     }
                 }

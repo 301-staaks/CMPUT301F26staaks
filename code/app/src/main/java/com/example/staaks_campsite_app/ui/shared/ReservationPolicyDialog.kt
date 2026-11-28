@@ -35,7 +35,7 @@ val app_policy = """
     • Owners may reject reservations and issue refunds during emergencies (e.g., wildfire warnings).
 
     2. Community Standards
-    • Reviews and ratings must be genuine. Admins may remove violating content or accounts.
+    • Reviews and ratings must be genuine. Admins may remove violating content or accounts. 
 
     3. Device ID & Privacy
     • Your account uses your unique device ID—no password required.

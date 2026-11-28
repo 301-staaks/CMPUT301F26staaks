@@ -198,7 +198,8 @@ fun OwnerMain(
                             isExpanded = expandedCampsite == index,
                             onPreviewCampsite = { navController.navigate("owner_campsite_preview/${campsite.id}") },
                             onEditCampsite = { onEditCampsite(campsite) },
-                            onAddToLottery = { /* TODO : Add campsite to existing lottery */ },
+                            onAddToLottery = { /* TODO: Add campsite to existing lottery */ },
+
                         )
                     }
 //                    OwnerCampsiteCardActions(
@@ -235,7 +236,15 @@ fun OwnerCampsiteCardActions(
     ) {
         GenericButton(text="Preview",onClick = { onPreviewCampsite(campsite) })
         GenericButton(text="Edit",onClick = { onEditCampsite(campsite) })
-        GenericButton(text="Delete",onClick = { onAddToLottery(campsite) })
+        Button(
+            onClick = { onAddToLottery(campsite) },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Red,
+                contentColor = Color.White
+            )
+        ) {
+            Text("Delete")
+        }
     }
 }
 

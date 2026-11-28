@@ -38,6 +38,9 @@ import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.UserRepository
 import com.example.staaks_campsite_app.data.getDeviceId
 import com.example.staaks_campsite_app.data.model.UserType
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 
 
 /**
@@ -112,6 +115,32 @@ fun ProfileScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        UserProfileImagePreview(
+                            size = 100.dp,
+                            imageId = currentUser?.profileImageId.orEmpty()
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = currentUser?.name.orEmpty(),
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
                 if (!editToggle) {
                     Text(
                         text = "Name: $name",
@@ -212,9 +241,11 @@ fun ProfileScreen(navController: NavController) {
                     contentAlignment = Alignment.Center
                 ) {
                     Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Red,
+                            contentColor = Color.White
+                        ),
                         onClick = {
-                            /* To do: implement delete profile, right now it will
-                            just go back the start screen */
                             userRepo.deleteUser(currentUser!!)
                             navController.navigate("start") }
                     ) {

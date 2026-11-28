@@ -31,6 +31,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.staaks_campsite_app.session.SessionManager
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.font.FontWeight
 
 /**
  * The owner's screen listing lotteries that have already passed.
@@ -68,12 +73,47 @@ fun OwnerPastLotteries(navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(pastLotteries) { name ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text(name, fontSize = 18.sp)
-                            Text("Campsite: —")
-                            Text("Drawn on: —")
-                            Text("Entries: —  |  Winners: —")
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White,
+                            contentColor = Color(0xFF202124)
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.SemiBold
+                            )
+
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text("Campsite: —", style = MaterialTheme.typography.bodyMedium)
+                                Text("Drawn on: —", style = MaterialTheme.typography.bodyMedium)
+                            }
+
+                            HorizontalDivider(color = Color(0xFFE6E6E6))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = "Entries: —",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                                Text(
+                                    text = "Winners: —",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                            }
                         }
                     }
                 }

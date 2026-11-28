@@ -396,7 +396,6 @@ fun OwnerCampsiteCard(
             )
             // shows the qr controls for this campsite
             CampsiteQrSection(campsiteId = campsite.id)
-            Text(text = campsite.coords.toString())
         }
     }
 }

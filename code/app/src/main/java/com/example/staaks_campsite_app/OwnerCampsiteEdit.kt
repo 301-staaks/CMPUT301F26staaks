@@ -9,11 +9,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -88,6 +91,7 @@ fun OwnerCampsiteEdit(
     var query by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
+    var success by remember { mutableStateOf(false)}
 
     var address by remember { mutableStateOf<String?>(null) }
     var coords by remember { mutableStateOf(GeoPoint(0.0, 0.0))}
@@ -172,8 +176,9 @@ fun OwnerCampsiteEdit(
             ) {
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Campsite Name") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = location, onValueChange = { location = it }, label = { Text("Location") }, modifier = Modifier.fillMaxWidth())
-                Row() {
-                    OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text("Coordinates") }, modifier = Modifier)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text("Address or Coordinates") }, modifier = Modifier.widthIn(270.dp, 270.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     GenericButton(
                         enabled = query.isNotBlank(),
                         text = if (busy) "Checking..." else "Check",
@@ -188,6 +193,7 @@ fun OwnerCampsiteEdit(
                                     } else {
                                         address = if (typedCoords == null) query else null
                                         coords = GeoPoint(latLng.latitude, latLng.longitude)
+                                        success = true
                                     }
                                 } catch (e: Exception) {
                                     error = e.message ?: "Check failed"
@@ -196,7 +202,10 @@ fun OwnerCampsiteEdit(
                         }
                     )
                 }
-                error?.let { Text(it, color = Color.Red) }
+                error?.let { Text(it, color = Color.Red); success = false }
+                if (success) {
+                    Text("Success!", color = Color(0xFF009E60))
+                }
                 OutlinedTextField(value = capacity, onValueChange = { capacity = it }, label = { Text("Maximum Occupancy") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Price per Night") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, minLines = 3, modifier = Modifier.fillMaxWidth())

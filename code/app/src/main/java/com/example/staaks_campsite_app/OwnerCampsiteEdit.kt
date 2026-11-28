@@ -9,11 +9,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -60,6 +63,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.example.staaks_campsite_app.session.SessionManager
+import com.google.firebase.firestore.GeoPoint
 
 
 /**
@@ -83,6 +87,15 @@ fun OwnerCampsiteEdit(
 
     var name by remember(existing?.id) { mutableStateOf(existing?.name ?: "") }
     var location by remember(existing?.id) { mutableStateOf(existing?.location ?: "") }
+
+    var query by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    var success by remember { mutableStateOf(false)}
+
+    var address by remember { mutableStateOf<String?>(null) }
+    var coords by remember { mutableStateOf(GeoPoint(0.0, 0.0))}
+
     var capacity by remember(existing?.id) { mutableStateOf(existing?.capacity?.toString() ?: "") }
     var price by remember(existing?.id) { mutableStateOf(existing?.price?.toString() ?: "") }
     var description by remember(existing?.id) { mutableStateOf(existing?.description ?: "") }
@@ -142,7 +155,7 @@ fun OwnerCampsiteEdit(
 
 
     Scaffold(
-        topBar = { UiTopRow(navController = navController, title = "Owner Main", homeRoute = "owner_main") },
+        topBar = { UiTopRow(navController = navController, title = "Home", homeRoute = "owner_main") },
         bottomBar = { UiBottomRow(navController = navController, tabs = ownerTabs) }
     ) { innerPadding ->
         Box(
@@ -163,6 +176,36 @@ fun OwnerCampsiteEdit(
             ) {
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Campsite Name") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = location, onValueChange = { location = it }, label = { Text("Location") }, modifier = Modifier.fillMaxWidth())
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text("Address or Coordinates") }, modifier = Modifier.widthIn(270.dp, 270.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
+                    GenericButton(
+                        enabled = query.isNotBlank(),
+                        text = if (busy) "Checking..." else "Check",
+                        onClick = {
+                            scope.launch {
+                                busy = true; error = null
+                                try {
+                                    val typedCoords = parseCoordinates(query)
+                                    val latLng = typedCoords ?: geocode(context, query)
+                                    if (latLng == null) {
+                                        error = "Couldn't find that location"
+                                    } else {
+                                        address = if (typedCoords == null) query else null
+                                        coords = GeoPoint(latLng.latitude, latLng.longitude)
+                                        success = true
+                                    }
+                                } catch (e: Exception) {
+                                    error = e.message ?: "Check failed"
+                                } finally { busy = false }
+                            }
+                        }
+                    )
+                }
+                error?.let { Text(it, color = Color.Red); success = false }
+                if (success) {
+                    Text("Success!", color = Color(0xFF009E60))
+                }
                 OutlinedTextField(value = capacity, onValueChange = { capacity = it }, label = { Text("Maximum Occupancy") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Price per Night") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, minLines = 3, modifier = Modifier.fillMaxWidth())
@@ -228,6 +271,8 @@ fun OwnerCampsiteEdit(
                             existing.copy(
                                 name = name,
                                 location = location,
+                                address = address?: existing.address,
+                                coords = coords,
                                 capacity = capacity.toIntOrNull() ?: 0,
                                 price = price.toDoubleOrNull() ?: 0.0,
                                 description = description,
@@ -238,6 +283,8 @@ fun OwnerCampsiteEdit(
                                 ownerId = ownerId,
                                 name = name,
                                 location = location,
+                                address = address?: "",
+                                coords = coords,
                                 capacity = capacity.toIntOrNull() ?: 0,
                                 price = price.toDoubleOrNull() ?: 0.0,
                                 description = description,

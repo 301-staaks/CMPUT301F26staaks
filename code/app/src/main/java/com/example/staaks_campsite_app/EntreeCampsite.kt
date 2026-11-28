@@ -15,13 +15,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,12 +52,15 @@ import com.example.staaks_campsite_app.data.CampsiteRepository
 import com.example.staaks_campsite_app.data.model.Campsite
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.RectangleShape
 import com.example.staaks_campsite_app.data.LotteryRepository
 import com.example.staaks_campsite_app.EntrantLotteryJoin
+import com.example.staaks_campsite_app.PinMap
 import com.example.staaks_campsite_app.StoredImage
 import com.example.staaks_campsite_app.data.ConversationRepository
 import com.example.staaks_campsite_app.data.ReviewRepository
@@ -64,6 +70,7 @@ import com.example.staaks_campsite_app.data.model.Message
 import com.example.staaks_campsite_app.data.model.User
 import com.example.staaks_campsite_app.data.model.UserType
 import com.example.staaks_campsite_app.session.SessionManager
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -102,7 +109,8 @@ fun EntreeCampsite(
     navController: NavController,
     campsiteID: String,
     lotteryRepository: LotteryRepository,
-    entrantId: String
+    entrantId: String,
+    previewMode: Boolean = false
 ) {
 
     // this whole new block is for when an entrant is seeing the campsite and the admin deletes it
@@ -171,10 +179,15 @@ fun EntreeCampsite(
 // until here
     val imageNum = campsite.images.size
 
+    val address = campsite.address
+    val coords = campsite.coords
+
+    val scrollState = rememberScrollState()
+
     if (!reviewScreen) {
         Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize().verticalScroll(scrollState),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Row(
                 modifier = Modifier
@@ -185,7 +198,7 @@ fun EntreeCampsite(
             ) {
                 IconButton(
                     onClick = {
-                        navController.navigate("entree_main")
+                        navController.popBackStack()
                     },
                     colors = IconButtonDefaults.iconButtonColors(
                         containerColor = Color(0xFF009E60),
@@ -286,6 +299,21 @@ fun EntreeCampsite(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            if (address == null) {
+                Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) { CircularProgressIndicator() }
+            } else {
+                PinMap(
+                    position = LatLng(coords.latitude, coords.longitude),
+                    snippet = address,
+                    title = campsite.name,
+                    modifier = Modifier.width(300.dp).height(300.dp),
+                )
+            }
+
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -298,90 +326,96 @@ fun EntreeCampsite(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF009E60),
                         contentColor = Color.White
-                    )
+                    ),
+                    enabled = !previewMode
                 ) { Text("Reviews") }
             }
 
 
-            EntrantLotteryJoin(
-                campsiteId = campsite.id,
-                lotteryRepository = lotteryRepository,
-                entrantId = entrantId
-            )
-        }
-    }
-    if (reviewScreen) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Button(
-                onClick = { reviewScreen = false },
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF009E60),
-                    contentColor = Color.White
+            if (!previewMode) {
+                EntrantLotteryJoin(
+                    campsiteId = campsite.id,
+                    lotteryRepository = lotteryRepository,
+                    entrantId = entrantId
                 )
-            ) { Text("Back") }
+            } else {
+                Text("Lottery joining is not available in preview mode.")
+            }
+        }
 
-            LazyColumn(
+
+        if (reviewScreen) {
+            Column(
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(
-                    items = reviews,
-                    key = { review -> review.id }
-                ) { review ->
+                Button(
+                    onClick = { reviewScreen = false },
+                    shape = RectangleShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF009E60),
+                        contentColor = Color.White
+                    )
+                ) { Text("Back") }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = reviews,
+                        key = { review -> review.id }
+                    ) { review ->
 
 
-                    val username = users.find{it.id == review.userId}?.name ?: ""
+                        val username = users.find { it.id == review.userId }?.name ?: ""
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(color= Color(0xFFD8FAD0))
-                            .border(width = 2.dp, color = Color.Gray)
-                    ) {
-                        Row() {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(color = Color(0xFFD8FAD0))
+                                .border(width = 2.dp, color = Color.Gray)
+                        ) {
+                            Row() {
 
+
+                                Text(
+                                    modifier = Modifier
+                                        .padding(16.dp),
+                                    text = campsite?.name ?: "",
+                                    fontSize = 30.sp
+                                )
+
+                                repeat(maxOf(0, review.rating.toInt())) {
+                                    Text(
+                                        modifier = Modifier.padding(top = 16.dp),
+                                        text = "⭐",
+                                        fontSize = 20.sp
+                                    )
+                                }
+                            }
 
                             Text(
                                 modifier = Modifier
                                     .padding(16.dp),
-                                text = campsite?.name ?: "",
-                                fontSize = 30.sp
+                                text = username,
+                                fontSize = 20.sp
                             )
 
-                            repeat(maxOf(0, review.rating.toInt())) {
-                                Text(
-                                    modifier = Modifier.padding(top = 16.dp),
-                                    text = "⭐",
-                                    fontSize = 20.sp
-                                )
-                            }
+                            Text(
+                                modifier = Modifier
+                                    .padding(16.dp),
+                                text = review.comment,
+                                fontSize = 15.sp
+                            )
+
                         }
-
-                        Text(
-                            modifier = Modifier
-                                .padding(16.dp),
-                            text = username,
-                            fontSize = 20.sp
-                        )
-
-                        Text(
-                            modifier = Modifier
-                                .padding(16.dp),
-                            text = review.comment,
-                            fontSize = 15.sp
-                        )
-
                     }
                 }
             }
         }
-
     }
 }

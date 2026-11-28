@@ -92,7 +92,7 @@ import com.google.firebase.firestore.firestore
 
 val ownerTabs = listOf(
     Tab("owner_main", "Main", Icons.Default.Home),
-    Tab("owner_reservations_active", "Reservations", Icons.Default.CalendarMonth),
+    Tab("owner_reservations", "Reservations", Icons.Default.CalendarMonth),
     Tab("owner_notifications", "Notifications", Icons.Default.Notifications),
     Tab("owner_messages", "Messages", Icons.Default.Textsms),
     Tab("owner_lotteries", "Lotteries", Icons.Default.ConfirmationNumber)
@@ -403,9 +403,9 @@ fun OwnerCampsiteCard(
                 onEditCampsite = onEditCampsite,
                 onAddToLottery = onAddToLottery
             )
+            // shows the qr controls for this campsite
+            CampsiteQrSection(campsiteId = campsite.id)
         }
-        // shows the qr controls for this campsite
-        CampsiteQrSection(campsiteId = campsite.id)
     }
 }
 

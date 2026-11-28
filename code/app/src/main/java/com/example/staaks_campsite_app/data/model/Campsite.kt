@@ -1,5 +1,6 @@
 package com.example.staaks_campsite_app.data.model
 
+import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.IgnoreExtraProperties
 
 /**
@@ -23,6 +24,8 @@ data class Campsite(
     var ownerId: String = "",
     var name: String = "",
     var location: String = "",
+    var coords: GeoPoint = GeoPoint(0.0, 0.0),
+    var address: String = "",
     var capacity: Int = 0,
     var date: MutableList<String> = mutableListOf(),
     var price: Double = 0.0,
@@ -30,7 +33,7 @@ data class Campsite(
     var description: String = "",
     var rating: Double = 0.0,
     var ratingCount: Int = 0,
-    var booked: MutableList<String> = mutableListOf()
+    var booked: MutableList<String> = mutableListOf(),
 ) {
     fun addImage(image: String) {
         this.images.plusAssign(image)

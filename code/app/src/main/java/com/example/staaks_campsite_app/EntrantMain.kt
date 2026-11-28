@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.ImageNotSupported
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Search
@@ -66,7 +67,7 @@ import com.example.staaks_campsite_app.data.model.Campsite
 val entrantTabs = listOf(
     Tab("entree_main", "Home", icon = Icons.Default.Home),
     Tab("entree_res_screen", "Reservations", icon = Icons.AutoMirrored.Filled.List),
-    Tab("entree_inbox_screen", "Inbox", icon =Icons.Default.Search),
+    Tab("entree_inbox_screen", "Inbox", icon =Icons.Default.Notifications),
     Tab("entrant_messages_screen", "Messages", icon =Icons.Default.Textsms),
     Tab("qr_scanner_screen", "Scan", icon =Icons.Default.QrCode)
 )

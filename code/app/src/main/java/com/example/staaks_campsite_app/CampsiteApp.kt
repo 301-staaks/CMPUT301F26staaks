@@ -168,9 +168,10 @@ fun CampsiteApp() {
                 existing = campsiteRepository.campsites.find { it.id == id },
             ) { campsiteRepository.addOrUpdateCampsite(it) }
         }
-        composable("owner_reservations_active") { OwnerReservationsActive(navController) }
-        composable("owner_reservations_past") { OwnerReservationsPast(navController) }
-        composable("owner_reservations_cancelled") { OwnerReservationsCancelled(navController) }
+        composable("owner_reservations") { OwnerReservationsScreen(navController) }
+        composable("owner_reservations_active") { OwnerReservationsScreen(navController) }
+        composable("owner_reservations_past") { OwnerReservationsScreen(navController) }
+        composable("owner_reservations_cancelled") { OwnerReservationsScreen(navController) }
         // prepares and displays the owner's active lotteries
         composable("owner_lotteries") {
             val today = todayString()
@@ -291,7 +292,7 @@ fun CampsiteApp() {
         ) { entry ->
             val campsiteId = entry.arguments?.getString("campsiteId") ?: ""
 
-            OwnerCampsitePreview(navController, campsiteId)
+            OwnerCampsitePreview(navController, campsiteId, lotteryRepository, currentUserId)
         }
 
         composable<owner_campsite> { backStackEntry ->

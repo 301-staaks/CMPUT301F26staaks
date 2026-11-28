@@ -47,7 +47,7 @@ fun OwnerReservationsPast(navController: NavController) {
     val session by SessionManager.state.collectAsState()
 
     Scaffold(
-        topBar = { UiTopRow(navController = navController, title = "Owner Main", homeRoute = "owner_main") },
+        topBar = { UiTopRow(navController = navController, title = "Home", homeRoute = "owner_main") },
         bottomBar = { UiBottomRow(navController = navController, tabs = ownerTabs) }
     ) { innerPadding ->
         Box(

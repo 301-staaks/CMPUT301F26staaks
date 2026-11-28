@@ -297,121 +297,122 @@ fun EntreeCampsite(
                 }
             }
 
-        Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f))
 
-        if (address == null) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        } else {
-            PinMap(
-                position = LatLng(coords.latitude, coords.longitude),
-                snippet = address,
-                title = campsite.name,
-                modifier = Modifier.width(300.dp).height(300.dp),
-            )
-        }
+            if (address == null) {
+                Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) { CircularProgressIndicator() }
+            } else {
+                PinMap(
+                    position = LatLng(coords.latitude, coords.longitude),
+                    snippet = address,
+                    title = campsite.name,
+                    modifier = Modifier.width(300.dp).height(300.dp),
+                )
+            }
 
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Button(
-                onClick = { reviewScreen = true },
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF009E60),
-                    contentColor = Color.White
-                ),
-                enabled = !previewMode
-            ) { Text(score.toString()) }
-            if (score < 5) {
-                Spacer(modifier = Modifier.width(4.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(
+                    onClick = { reviewScreen = true },
+                    shape = RectangleShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF009E60),
+                        contentColor = Color.White
+                    ),
+                    enabled = !previewMode
+                ) { Text("Reviews") }
+            }
+
+
+            if (!previewMode) {
+                EntrantLotteryJoin(
+                    campsiteId = campsite.id,
+                    lotteryRepository = lotteryRepository,
+                    entrantId = entrantId
+                )
+            } else {
+                Text("Lottery joining is not available in preview mode.")
             }
         }
 
 
-        if (!previewMode) {
-            EntrantLotteryJoin(
-                campsiteId = campsite.id,
-                lotteryRepository = lotteryRepository,
-                entrantId = entrantId
-            )
-        } else {
-            Text("Lottery joining is not available in preview mode.")
-        }
-    }
-
-
-    if (reviewScreen) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Button(
-                onClick = { reviewScreen = false },
-                shape = RectangleShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF009E60),
-                    contentColor = Color.White
-                )
-            ) { Text("Back") }
-
-            LazyColumn(
+        if (reviewScreen) {
+            Column(
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(
-                    items = reviews,
-                    key = { review -> review.id }
-                ) { review ->
+                Button(
+                    onClick = { reviewScreen = false },
+                    shape = RectangleShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF009E60),
+                        contentColor = Color.White
+                    )
+                ) { Text("Back") }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = reviews,
+                        key = { review -> review.id }
+                    ) { review ->
 
 
-                    val username = users.find{it.id == review.userId}?.name ?: ""
+                        val username = users.find { it.id == review.userId }?.name ?: ""
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(color= Color(0xFFD8FAD0))
-                            .border(width = 2.dp, color = Color.Gray)
-                    ) {
-                        Row() {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(color = Color(0xFFD8FAD0))
+                                .border(width = 2.dp, color = Color.Gray)
+                        ) {
+                            Row() {
 
+
+                                Text(
+                                    modifier = Modifier
+                                        .padding(16.dp),
+                                    text = campsite?.name ?: "",
+                                    fontSize = 30.sp
+                                )
+
+                                repeat(maxOf(0, review.rating.toInt())) {
+                                    Text(
+                                        modifier = Modifier.padding(top = 16.dp),
+                                        text = "⭐",
+                                        fontSize = 20.sp
+                                    )
+                                }
+                            }
 
                             Text(
                                 modifier = Modifier
                                     .padding(16.dp),
-                                text = campsite?.name ?: "",
-                                fontSize = 30.sp
+                                text = username,
+                                fontSize = 20.sp
                             )
 
-                            repeat(maxOf(0, review.rating.toInt())) {
-                                Text(
-                                    modifier = Modifier.padding(top = 16.dp),
-                                    text = "⭐",
-                                    fontSize = 20.sp
-                                )
-                            }
+                            Text(
+                                modifier = Modifier
+                                    .padding(16.dp),
+                                text = review.comment,
+                                fontSize = 15.sp
+                            )
+
                         }
-
-                        Text(
-                            modifier = Modifier
-                                .padding(16.dp),
-                            text = username,
-                            fontSize = 20.sp
-                        )
-
-                        Text(
-                            modifier = Modifier
-                                .padding(16.dp),
-                            text = review.comment,
-                            fontSize = 15.sp
-                        )
-
                     }
                 }
             }

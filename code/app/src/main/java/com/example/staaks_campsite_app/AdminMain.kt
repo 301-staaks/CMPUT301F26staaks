@@ -324,13 +324,14 @@ fun AdminBottomRow(navController: NavController) {
 }
 
 @Composable
-fun GenericButton(text: String, onClick: () -> Unit) {
+fun GenericButton(text: String, onClick: () -> Unit, enabled: Boolean = true) {
     Button(
         onClick = { onClick() },
         colors = ButtonDefaults.buttonColors(
             containerColor = Color(0xFF009E60),
             contentColor = Color.White
-        )
+        ),
+        enabled = enabled
     ){
         Text(text = text)
     }

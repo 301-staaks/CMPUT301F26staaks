@@ -1,5 +1,9 @@
 package com.example.staaks_campsite_app.data
 
+import android.content.Context
+import android.location.Address
+import android.location.Geocoder
+import android.os.Build
 import androidx.compose.runtime.mutableStateListOf
 import com.example.staaks_campsite_app.data.model.Campsite
 import com.example.staaks_campsite_app.data.model.Owner
@@ -8,6 +12,13 @@ import kotlin.collections.filter
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.firestore.GeoPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import java.util.Locale
+import kotlin.coroutines.resume
 
 
 /**
@@ -88,6 +99,8 @@ class CampsiteRepository(
                     ownerId = ownerId,
                     name = document.getString("name") ?: "",
                     location = document.getString("location") ?: "",
+                    address = document.getString("address") ?: "",
+                    coords = document.getGeoPoint("coords") ?: GeoPoint(0.0, 0.0),
                     capacity = document.getLong("capacity")?.toInt() ?: 0,
                     date = dates,
                     price = document.getDouble("price") ?: 0.0,
@@ -153,6 +166,8 @@ class CampsiteRepository(
         ownerId: String = "",
         name: String = "",
         location: String = "",
+        address: String = "",
+        coords: GeoPoint = GeoPoint(0.0, 0.0),
         capacity: Int = 0,
         price: Double = 0.0,
         date: MutableList<String> = mutableListOf(),
@@ -167,6 +182,8 @@ class CampsiteRepository(
             ownerId = ownerId,
             name = name,
             location = location,
+            address = address,
+            coords = coords,
             capacity = capacity,
             price = price,
             date = date,

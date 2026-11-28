@@ -60,6 +60,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.example.staaks_campsite_app.session.SessionManager
+import com.google.firebase.firestore.GeoPoint
 
 
 /**
@@ -83,6 +84,14 @@ fun OwnerCampsiteEdit(
 
     var name by remember(existing?.id) { mutableStateOf(existing?.name ?: "") }
     var location by remember(existing?.id) { mutableStateOf(existing?.location ?: "") }
+
+    var query by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }
+
+    var address by remember { mutableStateOf<String?>(null) }
+    var coords by remember { mutableStateOf(GeoPoint(0.0, 0.0))}
+
     var capacity by remember(existing?.id) { mutableStateOf(existing?.capacity?.toString() ?: "") }
     var price by remember(existing?.id) { mutableStateOf(existing?.price?.toString() ?: "") }
     var description by remember(existing?.id) { mutableStateOf(existing?.description ?: "") }
@@ -163,6 +172,31 @@ fun OwnerCampsiteEdit(
             ) {
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Campsite Name") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = location, onValueChange = { location = it }, label = { Text("Location") }, modifier = Modifier.fillMaxWidth())
+                Row() {
+                    OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text("Coordinates") }, modifier = Modifier)
+                    GenericButton(
+                        enabled = query.isNotBlank(),
+                        text = if (busy) "Checking..." else "Check",
+                        onClick = {
+                            scope.launch {
+                                busy = true; error = null
+                                try {
+                                    val typedCoords = parseCoordinates(query)
+                                    val latLng = typedCoords ?: geocode(context, query)
+                                    if (latLng == null) {
+                                        error = "Couldn't find that location"
+                                    } else {
+                                        address = if (typedCoords == null) query else null
+                                        coords = GeoPoint(latLng.latitude, latLng.longitude)
+                                    }
+                                } catch (e: Exception) {
+                                    error = e.message ?: "Check failed"
+                                } finally { busy = false }
+                            }
+                        }
+                    )
+                }
+                error?.let { Text(it, color = Color.Red) }
                 OutlinedTextField(value = capacity, onValueChange = { capacity = it }, label = { Text("Maximum Occupancy") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Price per Night") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, minLines = 3, modifier = Modifier.fillMaxWidth())
@@ -228,6 +262,8 @@ fun OwnerCampsiteEdit(
                             existing.copy(
                                 name = name,
                                 location = location,
+                                address = address?: existing.address,
+                                coords = coords,
                                 capacity = capacity.toIntOrNull() ?: 0,
                                 price = price.toDoubleOrNull() ?: 0.0,
                                 description = description,
@@ -238,6 +274,8 @@ fun OwnerCampsiteEdit(
                                 ownerId = ownerId,
                                 name = name,
                                 location = location,
+                                address = address?: "",
+                                coords = coords,
                                 capacity = capacity.toIntOrNull() ?: 0,
                                 price = price.toDoubleOrNull() ?: 0.0,
                                 description = description,
